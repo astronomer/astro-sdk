@@ -92,7 +92,8 @@ class WASBLocation(BaseFileLocation):
         """
         return urlparse(self.path).path
 
-    def get_new_path_for_snowflake_stage(self) -> str:
+    @property
+    def snowflake_stage_path(self) -> str:
         """
         Get the altered path if needed for stage creation in snowflake stage creation. We need to modify the path since
          Snowflake only accepts paths of format for stage creation:

@@ -47,24 +47,24 @@ def test_wasb_smartopen_uri_azure_scheme():
     assert location.smartopen_uri == "azure://somepath"
 
 
-def test_get_new_path_for_snowflake_stage_raise_exception():
+def test_snowflake_stage_path_raise_exception():
     """
-    Test get_new_path_for_snowflake_stage() raise exception when 'storage_account' is missing.
+    Test snowflake_stage_path raise exception when 'storage_account' is missing.
     """
     location = WASBLocation(path="azure://somepath")
     error_message = f"Required param missing 'storage_account', pass {location.LOAD_OPTIONS_CLASS_NAME}"
     "(storage_account=<account_name>) to load_options"
     with pytest.raises(ValueError, match=error_message):
-        location.get_new_path_for_snowflake_stage()
+        location.snowflake_stage_path
 
 
-def test_get_new_path_for_snowflake_stage_new_path():
+def test_snowflake_stage_path_new_path():
     """
-    Test get_new_path_for_snowflake_stage() to return expected path
+    Test snowflake_stage_path to return expected path
     """
     location = WASBLocation(
         path="wasb://some_container/test.csv",
         load_options=WASBLocationLoadOptions(storage_account="storage_account_name"),
     )
-    new_path = location.get_new_path_for_snowflake_stage()
+    new_path = location.snowflake_stage_path
     assert new_path == "azure://storage_account_name.blob.core.windows.net/some_container/"

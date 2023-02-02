@@ -197,7 +197,7 @@ class SnowflakeStage:
         """
         # the stage URL needs to be the folder where the files are
         # https://docs.snowflake.com/en/sql-reference/sql/create-stage.html#external-stage-parameters-externalstageparams
-        path = file.location.get_new_path_for_snowflake_stage()
+        path = file.location.snowflake_stage_path
         url = path[: path.rfind("/") + 1]
         self.url = url.replace("gs://", "gcs://")
 
