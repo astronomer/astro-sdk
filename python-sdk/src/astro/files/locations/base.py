@@ -199,4 +199,3 @@ class BaseFileLocation(ABC):
         Get the altered path if needed for stage creation in snowflake stage creation
         """
         return self.path
-

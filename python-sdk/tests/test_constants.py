@@ -22,4 +22,3 @@ def test_supported_databases():
         "sqlite",
     }
     assert set(SUPPORTED_DATABASES) == expected
-
