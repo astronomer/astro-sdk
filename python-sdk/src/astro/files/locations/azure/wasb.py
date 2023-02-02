@@ -108,4 +108,13 @@ class WASBLocation(BaseFileLocation):
             )
         url = urlparse(self.path)
         azure_host = "blob.core.windows.net"
-        return f"{FileLocation.AZURE}://{self.load_options.storage_account}.{azure_host}/{url.netloc}/"  # type: ignore
+        return urlunparse(
+            (
+                FileLocation.AZURE,
+                f"{self.load_options.storage_account}.{azure_host}",  # type: ignore
+                url.netloc,
+                "",
+                "",
+                "",
+            )
+        )
