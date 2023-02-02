@@ -7,6 +7,7 @@ import random
 import string
 from dataclasses import dataclass, field
 from typing import Any, Sequence
+from urllib.parse import urlparse
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -197,9 +198,10 @@ class SnowflakeStage:
         """
         # the stage URL needs to be the folder where the files are
         # https://docs.snowflake.com/en/sql-reference/sql/create-stage.html#external-stage-parameters-externalstageparams
-        path = file.location.snowflake_stage_path
-        url = path[: path.rfind("/") + 1]
-        self.url = url.replace("gs://", "gcs://")
+        url = urlparse(file.location.snowflake_stage_path)
+        url = url._replace(path=url.path[: url.path.rfind("/") + 1])
+        url = url._replace(scheme="gcs") if url.scheme == "gs" else url
+        self.url = url.geturl()
 
     @property  # type: ignore
     def name(self) -> str:
@@ -958,6 +960,7 @@ class SnowflakeDatabase(BaseDatabase):
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
         # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
+        sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         self.run_sql(sql=sql)
 
