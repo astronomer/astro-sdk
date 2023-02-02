@@ -15,11 +15,11 @@ class LoadOptions:
         return attr.asdict(self)
 
 
-def check_required_option(load_options: Optional[LoadOptions], option_name: str) -> bool:
+def contains_required_option(load_options: Optional[LoadOptions], option_name: str) -> bool:
     """
     Check required options in load_option class
     """
-    return load_options and getattr(load_options, option_name)
+    return bool(load_options and getattr(load_options, option_name))
 
 
 def list_to_dict(value: Optional[List[LoadOptions]]) -> Optional[Dict[str, LoadOptions]]:

@@ -4,7 +4,7 @@ from astro.dataframes.load_options import (
     PandasNdjsonLoadOptions,
     PandasParquetLoadOptions,
 )
-from astro.options import LoadOptionsList, check_required_option
+from astro.options import LoadOptionsList, contains_required_option
 
 
 def test_load_options_list():
@@ -32,11 +32,11 @@ def test_load_options_list():
     assert load_option is None
 
 
-def test_check_required_option():
+def test_contains_required_option():
     """
     Test if a required param is present in a load_options class object
     """
     load_option = PandasCsvLoadOptions(delimiter="$")
-    assert check_required_option(load_option, "delimiter") is True
-    assert check_required_option(load_option, "non-existing-option") is False
-    assert check_required_option(None, "non-existing-option") is False
+    assert contains_required_option(load_option, "delimiter") is True
+    assert contains_required_option(load_option, "non-existing-option") is False
+    assert contains_required_option(None, "non-existing-option") is False

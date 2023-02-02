@@ -8,7 +8,7 @@ from azure.core.exceptions import ResourceNotFoundError
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
-from astro.options import check_required_option
+from astro.options import contains_required_option
 
 
 class WASBLocation(BaseFileLocation):
@@ -102,7 +102,7 @@ class WASBLocation(BaseFileLocation):
          "wasb://<container_name>/<filename>" or "wasbs://<container_name>/<filename>"
          To bridge the gap we use this method
         """
-        if not check_required_option(self.load_options, "storage_account"):
+        if not contains_required_option(self.load_options, "storage_account"):
             raise ValueError(
                 f"Required param missing 'storage_account', pass {self.LOAD_OPTIONS_CLASS_NAME}"
                 f"(storage_account=<account_name>) to load_options"
