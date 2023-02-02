@@ -137,10 +137,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         :param context: Dict with values to apply on content
         :param jinja_env: Jinja environment
         """
-        output = super().render_template_fields(context, jinja_env)
         context = self._enrich_context(context)
 
-        return output
+        return super().render_template_fields(context, jinja_env)
 
     def execute(self, context: Context) -> None:
         self._enrich_context(context)
