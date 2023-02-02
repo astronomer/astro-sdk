@@ -393,7 +393,7 @@ class SnowflakeDatabase(BaseDatabase):
         file_options = [f"{k}={v}" for k, v in self.load_options.file_options.items()]
         file_options.extend([f"TYPE={fileformat}", "TRIM_SPACE=TRUE"])
         file_options_str = ", ".join(file_options)
-        copy_options_str = ", ".join(copy_options)  # type:ignore
+        copy_options_str = ", ".join(copy_options)
         sql_statement = "".join(
             [
                 f"CREATE OR REPLACE STAGE {stage.qualified_name} URL='{stage.url}' ",

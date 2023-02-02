@@ -424,6 +424,13 @@ If you want to provide the list of load options(specific to database or file loc
 
     - :py:obj:`SnowflakeLoadOptions <astro.options.SnowflakeLoadOptions>` - Load options to load file to snowflake using native approach.
 
+        .. note::
+
+            ``file_options`` default to
+                ```
+                file_options={"TYPE": "filetype", "TRIM_SPACE": True},
+                ```
+
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_23]
