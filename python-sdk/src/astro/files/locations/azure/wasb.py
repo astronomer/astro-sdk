@@ -17,6 +17,7 @@ class WASBLocation(BaseFileLocation):
     location_type = FileLocation.WASB
     supported_conn_type = {WasbHook.conn_type, "wasbs"}
     LOAD_OPTIONS_CLASS_NAME = "WASBLocationLoadOptions"
+    AZURE_HOST = "blob.core.windows.net"
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
@@ -108,11 +109,10 @@ class WASBLocation(BaseFileLocation):
                 f"(storage_account=<account_name>) to load_options"
             )
         url = urlparse(self.path)
-        azure_host = "blob.core.windows.net"
         return urlunparse(
             (
                 FileLocation.AZURE,
-                f"{self.load_options.storage_account}.{azure_host}",  # type: ignore
+                f"{self.load_options.storage_account}.{self.AZURE_HOST}",  # type: ignore
                 url.netloc,
                 "",
                 "",
