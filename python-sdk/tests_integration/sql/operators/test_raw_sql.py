@@ -7,6 +7,7 @@ from airflow.decorators import task
 
 from astro import sql as aql
 from astro.constants import Database
+from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.table import BaseTable
 
@@ -226,15 +227,17 @@ def test_run_raw_sql_handle_multiple_tables(sample_dag, database_table_fixture):
     """
     _, test_table = database_table_fixture
 
-    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()))
+    @aql.run_raw_sql(handler=lambda x: PandasDataframe(x.fetchall(), columns=x.keys()))
     def raw_sql_query_1(input_table: BaseTable):
         return "SELECT * from {{input_table}}"
 
-    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()))
+    @aql.run_raw_sql(handler=lambda x: PandasDataframe(x.fetchall(), columns=x.keys()))
     def raw_sql_query_2(input_table: BaseTable):
         return "SELECT * from {{input_table}}"
 
-    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()), conn_id="sqlite_default")
+    @aql.run_raw_sql(
+        handler=lambda x: PandasDataframe(x.fetchall(), columns=x.keys()), conn_id="sqlite_default"
+    )
     def raw_sql_query_3(table_1: BaseTable, table_2: BaseTable):
         assert table_1.name != table_2.name
         return "SELECT 1 + 1"
