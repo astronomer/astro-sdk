@@ -109,13 +109,9 @@ class WASBLocation(BaseFileLocation):
                 f"(storage_account=<account_name>) to load_options"
             )
         url = urlparse(self.path)
-        return urlunparse(
-            (
-                FileLocation.AZURE,
-                f"{self.load_options.storage_account}.{self.AZURE_HOST}",  # type: ignore
-                url.netloc,
-                "",
-                "",
-                "",
-            )
+        url = url._replace(
+            scheme=str(FileLocation.AZURE),
+            path=f"{url.netloc}/",
+            netloc=f"{self.load_options.storage_account}.{self.AZURE_HOST}",  # type: ignore
         )
+        return url.geturl()
