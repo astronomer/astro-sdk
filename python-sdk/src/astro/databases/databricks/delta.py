@@ -232,7 +232,7 @@ class DeltaDatabase(BaseDatabase):
             )
             return True
         except ServerOperationError as s:
-            if "Table or view not found" in s.message:
+            if "TABLE_OR_VIEW_NOT_FOUND" in s.message:
                 return False
             else:
                 raise s
