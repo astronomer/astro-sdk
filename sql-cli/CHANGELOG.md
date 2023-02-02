@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+Pin Python SDK to 1.4.x, so the SQL CLI and Astro CLI are not affected by breaking changes introduced in the project.
+
+
 ## 0.3.1
 
 ### Features
