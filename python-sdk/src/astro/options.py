@@ -57,10 +57,28 @@ class SnowflakeLoadOptions(LoadOptions):
         https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#format-type-options-formattypeoptions
     :param copy_options: Specify one or more of the copy option as key-value pair. Read more at:
         https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions
+    :param storage_integration: Specify the previously created Snowflake storage integration
+    :param validation_mode: Defaults to `validation_mode=None`. This instructs the COPY command to validate the data
+        files instead of loading them into the specified table; i.e. the COPY command tests the files for errors but
+        does not load them. Supported validation mode; `RETURN_n_ROWS` | `RETURN_ERRORS` | `RETURN_ALL_ERRORS`
+
+    .. note::
+        Specify the supported validation mode;
+
+        - `RETURN_n_ROWS`: validates the specified n rows if no errors are encountered; otherwise, fails at the first
+          error encountered in the rows.
+        - `RETURN_ERRORS`: returns all errors (parsing, conversion, etc.) across all files specified in the COPY
+          statement.
+        - `RETURN_ALL_ERRORS`: returns all errors across all files specified in the `COPY` statement, including files
+          with errors that were partially loaded during an earlier load because the `ON_ERROR` copy option was set
+          to `CONTINUE` during the load.
+
+        Read more at: https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#optional-parameters
     """
 
     file_options: dict = attr.field(init=True, factory=dict)
     copy_options: dict = attr.field(init=True, factory=dict)
+    validation_mode: str = attr.field(default=None)
     storage_integration: str = attr.field(default=None)
 
     def empty(self):
