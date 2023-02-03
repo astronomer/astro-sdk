@@ -1,6 +1,6 @@
 {
   "astroCliCompatibility": {
-    "1.10.0": {
+    "1.10": {
       "preRelease": false,
       "sqlCliVersion": ">0.2.2"
     },
@@ -11,6 +11,10 @@
     "1.9.0": {
       "preRelease": false,
       "sqlCliVersion": ">0.2, <0.3"
+    },
+    "default": {
+      "preRelease": false,
+      "sqlCliVersion": ">0.2.2"
     }
   },
   "baseDockerImage": "quay.io/astronomer/astro-runtime:6.0.4-base",
