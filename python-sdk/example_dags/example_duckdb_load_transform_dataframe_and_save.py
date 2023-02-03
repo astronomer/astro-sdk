@@ -10,8 +10,8 @@ from astro import sql as aql
 from astro.files import File
 from astro.table import Table
 
-DUCKDB_CONN_ID = "duckdb_default"
-AWS_CONN_ID = "aws_default"
+DUCKDB_CONN_ID = "duckdb_conn"
+AWS_CONN_ID = "aws_conn"
 
 
 @aql.transform()
@@ -43,7 +43,7 @@ def example_duckdb_load_transform_dataframe_and_save():
     adoption_center_data = aql.load_file(
         input_file=File("s3://tmp9/ADOPTION_CENTER_2_unquoted.csv", conn_id=AWS_CONN_ID),
         task_id="adoption_center_data",
-        output_table=Table(conn_id="duckdb_default"),
+        output_table=Table(conn_id=DUCKDB_CONN_ID),
     )
 
     filtered_dataframe = filter_data(
@@ -52,7 +52,7 @@ def example_duckdb_load_transform_dataframe_and_save():
 
     aggregated_dataframe = aggregate_data(
         filtered_dataframe,
-        output_table=Table(conn_id="duckdb_default"),
+        output_table=Table(conn_id=DUCKDB_CONN_ID),
     )
 
     s3_bucket = os.getenv("GCS_BUCKET", "s3://astro-sdk")
@@ -61,7 +61,7 @@ def example_duckdb_load_transform_dataframe_and_save():
         input_data=aggregated_dataframe,
         output_file=File(
             path=f"{s3_bucket}/{{{{ task_instance_key_str }}}}/aggregated_data_duckdb.csv",
-            conn_id="aws_default",
+            conn_id=AWS_CONN_ID,
         ),
         if_exists="replace",
     )
