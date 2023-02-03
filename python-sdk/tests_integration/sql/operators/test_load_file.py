@@ -552,13 +552,13 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
 
     with mock.patch("astro.databases.snowflake.SnowflakeDatabase.truncate_table"), mock.patch(
         chunk_function
-    ) as mock_chunk_function, sample_dag:
+    ) as mock_chunk_function, sample_dag as trail_dag:
         load_file(
             input_file=File(path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))),
             output_table=test_table,
             use_native_support=False,
         )
-        test_utils.run_dag(sample_dag)
+        test_utils.run_dag(trail_dag)
 
     _, kwargs = mock_chunk_function.call_args
     assert kwargs[chunk_size_argument] == 1000000
