@@ -7,6 +7,7 @@ import random
 import string
 from dataclasses import dataclass, field
 from typing import Any, Sequence
+from urllib.parse import urlparse
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -58,7 +59,13 @@ DEFAULT_STORAGE_INTEGRATION = {
 }
 
 NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
-NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
+NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (
+    FileLocation.GS,
+    FileLocation.S3,
+    FileLocation.WASB,
+    FileLocation.WASBS,
+    FileLocation.AZURE,
+)
 
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.PARQUET}
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS, FileLocation.S3}
@@ -186,8 +193,10 @@ class SnowflakeStage:
         """
         # the stage URL needs to be the folder where the files are
         # https://docs.snowflake.com/en/sql-reference/sql/create-stage.html#external-stage-parameters-externalstageparams
-        url = file.path[: file.path.rfind("/") + 1]
-        self.url = url.replace("gs://", "gcs://")
+        url = urlparse(file.location.snowflake_stage_path)
+        url = url._replace(path=url.path[: url.path.rfind("/") + 1])
+        url = url._replace(scheme="gcs") if url.scheme == "gs" else url
+        self.url = url.geturl()
 
     @property  # type: ignore
     def name(self) -> str:
@@ -379,6 +388,7 @@ class SnowflakeDatabase(BaseDatabase):
             `Snowflake official documentation on stage creation
             <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
         """
+
         auth = self._create_stage_auth_sub_statement(file=file, storage_integration=storage_integration)
 
         if not self.load_options:
@@ -966,6 +976,7 @@ class SnowflakeDatabase(BaseDatabase):
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
         # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
+        sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         self.run_sql(sql=sql)
 

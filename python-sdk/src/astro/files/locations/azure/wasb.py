@@ -8,6 +8,7 @@ from azure.core.exceptions import ResourceNotFoundError
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
+from astro.options import contains_required_option
 
 
 class WASBLocation(BaseFileLocation):
@@ -15,6 +16,8 @@ class WASBLocation(BaseFileLocation):
 
     location_type = FileLocation.WASB
     supported_conn_type = {WasbHook.conn_type, "wasbs"}
+    LOAD_OPTIONS_CLASS_NAME = "WASBLocationLoadOptions"
+    AZURE_HOST = "blob.core.windows.net"
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
@@ -89,3 +92,26 @@ class WASBLocation(BaseFileLocation):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         return urlparse(self.path).path
+
+    @property
+    def snowflake_stage_path(self) -> str:
+        """
+        Get the altered path if needed for stage creation in snowflake stage creation. We need to modify the path since
+         Snowflake only accepts paths of format for stage creation:
+         "azure://<storage_account>.blob.core.windows.net/<container_name>/load/files/"
+         But SDK accepts paths
+         "wasb://<container_name>/<filename>" or "wasbs://<container_name>/<filename>"
+         To bridge the gap we use this method
+        """
+        if not contains_required_option(self.load_options, "storage_account"):
+            raise ValueError(
+                f"Required param missing 'storage_account', pass {self.LOAD_OPTIONS_CLASS_NAME}"
+                f"(storage_account=<account_name>) to load_options"
+            )
+        url = urlparse(self.path)
+        url = url._replace(
+            scheme=str(FileLocation.AZURE),
+            path=f"{url.netloc}/",
+            netloc=f"{self.load_options.storage_account}.{self.AZURE_HOST}",  # type: ignore
+        )
+        return url.geturl()

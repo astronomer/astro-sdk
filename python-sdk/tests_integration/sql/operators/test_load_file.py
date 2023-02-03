@@ -15,6 +15,7 @@ from astro.dataframes.load_options import PandasCsvLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.options import SnowflakeLoadOptions, WASBLocationLoadOptions
 from astro.settings import SCHEMA
 from astro.sql import load_file
 from astro.table import Table
@@ -1367,3 +1368,33 @@ def test_tables_creation_if_they_dont_exist_mssql(database_table_fixture, if_exi
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 9)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        },
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_snowflake_azure_native_path(sample_dag, database_table_fixture):
+    db, test_table = database_table_fixture
+
+    path = "wasb://astro-sdk/sample.csv"
+    with sample_dag:
+        load_file(
+            input_file=File(path),
+            output_table=test_table,
+            load_options=[
+                SnowflakeLoadOptions(storage_integration="AZURE_INT_PYTHON_SDK"),
+                WASBLocationLoadOptions(storage_account="astrosdk"),
+            ],
+            enable_native_fallback=False,
+        )
+    test_utils.run_dag(sample_dag)
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 2)
