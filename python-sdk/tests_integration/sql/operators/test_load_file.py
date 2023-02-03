@@ -1390,7 +1390,11 @@ def test_load_file_snowflake_azure_native_path(sample_dag, database_table_fixtur
             input_file=File(path),
             output_table=test_table,
             load_options=[
-                SnowflakeLoadOptions(storage_integration="AZURE_INT_PYTHON_SDK"),
+                SnowflakeLoadOptions(
+                    storage_integration="AZURE_INT_PYTHON_SDK",
+                    copy_options={"ON_ERROR": "CONTINUE"},
+                    file_options={"TYPE": "CSV", "TRIM_SPACE": True},
+                ),
                 WASBLocationLoadOptions(storage_account="astrosdk"),
             ],
             enable_native_fallback=False,
