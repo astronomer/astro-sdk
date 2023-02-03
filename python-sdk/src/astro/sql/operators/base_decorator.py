@@ -8,6 +8,7 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
+from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.airflow.datasets import kwargs_with_datasets
@@ -62,6 +63,40 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
+    def _resolve_xcom_op_kwargs(self, context: Context) -> None:
+        """
+        Iterate through self.op_kwargs, resolving any XCom values with the given context.
+        Replace those values in-place.
+
+        :param context: The Airflow Context to be used to resolve the op_kwargs.
+        """
+        # TODO: confirm if it makes sense for us to always replace the op_kwargs or if we should
+        # only replace those that are within the decorator signature, by using
+        # inspect.signature(self.python_callable).parameters.values()
+        kwargs = {}
+        for kwarg_name, kwarg_value in self.op_kwargs.items():
+            if isinstance(kwarg_value, XComArg):
+                kwargs[kwarg_name] = kwarg_value.resolve(context)
+            else:
+                kwargs[kwarg_name] = kwarg_value
+        self.op_kwargs = kwargs
+
+    def _resolve_xcom_op_args(self, context: Context) -> None:
+        """
+        Iterates through self.op_args, resolving any XCom values with the given context.
+        Replace those values in-place.
+
+        :param context: The Airflow Context used to resolve the op_args.
+        """
+        args = []
+        for arg_value in self.op_args:
+            if isinstance(arg_value, XComArg):
+                item = arg_value.resolve(context)
+            else:
+                item = arg_value
+            args.append(item)
+        self.op_args = args  # type: ignore
+
     def _enrich_context(self, context: Context) -> Context:
         """
         Prepare the sql and context for execution.
@@ -75,6 +110,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         :return: the enriched context with astro specific information.
         """
+        self._resolve_xcom_op_args(context)
+        self._resolve_xcom_op_kwargs(context)
+
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -138,7 +176,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         :param jinja_env: Jinja environment
         """
         context = self._enrich_context(context)
-
         return super().render_template_fields(context, jinja_env)
 
     def execute(self, context: Context) -> None:
@@ -220,6 +257,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 ) = self.database_impl.get_sqlalchemy_template_table_identifier_and_parameter(v, k)
                 context[k] = jinja_table_identifier
                 self.parameters[k] = jinja_table_parameter_value
+            # elif isinstance(v, pd.DataFrame):
+            #    raise Exception("I should not be here")
             else:
                 context[k] = self.database_impl.parameterize_variable(k)
 
