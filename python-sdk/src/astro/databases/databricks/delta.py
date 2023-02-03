@@ -112,7 +112,8 @@ class DeltaDatabase(BaseDatabase):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)};"
         if row_limit > -1:
             statement = statement + f" LIMIT {row_limit}"
-        return self.run_sql(statement, handler=lambda x: x.fetchall())  # type: ignore
+        result = self.run_sql(statement)
+        return result.fetchall()  # type: ignore
 
     def load_file_to_table(
         self,
@@ -190,15 +191,15 @@ class DeltaDatabase(BaseDatabase):
     def row_count(self, table: BaseTable):
         result = self.run_sql(
             f"SELECT COUNT(*) FROM {self.get_table_qualified_name(table)}",  # skipcq: BAN-B608
-            handler=lambda x: x.fetchone(),
         )
+        result = result.fetchone()
         return result.asDict()["count(1)"]
 
     def run_sql(
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
-        handler=None,
+        # handler=None,
         **kwargs,
     ):
         """
@@ -213,7 +214,7 @@ class DeltaDatabase(BaseDatabase):
         hook = DatabricksSqlHook(
             databricks_conn_id=self.conn_id,
         )
-        return hook.run(sql, parameters=parameters, handler=handler)
+        return hook.run(sql, parameters=parameters, handler=lambda x: x)
 
     def table_exists(self, table: BaseTable) -> bool:
         """
