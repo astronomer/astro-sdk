@@ -67,19 +67,6 @@ class DuckdbDatabase(BaseDatabase):
         Since Duckdb does not have schemas, we do not need to set a schema here.
         """
 
-    def schema_exists(self, schema: str) -> bool:  # skipcq PYL-W0613,PYL-R0201
-        """
-        Check if a schema exists. We return false for duckdb since duckdb does not have schemas
-        """
-        return False
-
-    @staticmethod
-    def get_merge_initialization_query(parameters: tuple) -> str:
-        """
-        Handles database-specific logic to handle index for DuckDB.
-        """
-        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)  # skipcq PYL-C0209
-
     def merge_table(
         self,
         source_table: BaseTable,
@@ -116,7 +103,6 @@ class DuckdbDatabase(BaseDatabase):
             update_statements=",".join(update_statements),
             merge_keys=",".join(list(target_conflict_columns)),
         )
-
         self.run_sql(sql=query)
 
     def get_sqla_table(self, table: BaseTable) -> SqlaTable:

@@ -12,6 +12,7 @@ from astro.table import Table
 
 DUCKDB_CONN_ID = "duckdb_conn"
 AWS_CONN_ID = "aws_conn"
+s3_bucket = os.getenv("S3_BUCKET", "s3://astro-sdk")
 
 
 @aql.transform()
@@ -34,7 +35,7 @@ def aggregate_data(df: pd.DataFrame):
     schedule_interval=None,
     default_args={
         "email_on_failure": False,
-        "retries": 0,
+        "retries": 2,
         "retry_delay": timedelta(minutes=5),
     },
     catchup=False,
@@ -55,7 +56,6 @@ def example_duckdb_load_transform_dataframe_and_save():
         output_table=Table(conn_id=DUCKDB_CONN_ID),
     )
 
-    s3_bucket = os.getenv("GCS_BUCKET", "s3://astro-sdk")
     aql.export_to_file(
         task_id="save_file_to_gcs",
         input_data=aggregated_dataframe,
