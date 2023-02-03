@@ -4,6 +4,10 @@
       "preRelease": false,
       "sqlCliVersion": ">0.2.2"
     },
+    "1.10.0": {
+      "preRelease": false,
+      "sqlCliVersion": ">0.2.2"
+    },
     "1.8.0": {
       "preRelease": false,
       "sqlCliVersion": ">0.2, <0.3"
