@@ -15,6 +15,13 @@ class LoadOptions:
         return attr.asdict(self)
 
 
+def contains_required_option(load_options: Optional[LoadOptions], option_name: str) -> bool:
+    """
+    Check required options in load_option class
+    """
+    return bool(load_options and getattr(load_options, option_name, None))
+
+
 def list_to_dict(value: Optional[List[LoadOptions]]) -> Optional[Dict[str, LoadOptions]]:
     """
     Convert list object to dict
@@ -83,3 +90,8 @@ class SnowflakeLoadOptions(LoadOptions):
 
     def empty(self):
         return not self.file_options and not self.copy_options
+
+
+@attr.define
+class WASBLocationLoadOptions(LoadOptions):
+    storage_account: str = attr.field(default=None)
