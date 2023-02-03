@@ -35,7 +35,8 @@ def test_delta_run_sql():
     """Run a SQL statement using plain string."""
     statement = "SELECT 1 + 1;"
     database = DeltaDatabase(DEFAULT_CONN_ID)
-    response = database.run_sql(statement, handler=lambda x: x.fetchone())
+    response = database.run_sql(statement)
+    response = response.fetchone()
     assert response.asDict()["(1 + 1)"] == 2
 
 
@@ -44,7 +45,8 @@ def test_delta_run_sql_with_parameters():
     """Test running a SQL query using SQLAlchemy templating engine"""
     statement = "SELECT 1 + %(value)s;"
     database = DeltaDatabase(DEFAULT_CONN_ID)
-    response = database.run_sql(statement, parameters={"value": 1}, handler=lambda x: x.fetchone())
+    response = database.run_sql(statement, parameters={"value": 1})
+    response = response.fetchone()
     assert response.asDict()["(1 + 1)"] == 2
 
 
@@ -79,7 +81,8 @@ def test_delta_create_table_with_columns(database_table_fixture):
     assert not database.table_exists(table)
     database.create_table(table)
     statement = f"DESCRIBE TABLE {table.name};"
-    rows = database.run_sql(statement, handler=lambda x: x.fetchall())
+    rows = database.run_sql(statement)
+    rows = rows.fetchall()()
     assert len(rows) == 2
     assert rows[0] == Row(col_name="id", data_type="int", comment=None)
     assert rows[1] == Row(col_name="name", data_type="varchar(60)", comment=None)
