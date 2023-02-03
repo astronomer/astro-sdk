@@ -10,9 +10,14 @@ from sqlalchemy.exc import ProgrammingError
 
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
-from astro.databases.snowflake import SnowflakeDatabase, SnowflakeStage
+from astro.databases.snowflake import (
+    ProgrammingError as SnowflakeProgrammingError,
+    SnowflakeDatabase,
+    SnowflakeStage,
+)
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File
+from astro.options import SnowflakeLoadOptions
 from astro.settings import SCHEMA, SNOWFLAKE_STORAGE_INTEGRATION_AMAZON, SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
 from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
@@ -213,10 +218,12 @@ def test_load_file_to_table(database_table_fixture):
 def test_load_file_from_cloud_to_table(database_table_fixture):
     """Test loading on files to snowflake database"""
     database, target_table = database_table_fixture
+    database.load_options = SnowflakeLoadOptions(
+        copy_options={"ON_ERROR": "CONTINUE"}, file_options={"TYPE": "CSV", "TRIM_SPACE": True}
+    )
     database.load_file_to_table(
-        File("s3://astro-sdk/data/", conn_id="aws_conn", filetype=FileType.CSV),
-        target_table,
-        {},
+        input_file=File("s3://astro-sdk/data/", conn_id="aws_conn", filetype=FileType.CSV),
+        output_table=target_table,
     )
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
@@ -478,8 +485,14 @@ def test_load_file_to_table_natively(remote_files_fixture, database_table_fixtur
     """Load a file to a Snowflake table using the native optimisation."""
     filepath = remote_files_fixture[0]
     database, target_table = database_table_fixture
-    database.load_file_to_table(File(filepath), target_table, {}, use_native_support=True)
-
+    database.load_options = SnowflakeLoadOptions(
+        copy_options={"ON_ERROR": "CONTINUE"}, file_options={"TYPE": "CSV", "TRIM_SPACE": True}
+    )
+    database.load_file_to_table(
+        File(filepath),
+        target_table,
+        use_native_support=True,
+    )
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 3
     expected = pd.DataFrame(
@@ -517,6 +530,159 @@ def test_export_table_to_file_file_already_exists_raises_exception(
         database.export_table_to_file(source_table, File(str(filepath)))
     err_msg = exception_info.value.args[0]
     assert err_msg.endswith(f"The file {filepath} already exists.")
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "amazon", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["amazon_csv"],
+)
+def test_load_file_to_table_natively_with_validation_mode(remote_files_fixture, database_table_fixture):
+    """Load a file to a Snowflake table using the native optimisation with validation mode."""
+    filepath = remote_files_fixture[0]
+    database, target_table = database_table_fixture
+    database.load_options = SnowflakeLoadOptions(
+        copy_options={"ON_ERROR": "CONTINUE"},
+        file_options={"TYPE": "CSV", "TRIM_SPACE": True, "SKIP_HEADER": 1, "SKIP_BLANK_LINES": True},
+        validation_mode="RETURN_ROWS",
+    )
+    database.load_file_to_table(
+        File(filepath),
+        target_table,
+        use_native_support=True,
+    )
+    df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
+    assert len(df) == 3
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    )
+    test_utils.assert_dataframes_are_equal(df, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "amazon", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["amazon_csv"],
+)
+def test_load_file_to_table_natively_with_validation_mode_for_error(
+    remote_files_fixture, database_table_fixture
+):
+    """
+    Load a file to a Snowflake table using the native path with validation mode for error as header is not skipped.
+    """
+    filepath = remote_files_fixture[0]
+    database, target_table = database_table_fixture
+    database.load_options = SnowflakeLoadOptions(
+        copy_options={"ON_ERROR": "CONTINUE"},
+        file_options={"TYPE": "CSV", "TRIM_SPACE": True},
+        validation_mode="RETURN_ROWS",
+    )
+    with pytest.raises(SnowflakeProgrammingError) as err:
+        database.load_file_to_table(
+            File(filepath),
+            target_table,
+            use_native_support=True,
+        )
+    assert "Numeric value 'id' is not recognized" in str(err.value)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "amazon", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["amazon_csv"],
+)
+def test_load_file_to_table_natively_with_error_on_continue(remote_files_fixture, database_table_fixture):
+    """Load a file to a Snowflake table using the native path when ON_ERROR=CONTINUE is not passed."""
+    filepath = remote_files_fixture[0]
+    database, target_table = database_table_fixture
+    database.load_options = SnowflakeLoadOptions(
+        file_options={"TYPE": "CSV", "TRIM_SPACE": True},
+    )
+    with pytest.raises(SnowflakeProgrammingError) as err:
+        database.load_file_to_table(
+            File(filepath),
+            target_table,
+            use_native_support=True,
+        )
+    assert "use other values such as 'SKIP_FILE' or 'CONTINUE' for the ON_ERROR option" in str(err.value)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "amazon", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["amazon_csv"],
+)
+def test_load_file_to_table_natively_with_validation_mode_for_returning_all_error(
+    remote_files_fixture, database_table_fixture
+):
+    """Load a file to a Snowflake table using the native path with validation mode for returning all errors"""
+    filepath = remote_files_fixture[0]
+    database, target_table = database_table_fixture
+    database.load_options = SnowflakeLoadOptions(
+        validation_mode="RETURN_ALL_ERRORS",
+    )
+    with pytest.raises(SnowflakeProgrammingError) as err:
+        database.load_file_to_table(
+            File(filepath),
+            target_table,
+            use_native_support=True,
+        )
+    assert (
+        "If you would like to continue loading when an error is encountered, use "
+        "other values such as 'SKIP_FILE' or 'CONTINUE' for the ON_ERROR option" in str(err.value)
+    )
 
 
 @pytest.mark.integration

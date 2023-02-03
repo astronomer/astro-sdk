@@ -51,11 +51,6 @@ ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP = {
     FileType.PARQUET: "PARQUET",
 }
 
-COPY_OPTIONS = {
-    FileType.CSV: "ON_ERROR=CONTINUE",
-    FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
-    FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
-}
 
 DEFAULT_STORAGE_INTEGRATION = {
     FileLocation.S3: settings.SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
@@ -393,7 +388,7 @@ class SnowflakeDatabase(BaseDatabase):
         stage.set_url_from_file(file)
 
         fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
-        copy_options = [COPY_OPTIONS[file.type.name]]
+        copy_options = []
         copy_options.extend([f"{k}={v}" for k, v in self.load_options.copy_options.items()])
         file_options = [f"{k}={v}" for k, v in self.load_options.file_options.items()]
         file_options.extend([f"TYPE={fileformat}", "TRIM_SPACE=TRUE"])
@@ -407,7 +402,7 @@ class SnowflakeDatabase(BaseDatabase):
                 auth,
             ]
         )
-
+        logging.debug("SQL statement executed: %s ", sql_statement)
         self.run_sql(sql_statement)
 
         return stage
@@ -622,6 +617,8 @@ class SnowflakeDatabase(BaseDatabase):
         file_path = os.path.basename(source_file.path) or ""
         sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
 
+        self._validate_before_copy_into(source_file, target_table, stage)
+
         # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
         # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
         # if we pass the handler provider raises an exception AttributeError
@@ -637,6 +634,25 @@ class SnowflakeDatabase(BaseDatabase):
         finally:
             self.drop_stage(stage)
         return rows
+
+    def _validate_before_copy_into(
+        self, source_file: File, target_table: BaseTable, stage: SnowflakeStage
+    ) -> None:
+        """Validate COPY INTO command to tests the files for errors but does not load them."""
+        if self.load_options:
+            if self.load_options.validation_mode is None:
+                return
+            table_name = self.get_table_qualified_name(target_table)
+            file_path = os.path.basename(source_file.path) or ""
+            sql_statement = (
+                f"COPY INTO {table_name} FROM "
+                f"@{stage.qualified_name}/{file_path} VALIDATION_MODE='{self.load_options.validation_mode}'"
+            )
+            try:
+                self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
+            except ProgrammingError as load_exception:
+                self.drop_stage(stage)
+                raise load_exception
 
     @staticmethod
     def evaluate_results(rows):
