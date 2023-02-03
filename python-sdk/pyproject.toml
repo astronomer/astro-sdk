@@ -95,8 +95,7 @@ mssql = [
 ]
 
 duckdb = [
-    "airflow-provider-duckdb",
-    "duckdb-engine"
+    "airflow-provider-duckdb>=0.0.2",
 ]
 
 all = [
@@ -118,8 +117,7 @@ all = [
     "apache-airflow-providers-microsoft-azure",
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
-    "airflow-provider-duckdb",
-    "duckdb-engine"
+    "airflow-provider-duckdb>=0.0.2",
 ]
 doc = [
     "myst-parser>=0.17",
