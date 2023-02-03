@@ -133,9 +133,8 @@ class DuckdbDatabase(BaseDatabase):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         Example: /tmp/local.duckdb.table_name
         """
-        uri = self.hook.get_uri()
-        conn_with_port = uri.removeprefix("duckdb:///")
-        return f"{conn_with_port}.{table.name}"
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.host}.{table.name}"
 
     def openlineage_dataset_namespace(self) -> str:
         """
