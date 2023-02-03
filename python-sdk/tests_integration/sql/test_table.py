@@ -73,6 +73,12 @@ from astro.table import Metadata, Table
             f"file://{socket.gethostbyname(socket.gethostname())}:22",
             f"file://{socket.gethostbyname(socket.gethostname())}:22/tmp/sqlite.db.test_tb",
         ),
+        (
+            Connection(conn_id="test_duckdb", conn_type="duckdb", host="/tmp/duckdb.db"),
+            "/tmp/duckdb.db.test_tb",
+            f"file://{socket.gethostbyname(socket.gethostname())}:22",
+            f"file://{socket.gethostbyname(socket.gethostname())}:22/tmp/duckdb.db.test_tb",
+        ),
     ],
 )
 @mock.patch("airflow.providers.google.cloud.utils.credentials_provider.get_credentials_and_project_id")

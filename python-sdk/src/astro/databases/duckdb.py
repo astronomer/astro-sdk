@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import socket
+
 from duckdb_provider.hooks.duckdb_hook import DuckDBHook
 from sqlalchemy import MetaData as SqlaMetaData
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-#
 from astro.constants import MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.options import LoadOptions
@@ -133,7 +134,7 @@ class DuckdbDatabase(BaseDatabase):
         Example: /tmp/local.duckdb.table_name
         """
         uri = self.hook.get_uri()
-        conn_with_port = uri.removeprefix("duckdb://")
+        conn_with_port = uri.removeprefix("duckdb:///")
         return f"{conn_with_port}.{table.name}"
 
     def openlineage_dataset_namespace(self) -> str:
@@ -142,9 +143,9 @@ class DuckdbDatabase(BaseDatabase):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         Example: duckdb://127.0.0.1:22
         """
-        uri = self.hook.get_uri()
-        conn_with_port = uri.removeprefix("duckdb://")
-        return f"duckdb:/{conn_with_port}"
+        conn = self.hook.get_connection(self.conn_id)
+        port = conn.port or 22
+        return f"file://{socket.gethostbyname(socket.gethostname())}:{port}"
 
     def openlineage_dataset_uri(self, table: BaseTable) -> str:
         """
