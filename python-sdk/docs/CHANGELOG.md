@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.5.0
+
+### Feature:
+- Support Microsoft SQL as Database [#1538](https://github.com/astronomer/astro-sdk/pull/1538)
+- Support DuckDB as Database. `aql.merge` requires a fix on DuckDB as `UPDATE/IGNORE` clause is not supported as per [bug on duckdb](https://github.com/duckdb/duckdb/issues/6087) [#1695](https://github.com/astronomer/astro-sdk/pull/1695)
+- Add `load_options` param to accept `pandasOptions` in `load_file` operator [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
+- Add `result_format` and `fail_on_empty` params to `run_raw_sql` operator [#1584](https://github.com/astronomer/astro-sdk/pull/1584)
+- Add support `validation_mode` as part of the `COPY INTO` command for snowflake. Specify the supported `validation_mode`; `RETURN_n_ROWS` or `RETURN_ERRORS` or `RETURN_ALL_ERRORS`. This instructs the `COPY INTO` command to validate the data files instead of loading them into the specified table; i.e. the `COPY INTO` command tests the files for errors but does not load them. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+- Add support for native transfers for Azure Blob Storage to Snowflake in `LoadFileOperator`. [#1675](https://github.com/astronomer/astro-sdk/pull/1675)
+
+### Improvements
+- Use cache to reduce redundant database calls [#1488](https://github.com/astronomer/astro-sdk/pull/1488)
+- Remove default `copy_options` as part of `SnowflakeLoadOptions`. All `copy_options` are now supported as part of `SnowflakeLoadOptions` as per [documentation](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions). [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+
+### Bug fixes
+- When multiple dataframes are passed to `run_raw_sql`, every dataframe should be loaded to different temporary tables. [#1684](https://github.com/astronomer/astro-sdk/pull/1684)
+
+### Docs
+- Add documentation around Microsoft SQL support with example DAG. [#1538](https://github.com/astronomer/astro-sdk/pull/1538)
+- Add documentation around DuckDB support with example DAG. [#1695](https://github.com/astronomer/astro-sdk/pull/1695)
+- Add documentation for `validation_mode` as part of the `COPY INTO` command for snowflake. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+- Add documentation and example DAGs for snowflake `SnowflakeLoadOptions` for various available options around `copy_options` and `file_options`. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+
+### Misc
+- Fix the deepsource issues. [#1422](https://github.com/astronomer/astro-sdk/issues/1422)
+- Add cleanup DAG to clean snowflake tables created as part of CI when the runners fail as part of GitHub actions. [#1663](https://github.com/astronomer/astro-sdk/issues/1663)
+- Run example DAGs on astro-cloud and collect the results. [#1499](https://github.com/astronomer/astro-sdk/pull/1499)
+
 ## 1.4.1
 
 ### Feature:
