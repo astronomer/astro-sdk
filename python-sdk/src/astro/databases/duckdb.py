@@ -67,6 +67,13 @@ class DuckdbDatabase(BaseDatabase):
         Since Duckdb does not have schemas, we do not need to set a schema here.
         """
 
+    @staticmethod
+    def get_merge_initialization_query(parameters: tuple) -> str:
+        """
+        Handles database-specific logic to handle index for DuckDB.
+        """
+        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)  # skipcq PYL-C0209
+
     def merge_table(
         self,
         source_table: BaseTable,
