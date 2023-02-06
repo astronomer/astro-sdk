@@ -21,6 +21,7 @@ dag = DAG(
     max_active_runs=3,
     schedule_interval=timedelta(minutes=30),
     default_args=default_args,
+    catchup=False,
 )
 
 DATA_DIR = str(CWD) + "/data/"
