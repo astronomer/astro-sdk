@@ -107,6 +107,7 @@ class BaseDatabase(ABC):
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
+        handler: Callable | None = None,
         **kwargs,
     ) -> CursorResult:
         """

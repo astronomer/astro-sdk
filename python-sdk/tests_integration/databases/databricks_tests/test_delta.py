@@ -44,7 +44,7 @@ def test_delta_run_sql_with_parameters():
     """Test running a SQL query using SQLAlchemy templating engine"""
     statement = "SELECT 1 + %(value)s;"
     database = DeltaDatabase(DEFAULT_CONN_ID)
-    response = database.run_sql(statement, handler=lambda x: x.fetchone())
+    response = database.run_sql(statement, parameters={"value": 1}, handler=lambda x: x.fetchone())
     assert response.asDict()["(1 + 1)"] == 2
 
 
