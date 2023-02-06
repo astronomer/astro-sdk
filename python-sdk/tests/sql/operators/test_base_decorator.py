@@ -29,6 +29,7 @@ def test_get_source_code_handle_exception(mock_getsource, exception):
         py_callable=None
     )
 
+
 def test_load_op_arg_dataframes_into_sql():
     df_1 = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
     df_2 = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
@@ -44,6 +45,7 @@ def test_load_op_arg_dataframes_into_sql():
     assert isinstance(results[2], BaseTable)
     assert isinstance(results[3], str)
 
+
 def test_load_op_kwarg_dataframes_into_sql():
     df_1 = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
     df_2 = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
@@ -58,6 +60,7 @@ def test_load_op_kwarg_dataframes_into_sql():
 
     assert isinstance(results["table"], BaseTable)
     assert isinstance(results["some_str"], str)
+
 
 def test_base_sql_decorated_operator_template_fields_and_template_ext_with_sql():
     """
