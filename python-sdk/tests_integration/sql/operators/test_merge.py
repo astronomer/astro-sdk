@@ -112,9 +112,10 @@ def validate_results(df: pd.DataFrame, mode):
         {"database": Database.REDSHIFT},
         {"database": Database.POSTGRES},
         {"database": Database.MSSQL},
+        {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["redshift", "postgres", "mssql"],
+    ids=["redshift", "postgres", "mssql", "duckdb"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -150,9 +151,10 @@ def test_merge(database_table_fixture, multiple_tables_fixture, sample_dag, merg
         {"database": Database.BIGQUERY},
         {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
+        {"database": Database.DELTA},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "redshift", "delta"],
+    ids=["snowflake", "bigquery", "redshift", "delta", "duckdb"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -253,7 +255,9 @@ def test_merge_with_the_same_schema_on_mssql(database_table_fixture, multiple_ta
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [{"database": Database.BIGQUERY}],
+    [
+        {"database": Database.BIGQUERY},
+    ],
     indirect=True,
     ids=["bigquery"],
 )
