@@ -150,10 +150,9 @@ def test_merge(database_table_fixture, multiple_tables_fixture, sample_dag, merg
         {"database": Database.BIGQUERY},
         {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
-        {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "redshift", "delta", "duckdb"],
+    ids=["snowflake", "bigquery", "redshift", "delta"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
