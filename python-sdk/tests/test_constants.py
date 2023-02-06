@@ -15,6 +15,7 @@ def test_supported_databases():
     expected = {
         "bigquery",
         "delta",
+        "duckdb",
         "mssql",
         "postgres",
         "redshift",

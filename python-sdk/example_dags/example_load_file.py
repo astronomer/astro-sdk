@@ -37,6 +37,8 @@ REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 DATABRICKS_CONN_ID = "databricks_conn"
 MSSQL_CONN_ID = "mssql_conn"
+DUCKDB_CONN_ID = "duckdb_conn"
+AWS_CONN_ID = "aws_conn"
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -112,7 +114,7 @@ with dag:
 
     # [START load_file_example_7]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
@@ -120,7 +122,7 @@ with dag:
 
     # [START load_file_example_8]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
@@ -133,7 +135,7 @@ with dag:
 
     # [START load_file_example_9]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
@@ -155,7 +157,7 @@ with dag:
 
     # [START load_file_example_11]
     aql.load_file(
-        input_file=File("s3://astro-sdk/sample_pattern", conn_id="aws_conn", filetype=FileType.CSV),
+        input_file=File("s3://astro-sdk/sample_pattern", conn_id=AWS_CONN_ID, filetype=FileType.CSV),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
@@ -177,7 +179,7 @@ with dag:
     aql.load_file(
         input_file=File(
             "s3://astro-sdk/sample_pattern",
-            conn_id="aws_conn",
+            conn_id=AWS_CONN_ID,
             filetype=FileType.CSV,
         ),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
@@ -208,7 +210,7 @@ with dag:
 
     # [START load_file_example_16]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
@@ -292,7 +294,7 @@ with dag:
 
     # [START load_file_example_22]
     aql.load_file(
-        input_file=File("s3://tmp9/delimiter_dollar.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/delimiter_dollar.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
         ),
@@ -303,7 +305,7 @@ with dag:
 
     # [START load_file_example_23]
     aql.load_file(
-        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id="aws_conn"),
+        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
         ),
@@ -318,7 +320,7 @@ with dag:
 
     # [START load_file_example_24]
     aql.load_file(
-        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id="aws_conn"),
+        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
             conn_id=DATABRICKS_CONN_ID,
         ),
@@ -346,11 +348,20 @@ with dag:
 
     # [START load_file_example_26]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
             conn_id=MSSQL_CONN_ID,
         ),
     )
     # [END load_file_example_26]
+
+    # [START load_file_example_27]
+    aql.load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
+        output_table=Table(
+            conn_id=DUCKDB_CONN_ID,
+        ),
+    )
+    # [END load_file_example_27]
 
     aql.cleanup()

@@ -126,3 +126,9 @@ connections:
     port: 1433
     schema: $MSSQL_DB
     extra:
+  - conn_id: duckdb_conn
+    conn_type: duckdb
+    host: /tmp/ciduckdb.duckdb
+    schema:
+    login:
+    password:
