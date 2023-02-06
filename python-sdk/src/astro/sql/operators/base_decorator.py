@@ -179,7 +179,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         return super().render_template_fields(context, jinja_env)
 
     def execute(self, context: Context) -> None:
-        self._enrich_context(context)
+        context = self._enrich_context(context)
 
         # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
