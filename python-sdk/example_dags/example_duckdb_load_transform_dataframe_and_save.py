@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 
@@ -31,13 +31,7 @@ def aggregate_data(df: pd.DataFrame):
 
 @dag(
     start_date=datetime(2021, 1, 1),
-    max_active_runs=1,
     schedule_interval=None,
-    default_args={
-        "email_on_failure": False,
-        "retries": 2,
-        "retry_delay": timedelta(minutes=5),
-    },
     catchup=False,
 )
 def example_duckdb_load_transform_dataframe_and_save():
