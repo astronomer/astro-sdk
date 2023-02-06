@@ -45,9 +45,12 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     ```shell
     export AIRFLOW_HOME=`pwd`
     export AIRFLOW__CORE__XCOM_BACKEND=astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+    export AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV=true
     airflow db init
     ```
    > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled for `astro-sdk-python`. This functionality is now deprecated as our custom xcom backend handles serialization.
+
+    The `AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV` should only be used for local development. The [XCom backend docs](https://astro-sdk-python.readthedocs.io/en/latest/guides/xcom_backend.html#airflow_xcom_backend) give further details about how to set this up in non-local environments.
 
     Currently, custom XCom backends are limited to data types that are json serializable. Since Dataframes are not json serializable, we need to enable XCom pickling to store dataframes.
 
@@ -70,7 +73,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
    Alternatively, you can download `calculate_popular_movies.py`
    ```shell
-    curl -O https://raw.githubusercontent.com/astronomer/astro-sdk/main/example_dags/calculate_popular_movies.py
+    curl -O https://raw.githubusercontent.com/astronomer/astro-sdk/main/python-sdk/example_dags/calculate_popular_movies.py
    ```
 
 4. Run the example DAG:
