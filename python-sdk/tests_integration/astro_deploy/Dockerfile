@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/astro-runtime:7.1.0-base
+FROM quay.io/astronomer/astro-runtime:7.2.0-base
 
 COPY python-sdk /tmp/python-sdk
 RUN pip install /tmp/python-sdk[all]
