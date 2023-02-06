@@ -21,11 +21,13 @@
 - Add documentation around DuckDB support with example DAG. [#1695](https://github.com/astronomer/astro-sdk/pull/1695)
 - Add documentation for `validation_mode` as part of the `COPY INTO` command for snowflake. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
 - Add documentation and example DAGs for snowflake `SnowflakeLoadOptions` for various available options around `copy_options` and `file_options`. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+- Fix the documentation to run the quickstart example described in the Python SDK README. [#1716](https://github.com/astronomer/astro-sdk/pull/1716)
 
 ### Misc
 - Fix the deepsource issues. [#1422](https://github.com/astronomer/astro-sdk/issues/1422)
 - Add cleanup DAG to clean snowflake tables created as part of CI when the runners fail as part of GitHub actions. [#1663](https://github.com/astronomer/astro-sdk/issues/1663)
 - Run example DAGs on astro-cloud and collect the results. [#1499](https://github.com/astronomer/astro-sdk/pull/1499)
+
 
 ## 1.4.1
 
