@@ -3,7 +3,7 @@
 ## 1.5.0a1
 
 ### Feature:
-- Add `load_options` param to accept `pandasOptions` in `load_file` operator [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
+- Add `load_options` param to accept `PandasLoadOptions` in `load_file` operator [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
 - Add `result_format` and `fail_on_empty` params to `run_raw_sql` operator [#1584](https://github.com/astronomer/astro-sdk/pull/1584)
 
 ### Improvements:
