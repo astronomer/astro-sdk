@@ -98,7 +98,6 @@ class LoadFileOperator(AstroSQLBaseOperator):
         return self.load_data(input_file=self.input_file, context=context)
 
     def load_data(self, input_file: File, context: Context) -> BaseTable | pd.DataFrame:
-
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
             return self.load_data_to_table(input_file, context)

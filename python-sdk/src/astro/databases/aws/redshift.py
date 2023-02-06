@@ -207,7 +207,7 @@ class RedshiftDatabase(BaseDatabase):
                 f"SET {source_to_target_map_target_columns[0]}="
                 f"{source_table_name}.{source_to_target_map_source_columns[0]}"
             )
-            for (source_column, target_column) in zip(
+            for source_column, target_column in zip(
                 source_to_target_map_source_columns[1:],
                 source_to_target_map_target_columns[1:],
             ):
