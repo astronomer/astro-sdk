@@ -43,8 +43,9 @@ drop_table_statement = "DROP TABLE IF EXISTS {table_name}"
         Table(conn_id="databricks_conn"),
         Table(conn_id="redshift_conn"),
         Table(conn_id="postgres_conn"),
+        Table(conn_id="duckdb_conn"),
     ],
-    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres", "duckdb"],
 )
 def test_cleanup_one_table(temp_table):
     module = create_database(temp_table.conn_id)
@@ -65,8 +66,9 @@ def test_cleanup_one_table(temp_table):
         (Table(conn_id="databricks_conn"), Table(name="foo", conn_id="databricks_conn")),
         (Table(conn_id="redshift_conn"), Table(name="foo", conn_id="redshift_conn")),
         (Table(conn_id="postgres_conn"), Table(name="foo", conn_id="postgres_conn")),
+        (Table(conn_id="duckdb_conn"), Table(name="foo", conn_id="duckdb_conn")),
     ],
-    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres", "duckdb"],
 )
 def test_cleanup_non_temp_table(temp_table, non_temp_table):
     module = create_database(temp_table.conn_id)
@@ -87,8 +89,9 @@ def test_cleanup_non_temp_table(temp_table, non_temp_table):
         Table(conn_id="databricks_conn"),
         Table(conn_id="redshift_conn"),
         Table(conn_id="postgres_conn"),
+        Table(conn_id="duckdb_conn"),
     ],
-    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres", "duckdb"],
 )
 def test_cleanup_non_table(temp_table):
     df = pandas.DataFrame(
@@ -116,8 +119,9 @@ def test_cleanup_non_table(temp_table):
         (Table(conn_id="databricks_conn"), Table(conn_id="databricks_conn")),
         (Table(conn_id="redshift_conn"), Table(conn_id="redshift_conn")),
         (Table(conn_id="postgres_conn"), Table(conn_id="postgres_conn")),
+        (Table(conn_id="duckdb_conn"), Table(conn_id="duckdb_conn")),
     ],
-    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres", "duckdb"],
 )
 def test_cleanup_multiple_table(temp_table_1, temp_table_2):
     df = pandas.DataFrame(
@@ -147,8 +151,9 @@ def test_cleanup_multiple_table(temp_table_1, temp_table_2):
         (Table(conn_id="databricks_conn"), Table(conn_id="databricks_conn")),
         (Table(conn_id="redshift_conn"), Table(conn_id="redshift_conn")),
         (Table(conn_id="postgres_conn"), Table(conn_id="postgres_conn")),
+        (Table(conn_id="duckdb_conn"), Table(conn_id="duckdb_conn")),
     ],
-    ids=["sqlite", "bigquery", "snowflake", "databricks", "redshift", "postgres"],
+    ids=["sqlite", "bigquery", "snowflake", "databricks", "redshift", "postgres", "duckdb"],
 )
 def test_cleanup_default_all_tables(temp_table_1, temp_table_2, sample_dag):
     @aql.transform()

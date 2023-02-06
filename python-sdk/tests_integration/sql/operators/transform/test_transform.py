@@ -26,9 +26,10 @@ cwd = pathlib.Path(__file__).parent
         {"database": Database.SQLITE},
         {"database": Database.REDSHIFT},
         {"database": Database.MSSQL},
+        {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_dataframe_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -64,9 +65,10 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
         {"database": Database.SQLITE},
         {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
+        {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta", "duckdb"],
 )
 def test_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -139,9 +141,10 @@ def test_transform_mssql(database_table_fixture, sample_dag):
         {"database": Database.SQLITE},
         {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
+        {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta", "duckdb"],
 )
 def test_raw_sql(database_table_fixture, sample_dag):
     db, test_table = database_table_fixture
@@ -228,10 +231,17 @@ def test_raw_sql_for_mssql(database_table_fixture, sample_dag):
                 "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
             ),
             "table": Table(name="imdb", conn_id="sqlite_default"),
-        }
+        },
+        {
+            "database": Database.DUCKDB,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+            ),
+            "table": Table(name="imdb", conn_id="duckdb_conn"),
+        },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["sqlite", "duckdb"],
 )
 def test_transform_with_templated_table_name(database_table_fixture, sample_dag):
     """Test table creation via select statement when the output table uses an Airflow template in its name"""
@@ -248,7 +258,7 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
         """
 
     with sample_dag:
-        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id=imdb_table.conn_id)
 
         top_five_animations(input_table=imdb_table, output_table=target_table)
     test_utils.run_dag(sample_dag)
@@ -312,10 +322,17 @@ def test_transform_with_templated_table_name_for_mssql(database_table_fixture, s
                 "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
             ),
             "table": Table(name="imdb", conn_id="sqlite_default"),
-        }
+        },
+        {
+            "database": Database.DUCKDB,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+            ),
+            "table": Table(name="imdb", conn_id="duckdb_conn"),
+        },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["sqlite", "duckdb"],
 )
 def test_transform_with_file(database_table_fixture, sample_dag):
     """Test table creation via select statement in a SQL file"""
@@ -326,7 +343,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
         assert df.columns.tolist() == ["title", "rating"]
 
     with sample_dag:
-        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id=imdb_table.conn_id)
         table_from_query = aql.transform_file(
             file_path="tests_integration/sql/operators/transform/test.sql",
             parameters={"input_table": imdb_table},

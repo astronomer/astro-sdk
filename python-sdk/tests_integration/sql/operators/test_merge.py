@@ -95,6 +95,7 @@ def validate_results(df: pd.DataFrame, mode):
         assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
 
 
+# TODO: Add DuckDB for this test once https://github.com/astronomer/astro-sdk/issues/1713 is fixed
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "merge_parameters",
@@ -142,6 +143,7 @@ def test_merge(database_table_fixture, multiple_tables_fixture, sample_dag, merg
     test_utils.run_dag(sample_dag)
 
 
+# TODO: Add DuckDB for this test once https://github.com/astronomer/astro-sdk/issues/1713 is fixed
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -253,7 +255,9 @@ def test_merge_with_the_same_schema_on_mssql(database_table_fixture, multiple_ta
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [{"database": Database.BIGQUERY}],
+    [
+        {"database": Database.BIGQUERY},
+    ],
     indirect=True,
     ids=["bigquery"],
 )
@@ -388,6 +392,23 @@ bigquery_single_result_sql = (
     "WHEN NOT MATCHED BY TARGET THEN INSERT (list) VALUES (list)"
 )
 
+duckdb_single_result_sql = (
+    "INSERT INTO target_table (list) SELECT list FROM source_table "
+    "Where true ON CONFLICT (list) DO NOTHING"
+)
+
+duckdb_multi_result_sql = (
+    "INSERT INTO target_table (list,sell) SELECT list,sell FROM source_table "
+    "Where true ON CONFLICT (list,sell) DO NOTHING"
+)
+
+duckdb_update_result_sql = (
+    "INSERT INTO target_table (list,sell,taxes) SELECT list,sell,age FROM "
+    "source_table Where true ON CONFLICT (list,sell) DO UPDATE SET "
+    "list=EXCLUDED.list,sell=EXCLUDED.sell,taxes=EXCLUDED.taxes"
+)
+
+
 base_database_class = "astro.databases.base.BaseDatabase.run_sql"
 delta_database_class = "astro.databases.databricks.delta.DeltaDatabase.run_sql"
 
@@ -410,6 +431,8 @@ def get_result_sql_update(conn_id):
         return delta_update_result_sql
     elif database_type == "bigquery":
         return bigquery_update_result_sql
+    elif database_type == "duckdb":
+        return duckdb_update_result_sql
 
 
 def get_result_sql_multi(conn_id):
@@ -422,6 +445,8 @@ def get_result_sql_multi(conn_id):
         return delta_multi_result_sql
     elif database_type == "bigquery":
         return bigquery_multi_result_sql
+    elif database_type == "duckdb":
+        return duckdb_multi_result_sql
 
 
 def get_result_sql_single(conn_id):
@@ -434,6 +459,8 @@ def get_result_sql_single(conn_id):
         return delta_single_result_sql
     elif database_type == "bigquery":
         return bigquery_single_result_sql
+    elif database_type == "duckdb":
+        return duckdb_single_result_sql
 
 
 @pytest.mark.parametrize(
@@ -452,8 +479,9 @@ def get_result_sql_single(conn_id):
         (base_database_class, "gcp_conn"),
         (base_database_class, "snowflake_conn"),
         (delta_database_class, "databricks_conn"),
+        (base_database_class, "duckdb_conn"),
     ],
-    ids=["sqlite", "bigquery", "snowflake", "databricks"],
+    ids=["sqlite", "bigquery", "snowflake", "databricks", "duckdb"],
 )
 def test_merge_sql_generation(database_class, conn_id, merge_parameters):
     parameters, mode = merge_parameters

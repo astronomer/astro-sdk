@@ -55,6 +55,7 @@ class Database(Enum):
     SNOWFLAKE = "snowflake"
     REDSHIFT = "redshift"
     MSSQL = "mssql"
+    DUCKDB = "duckdb"
     # [END database]
 
     def __str__(self) -> str:
