@@ -229,8 +229,6 @@ Loading to Duckdb
 ~~~~~~~~~~~~~~~~~
 
 ``load_file`` can load data to duckdb. If the database file is not specified in the connection, it will assume the user is using an in-memory duckdb. For more information about the supported files, check the [official documentation](https://duckdb.org/docs/extensions/overview.html).
-(the file extension may be .db, .duckdb, or anything else). The special value :memory: (the default) can be used to
-create an in-memory database. Note that for an in-memory database no data is persisted to disk (i.e. all data is lost when you exit the Python process).
 
 .. literalinclude:: ../../../../example_dags/example_load_file.py
    :language: python
