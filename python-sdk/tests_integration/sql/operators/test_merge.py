@@ -95,6 +95,7 @@ def validate_results(df: pd.DataFrame, mode):
         assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
 
 
+# TODO: Add DuckDB for this test once https://github.com/astronomer/astro-sdk/issues/1713 is fixed
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "merge_parameters",
@@ -142,6 +143,7 @@ def test_merge(database_table_fixture, multiple_tables_fixture, sample_dag, merg
     test_utils.run_dag(sample_dag)
 
 
+# TODO: Add DuckDB for this test once https://github.com/astronomer/astro-sdk/issues/1713 is fixed
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
