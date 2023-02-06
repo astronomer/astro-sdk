@@ -60,3 +60,12 @@ def test_load_op_kwarg_dataframes_into_sql():
 
     assert isinstance(results["table"], BaseTable)
     assert isinstance(results["some_str"], str)
+
+
+def test_base_sql_decorated_operator_template_fields_and_template_ext_with_sql():
+    """
+    Test that sql is in BaseSQLDecoratedOperator template_fields and template_ext
+     as this required for rending the sql in the task instance rendered section.
+    """
+    assert "sql" in BaseSQLDecoratedOperator.template_fields
+    assert ".sql" in BaseSQLDecoratedOperator.template_ext
