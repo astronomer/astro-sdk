@@ -4,7 +4,7 @@
 
 ### Feature:
 - Add support for Microsoft SQL server. [#1538](https://github.com/astronomer/astro-sdk/pull/1538)
-- Add support DuckDB. [#1695](https://github.com/astronomer/astro-sdk/pull/1695)
+- Add support for DuckDB. [#1695](https://github.com/astronomer/astro-sdk/pull/1695)
 - Add `result_format` and `fail_on_empty` params to `run_raw_sql` operator [#1584](https://github.com/astronomer/astro-sdk/pull/1584)
 - Add support `validation_mode` as part of the `COPY INTO` command for snowflake. Specify the supported `validation_mode`; `RETURN_n_ROWS` or `RETURN_ERRORS` or `RETURN_ALL_ERRORS`. This instructs the `COPY INTO` command to validate the data files instead of loading them into the specified table; i.e. the `COPY INTO` command tests the files for errors but does not load them. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
 - Add support for native transfers for Azure Blob Storage to Snowflake in `LoadFileOperator`. [#1675](https://github.com/astronomer/astro-sdk/pull/1675)
