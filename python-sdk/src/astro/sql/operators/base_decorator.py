@@ -257,8 +257,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 ) = self.database_impl.get_sqlalchemy_template_table_identifier_and_parameter(v, k)
                 context[k] = jinja_table_identifier
                 self.parameters[k] = jinja_table_parameter_value
-            # elif isinstance(v, pd.DataFrame):
-            #    raise Exception("I should not be here")
             else:
                 context[k] = self.database_impl.parameterize_variable(k)
 
