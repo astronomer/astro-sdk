@@ -197,6 +197,10 @@ Supported native transfers
      - Redshift
      - https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html
      - https://docs.aws.amazon.com/redshift/latest/dg/c-getting-started-using-spectrum-create-role.html
+   * - Azure
+     - Snowflake
+     - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
+     - https://docs.snowflake.com/en/user-guide/data-load-azure-config.html
 
 .. note::
    For loading from S3 to Redshift database, although Redshift allows the below two options for authorization, **we
