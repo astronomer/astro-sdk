@@ -13,8 +13,8 @@ from universal_transfer_operator.datasets.dataframe.pandas import (
 from universal_transfer_operator.datasets.file.types.base import FileType
 
 
-class NDJSONFileType(FileType):
-    """Concrete implementation to handle NDJSON file type"""
+class NDJsonFileType(FileType):
+    """Concrete implementation to handle ndjson file type"""
 
     def export_to_dataframe(self, stream, columns_names_capitalization="original", **kwargs):
         """read ndjson file from one of the supported locations and return dataframe
@@ -22,7 +22,7 @@ class NDJSONFileType(FileType):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         """
-        df = NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
+        df = NDJsonFileType.flatten(self.normalize_config, stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
         )
