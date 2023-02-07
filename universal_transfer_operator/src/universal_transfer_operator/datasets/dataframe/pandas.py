@@ -55,7 +55,6 @@ class PandasDataframe(DataFrame):
             logger.info("Dataframe size: %s bytes. Storing it in Airflow's metadata DB", df_size)
             return {"data": self.to_json()}
         else:
-
             logger.info(
                 "Dataframe size: %s bytes. Storing it in Remote Storage (conn_id: %s | URL: %s)",
                 df_size,
