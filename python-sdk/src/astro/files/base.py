@@ -45,7 +45,7 @@ class File(LoggingMixin, Dataset):
 
     @property
     def load_options(self):
-        return self._load_options
+        return getattr(self, "_load_options", [])
 
     @load_options.setter
     def load_options(self, value):
