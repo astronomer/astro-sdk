@@ -35,7 +35,7 @@ def create_file_type(
 
 def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
     """
-    Return a FileType given the filepath. Uses a naive strategy, using the file extension.
+    Return a FileType given the filepath. Uses a native strategy, using the file extension.
     :param filepath: URI or Path to a file
     :type filepath: str or pathlib.PosixPath
     :return: The filetype (e.g. csv, ndjson, json, parquet)
