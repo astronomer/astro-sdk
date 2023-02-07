@@ -31,7 +31,7 @@ class PandasLoadOptions(LoadOptions):
     encoding: str | None = None
 
     # NDJSON
-    normalize_sep: str = "_"
+    normalize_sep: str | None = None
 
     # Parquet
     columns: list[str] | None = None

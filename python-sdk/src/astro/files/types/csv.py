@@ -30,7 +30,7 @@ class CSVFileType(FileType):
             in the resulting dataframe
         """
         if isinstance(self.load_options, PandasLoadOptions):
-            kwargs.update(self.load_options.to_dict())
+            kwargs.update({key: val for key, val in self.load_options.to_dict().items() if val is not None})
         df = pd.read_csv(stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
