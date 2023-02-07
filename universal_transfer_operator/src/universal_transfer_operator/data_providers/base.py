@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC
-from contextlib import contextmanager
 
 import attr
 from airflow.hooks.base import BaseHook
@@ -54,7 +53,6 @@ class DataProviders(ABC):
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
-    @contextmanager
     def read(self):
         """Read the dataset and write to local reference location"""
         raise NotImplementedError
