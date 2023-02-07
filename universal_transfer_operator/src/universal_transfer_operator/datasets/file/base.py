@@ -52,7 +52,7 @@ class File(Dataset):
 
     def is_binary(self) -> bool:
         """
-        Return a constants.FileType given the filepath. Uses a naive strategy, using the file extension.
+        Return a constants.FileType given the filepath. Uses a native strategy, using the file extension.
 
         :return: True or False
         """
