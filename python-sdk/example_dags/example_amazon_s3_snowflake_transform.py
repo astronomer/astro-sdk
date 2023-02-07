@@ -40,7 +40,7 @@ def aggregate_data(df: pd.DataFrame):
 @dag(
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
-    schedule_interval="@daily",
+    schedule_interval=None,
     default_args={
         "email_on_failure": False,
         "retries": 0,

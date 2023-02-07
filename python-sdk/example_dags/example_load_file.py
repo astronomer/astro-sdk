@@ -18,7 +18,7 @@ Pre-requisites for load_file_example_19:
 """
 import os
 import pathlib
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import sqlalchemy
 from airflow.models import DAG
@@ -51,7 +51,7 @@ dag = DAG(
     dag_id="example_load_file",
     start_date=datetime(2019, 1, 1),
     max_active_runs=3,
-    schedule_interval=timedelta(minutes=30),
+    schedule_interval=None,
     default_args=default_args,
     catchup=False,
 )

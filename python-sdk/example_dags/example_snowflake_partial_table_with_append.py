@@ -69,7 +69,7 @@ def create_table(table: Table):
     """
 
 
-@dag(start_date=datetime(2021, 12, 1), schedule_interval="@daily", catchup=False)
+@dag(start_date=datetime(2021, 12, 1), schedule_interval=None, catchup=False)
 def example_snowflake_partial_table_with_append():
     homes_reporting = Table(conn_id=SNOWFLAKE_CONN_ID)
     create_results_table = create_table(table=homes_reporting, conn_id=SNOWFLAKE_CONN_ID)
