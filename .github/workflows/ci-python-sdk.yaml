@@ -618,8 +618,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ 3.7, 3.8, 3.9, 3.10 ]
-        airflow: [ 2.2.5, 2.3.4, 2.4.2, 2.5.1 ]
+        python: [ '3.7', '3.8', '3.9', '3.10' ]
+        airflow: [ '2.2.5', '2.3.4', '2.4.2', '2.5.1' ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
