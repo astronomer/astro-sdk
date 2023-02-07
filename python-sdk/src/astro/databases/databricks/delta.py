@@ -24,7 +24,6 @@ from astro.table import BaseTable, Metadata
 
 
 class DeltaDatabase(BaseDatabase):
-
     LOAD_OPTIONS_CLASS_NAME = "DeltaLoadOptions"
     # In run_raw_sql operator decides if we want to return results directly or process them by handler provided
     # For delta tables we ignore the handler

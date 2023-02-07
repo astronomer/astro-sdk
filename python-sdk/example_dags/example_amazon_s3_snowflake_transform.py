@@ -49,7 +49,6 @@ def aggregate_data(df: pd.DataFrame):
     catchup=False,
 )
 def example_amazon_s3_snowflake_transform():
-
     s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
     input_table_1 = Table(

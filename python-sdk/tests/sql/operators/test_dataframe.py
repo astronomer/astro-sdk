@@ -90,7 +90,6 @@ def _find_validator(function_output):
     ],
 )
 def test_columns_name_cap_multi_output(sample_dag, capital_settings, function_output):
-
     validator = _find_validator(function_output)
 
     @aql.dataframe(columns_names_capitalization=capital_settings["column_setting"])

@@ -56,7 +56,7 @@ repos:
         exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 23.1.0
     hooks:
       - id: black
         # Exclude auto-generated example files from being changed
@@ -71,7 +71,7 @@ repos:
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.237'
+    rev: 'v0.0.242'
     hooks:
       - id: ruff
         args:

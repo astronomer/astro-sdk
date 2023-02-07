@@ -45,7 +45,6 @@ class SQLCheckOperator(SQLTableCheckOperator):
         task_id: Optional[str] = None,
         **kwargs,
     ):
-
         self.dataset = dataset
         super().__init__(
             table="place_holder_table_name",

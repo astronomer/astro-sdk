@@ -1006,7 +1006,10 @@ def test_aql_load_file_optimized_path_method_called(sample_dag, database_table_f
     # }
     file = File(file_uri)
     optimised_path_to_method = {
-        ("gs", "bigquery",): {
+        (
+            "gs",
+            "bigquery",
+        ): {
             "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_table",
             "expected_kwargs": {
                 "source_file": file,
@@ -1014,7 +1017,10 @@ def test_aql_load_file_optimized_path_method_called(sample_dag, database_table_f
             },
             "expected_args": (),
         },
-        ("s3", "bigquery",): {
+        (
+            "s3",
+            "bigquery",
+        ): {
             "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_table",
             "expected_kwargs": {
                 "source_file": file,
@@ -1022,7 +1028,10 @@ def test_aql_load_file_optimized_path_method_called(sample_dag, database_table_f
             },
             "expected_args": (),
         },
-        ("local", "bigquery",): {
+        (
+            "local",
+            "bigquery",
+        ): {
             "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_table",
             "expected_kwargs": {
                 "source_file": file,
@@ -1086,10 +1095,16 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     #   expected_args:  List of all the args that are passed to method mentioned in the method_path
     # }
     optimised_path_to_method = {
-        ("gs", "bigquery",): {
+        (
+            "gs",
+            "bigquery",
+        ): {
             "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_table",
         },
-        ("s3", "bigquery",): {
+        (
+            "s3",
+            "bigquery",
+        ): {
             "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_table",
         },
         ("local", "bigquery"): {

@@ -461,7 +461,6 @@ class BaseDatabase(ABC):
         if use_native_support and self.is_native_load_file_available(
             source_file=input_file, target_table=output_table
         ):
-
             self.load_file_to_table_natively_with_fallback(
                 source_file=input_file,
                 target_table=output_table,
