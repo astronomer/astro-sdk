@@ -35,7 +35,9 @@ class ParquetFileType(FileType):
 
         byte_io_buffer = self._convert_remote_file_to_byte_stream(stream)
         if isinstance(self.load_options, PandasLoadOptions):
-            kwargs_copy.update(self.load_options.to_dict())
+            kwargs_copy.update(
+                {key: val for key, val in self.load_options.to_dict().items() if val is not None}
+            )
 
         df = pd.read_parquet(byte_io_buffer, **kwargs_copy)
         df = convert_columns_names_capitalization(

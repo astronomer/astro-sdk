@@ -7,6 +7,7 @@ import pandas as pd
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import ParquetFileType
+from astro.settings import NEED_CUSTOM_SERIALIZATION
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/sample.parquet")
 
@@ -18,7 +19,10 @@ def test_read_parquet_file():
     with open(path, mode="rb") as file:
         df = parquet_type.export_to_dataframe(file)
     assert df.shape == (3, 2)
-    assert isinstance(df, PandasDataframe)
+    if NEED_CUSTOM_SERIALIZATION:
+        assert isinstance(df, PandasDataframe)
+    else:
+        assert isinstance(df, pd.DataFrame)
 
 
 @mock.patch("astro.files.types.parquet.ParquetFileType._convert_remote_file_to_byte_stream")
