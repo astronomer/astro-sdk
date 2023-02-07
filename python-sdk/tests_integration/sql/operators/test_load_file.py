@@ -11,7 +11,7 @@ from pandas._testing import assert_frame_equal
 
 from astro import sql as aql
 from astro.constants import Database, FileType
-from astro.dataframes.load_options import PandasCsvLoadOptions
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
@@ -1384,7 +1384,7 @@ def test_load_file_delimiter(sample_dag, database_table_fixture):
             input_file=File(path),
             output_table=test_table,
             use_native_support=False,
-            load_options=[PandasCsvLoadOptions(delimiter="$")],
+            load_options=[PandasLoadOptions(delimiter="$")],
         )
     test_utils.run_dag(sample_dag)
 

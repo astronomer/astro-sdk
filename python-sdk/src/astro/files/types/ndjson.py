@@ -15,7 +15,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 class NDJSONFileType(FileType):
     """Concrete implementation to handle NDJSON file type"""
 
-    LOAD_OPTIONS_CLASS_NAME = "PandasNdjsonLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = "PandasLoadOptions"
 
     def export_to_dataframe(
         self,
