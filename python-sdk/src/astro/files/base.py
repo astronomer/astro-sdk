@@ -57,7 +57,7 @@ class File(LoggingMixin, Dataset):
 
     @property
     def load_options_list(self):
-        return LoadOptionsList(self._load_options)
+        return LoadOptionsList(self.load_options)
 
     @property
     def type(self) -> FileType:  # noqa: A003
