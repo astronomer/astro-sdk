@@ -248,11 +248,11 @@ def test_file_object_picks_load_options(file_type, file_location):
     location_path, location_expected_class = file_location.values()
     file = File(
         path=location_path + f".{type_name}",
-        load_options=[
-            PandasLoadOptions(delimiter="$"),
-            SnowflakeLoadOptions(copy_options={}),
-            WASBLocationLoadOptions(storage_account="some_account"),
-        ],
     )
+    file.load_options = [
+        PandasLoadOptions(delimiter="$"),
+        SnowflakeLoadOptions(copy_options={}),
+        WASBLocationLoadOptions(storage_account="some_account"),
+    ]
     assert type(file.type.load_options) is type_expected_class
     assert file.location.load_options is location_expected_class

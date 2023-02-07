@@ -34,7 +34,6 @@ class File(LoggingMixin, Dataset):
     normalize_config: dict | None = None
     is_dataframe: bool = False
     is_bytes: bool = False
-    load_options: list[LoadOptions] | None = None
 
     uri: str = field(init=False)
     extra: dict | None = field(init=False, factory=dict)
@@ -45,12 +44,20 @@ class File(LoggingMixin, Dataset):
     )
 
     @property
+    def load_options(self):
+        return self._load_options
+
+    @load_options.setter
+    def load_options(self, value):
+        self._load_options = value
+
+    @property
     def location(self) -> BaseFileLocation:
         return create_file_location(self.path, self.conn_id, self.load_options_list)
 
     @property
     def load_options_list(self):
-        return LoadOptionsList(self.load_options)
+        return LoadOptionsList(self._load_options)
 
     @property
     def type(self) -> FileType:  # noqa: A003
@@ -250,18 +257,18 @@ def resolve_file_path_pattern(
     :param normalize_config: parameters in dict format of pandas json_normalize() function
     """
     location = create_file_location(path_pattern, conn_id)
-
-    files = [
-        File(
+    files = []
+    for path in location.paths:
+        if path.endswith("/"):
+            continue
+        file = File(
             path=path,
             conn_id=conn_id,
             filetype=filetype,
             normalize_config=normalize_config,
-            load_options=load_options,
         )
-        for path in location.paths
-        if not path.endswith("/")
-    ]
+        file.load_options = load_options
+        files.append(file)
     if len(files) == 0:
         raise FileNotFoundError(f"File(s) not found for path/pattern '{path_pattern}'")
 
