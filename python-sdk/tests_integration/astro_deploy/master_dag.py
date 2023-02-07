@@ -160,13 +160,20 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*dynamic_task_trigger_tasks)
 
+    data_validation_dags_info = [
+        {"data_validation_check_table": "data_validation_check_table"},
+        {"data_validation_check_column": "data_validation_check_column"},
+    ]
+
+    data_validation_trigger_tasks, ids = prepare_dag_dependency(data_validation_dags_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*data_validation_trigger_tasks)
+
     cleanup_snowflake_task_info = [{"example_snowflake_cleanup": "example_snowflake_cleanup"}]
 
     cleanup_snowflake_trigger_tasks, ids = prepare_dag_dependency(cleanup_snowflake_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*cleanup_snowflake_trigger_tasks)
-
-    # example_dataset_producer [TODO]
 
     report = PythonOperator(
         task_id="get_report",
@@ -190,6 +197,7 @@ with DAG(
         append_trigger_tasks[0],
         merge_trigger_tasks[0],
         dynamic_task_trigger_tasks[0],
+        data_validation_trigger_tasks[0],
         cleanup_snowflake_trigger_tasks[0],
     ]
 
@@ -202,6 +210,7 @@ with DAG(
         append_trigger_tasks[-1],
         merge_trigger_tasks[-1],
         dynamic_task_trigger_tasks[-1],
+        data_validation_trigger_tasks[-1],
         cleanup_snowflake_trigger_tasks[-1],
     ]
 
