@@ -15,7 +15,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 class NDJSONFileType(FileType):
     """Concrete implementation to handle NDJSON file type"""
 
-    LOAD_OPTIONS_CLASS_NAME = "PandasNdjsonLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = "PandasLoadOptions"
 
     def export_to_dataframe(
         self,
@@ -31,7 +31,7 @@ class NDJSONFileType(FileType):
             in the resulting dataframe
         """
         if isinstance(self.load_options, PandasLoadOptions):
-            kwargs.update(self.load_options.to_dict())
+            kwargs = self.load_options.populate_kwargs(kwargs)
         df = NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization

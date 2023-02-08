@@ -14,7 +14,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 class JSONFileType(FileType):
     """Concrete implementation to handle JSON file type"""
 
-    LOAD_OPTIONS_CLASS_NAME = "PandasJsonLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = "PandasLoadOptions"
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
     def export_to_dataframe(
@@ -34,7 +34,7 @@ class JSONFileType(FileType):
         # Pandas `read_json` does not support the `nrows` parameter unless we're using NDJSON
         kwargs_copy.pop("nrows", None)
         if isinstance(self.load_options, PandasLoadOptions):
-            kwargs_copy.update(self.load_options.to_dict())
+            kwargs_copy = self.load_options.populate_kwargs(kwargs)
         df = pd.read_json(stream, **kwargs_copy)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization

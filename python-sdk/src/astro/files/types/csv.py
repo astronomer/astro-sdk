@@ -14,7 +14,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 class CSVFileType(FileType):
     """Concrete implementation to handle CSV file type"""
 
-    LOAD_OPTIONS_CLASS_NAME = "PandasCsvLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = "PandasLoadOptions"
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
     def export_to_dataframe(
@@ -30,7 +30,7 @@ class CSVFileType(FileType):
             in the resulting dataframe
         """
         if isinstance(self.load_options, PandasLoadOptions):
-            kwargs.update(self.load_options.to_dict())
+            kwargs = self.load_options.populate_kwargs(kwargs)
         df = pd.read_csv(stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
