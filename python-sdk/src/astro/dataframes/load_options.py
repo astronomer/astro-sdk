@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from attr import define
+import attr
 from pandas._typing import DtypeArg
 
 from astro.options import LoadOptions
 
 
-@define
+@attr.define
 class PandasLoadOptions(LoadOptions):
     """
     Pandas load options while reading and loading csv file.
@@ -35,3 +35,5 @@ class PandasLoadOptions(LoadOptions):
 
     # Parquet
     columns: list[str] | None = None
+
+    kwargs: dict = attr.field(init=True, factory=dict)
