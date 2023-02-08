@@ -21,6 +21,7 @@ s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
     schedule_interval=None,
     start_date=timezone.utcnow(),
     tags=["demo"],
+    catchup=False,
 )
 def example_amazon_s3_postgres_load_and_save():
     t1 = aql.load_file(
