@@ -37,3 +37,16 @@ class PandasLoadOptions(LoadOptions):
     columns: list[str] | None = None
 
     kwargs: dict = attr.field(init=True, factory=dict)
+
+    def populate_kwargs(self, kwargs):
+        exclude_key = ["kwargs"]
+        kwargs.update(
+            {
+                key: val
+                for key, val in self.load_options.to_dict().items()
+                if val is not None and key not in exclude_key
+            }
+        )
+        for key in exclude_key:
+            kwargs.update(self.load_options.to_dict()[key])
+        return kwargs

@@ -32,13 +32,9 @@ class ParquetFileType(FileType):
         kwargs_copy = dict(kwargs)
         # Pandas `read_parquet` does not support the `nrows` parameter
         kwargs_copy.pop("nrows", None)
-
         byte_io_buffer = self._convert_remote_file_to_byte_stream(stream)
         if isinstance(self.load_options, PandasLoadOptions):
-            kwargs_copy.update(
-                {key: val for key, val in self.load_options.to_dict().items() if val is not None}
-            )
-
+            kwargs_copy = self.load_options.populate_kwargs(kwargs_copy)
         df = pd.read_parquet(byte_io_buffer, **kwargs_copy)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
