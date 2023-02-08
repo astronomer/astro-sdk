@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.5.0
+
+### Feature:
+- Add support for Microsoft SQL server. [#1538](https://github.com/astronomer/astro-sdk/pull/1538)
+- Add support for DuckDB. [#1695](https://github.com/astronomer/astro-sdk/pull/1695)
+- Add `result_format` and `fail_on_empty` params to `run_raw_sql` operator [#1584](https://github.com/astronomer/astro-sdk/pull/1584)
+- Add support `validation_mode` as part of the `COPY INTO` command for snowflake. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+- Add support for native transfers for Azure Blob Storage to Snowflake in `LoadFileOperator`. [#1675](https://github.com/astronomer/astro-sdk/pull/1675)
+
+### Improvements
+- Use cache to reduce redundant database calls [#1488](https://github.com/astronomer/astro-sdk/pull/1488)
+- Remove default `copy_options` as part of `SnowflakeLoadOptions`. All `copy_options` are now supported as part of `SnowflakeLoadOptions` as per [documentation](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions). [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+- Remove `load_options` from `File` object. [#1721](https://github.com/astronomer/astro-sdk/pull/1721)
+- Consolidated `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` to single `PandasLoadOptions`. [#1722](https://github.com/astronomer/astro-sdk/pull/1722)
+- Render SQL code with parameters in BaseSQLDecoratedOperator. [#897](https://github.com/astronomer/astro-sdk/pull/897)
+
+### Bug fixes
+- Fix handling of multiple dataframes in the `run_raw_sql` operator. [#1700](https://github.com/astronomer/astro-sdk/pull/1700)
+
+### Docs
+- Add documentation around Microsoft SQL support with example DAG. [#1538](https://github.com/astronomer/astro-sdk/pull/1538)
+- Add documentation around DuckDB support with example DAG. [#1695](https://github.com/astronomer/astro-sdk/pull/1695)
+- Add documentation for `validation_mode` as part of the `COPY INTO` command for snowflake. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+- Add documentation and example DAGs for snowflake `SnowflakeLoadOptions` for various available options around `copy_options` and `file_options`. [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
+- Fix the documentation to run the quickstart example described in the Python SDK README. [#1716](https://github.com/astronomer/astro-sdk/pull/1716)
+
+### Misc
+- Add cleanup DAG to clean snowflake tables created as part of CI when the runners fail as part of GitHub actions. [#1663](https://github.com/astronomer/astro-sdk/issues/1663)
+- Run example DAGs on astro-cloud and collect the results. [#1499](https://github.com/astronomer/astro-sdk/pull/1499)
+
+
 ## 1.4.1
 
 ### Feature:
