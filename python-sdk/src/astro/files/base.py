@@ -267,16 +267,15 @@ def resolve_file_path_pattern(
     location = create_file_location(path_pattern, conn_id)
     files = []
     for path in location.paths:
-        if path.endswith("/"):
-            continue
-        file = File(
-            path=path,
-            conn_id=conn_id,
-            filetype=filetype,
-            normalize_config=normalize_config,
-        )
-        file.load_options = load_options
-        files.append(file)
+        if not path.endswith("/"):
+            file = File(
+                path=path,
+                conn_id=conn_id,
+                filetype=filetype,
+                normalize_config=normalize_config,
+            )
+            file.load_options = load_options
+            files.append(file)
     if len(files) == 0:
         raise FileNotFoundError(f"File(s) not found for path/pattern '{path_pattern}'")
 
