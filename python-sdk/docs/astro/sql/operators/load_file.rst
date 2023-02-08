@@ -424,7 +424,11 @@ If you want to provide the list of load options(specific to database or file loc
 
         ``load_options`` will be replacing ``native_support_kwargs`` parameter
 
-    - :py:obj:`PandasLoadOptions <astro.options.LoadOptions>` - Pandas load options for reading and loading file using pandas path.
+    - :py:obj:`PandasLoadOptions <astro.options.LoadOptions>` - Pandas load options for reading and loading file using pandas path for various file types:
+        1. Pandas load options while reading and loading csv file. [ref doc](https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html)
+        2. Pandas load options while reading and loading json file. [ref doc](https://pandas.pydata.org/docs/reference/api/pandas.read_json.html)
+        3. Pandas load options while reading and loading Ndjson file. [ref doc](https://pandas.pydata.org/docs/reference/api/pandas.read_json.html)
+        4. Pandas load options while reading and loading Parquet file. [ref doc](https://pandas.pydata.org/docs/reference/api/pandas.read_parquet.html)
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
