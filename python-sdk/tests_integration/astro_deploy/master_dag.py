@@ -118,10 +118,10 @@ with DAG(
     transform_task_info = [
         {"example_transform": "example_transform"},
         {"example_transform_file": "example_transform_file"},
-        {"example_sqlite_load_transform": "example_sqlite_load_transform"},
         {"example_amazon_s3_snowflake_transform": "example_amazon_s3_snowflake_transform"},
         {"calculate_popular_movies": "calculate_popular_movies"},
         {"example_transform_mssql": "example_transform_mssql"},
+        {"example_sqlite_load_transform": "example_sqlite_load_transform"},
     ]
 
     transform_trigger_tasks, ids = prepare_dag_dependency(transform_task_info, "{{ ds }}")

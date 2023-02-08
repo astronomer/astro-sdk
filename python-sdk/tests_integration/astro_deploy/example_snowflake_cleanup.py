@@ -45,4 +45,4 @@ with DAG(
         sql="{{ task_instance.xcom_pull(task_ids='create_drop_statement', dag_id='example_snowflake_cleanup', key='return_value') }}",  # noqa: E501
     )
 
-    snowflake_op_sql_str >> create_drop_statement >> snowflake_op_sql_multiple_stmts
+    snowflake_op_sql_str >> create_drop_statement >> snowflake_op_sql_multiple_stmts  # PYL-W0104
