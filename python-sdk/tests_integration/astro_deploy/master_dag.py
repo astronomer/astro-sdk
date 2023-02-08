@@ -105,10 +105,10 @@ with DAG(
     dag_run_ids = []
 
     load_file_task_info = [
-        {"example_load_file": "example_load_file"},
         {"example_google_bigquery_gcs_load_and_save": "example_google_bigquery_gcs_load_and_save"},
         {"example_amazon_s3_postgres_load_and_save": "example_amazon_s3_postgres_load_and_save"},
         {"example_amazon_s3_postgres": "example_amazon_s3_postgres"},
+        {"example_load_file": "example_load_file"},
     ]
 
     load_file_trigger_tasks, ids = prepare_dag_dependency(load_file_task_info, "{{ ds }}")
@@ -122,6 +122,9 @@ with DAG(
         {"calculate_popular_movies": "calculate_popular_movies"},
         {"example_transform_mssql": "example_transform_mssql"},
         {"example_sqlite_load_transform": "example_sqlite_load_transform"},
+        {
+            "example_duckdb_load_transform_dataframe_and_save": "example_duckdb_load_transform_dataframe_and_save"
+        },
     ]
 
     transform_trigger_tasks, ids = prepare_dag_dependency(transform_task_info, "{{ ds }}")
@@ -170,6 +173,14 @@ with DAG(
     dag_run_ids.extend(ids)
     chain(*data_validation_trigger_tasks)
 
+    dataset_dags_info = [
+        {"example_dataset_producer": "example_dataset_producer"},
+    ]
+
+    dataset_trigger_tasks, ids = prepare_dag_dependency(dataset_dags_info, "{{ ds }}")
+    dag_run_ids.extend(ids)
+    chain(*dataset_trigger_tasks)
+
     cleanup_snowflake_task_info = [{"example_snowflake_cleanup": "example_snowflake_cleanup"}]
 
     cleanup_snowflake_trigger_tasks, ids = prepare_dag_dependency(cleanup_snowflake_task_info, "{{ ds }}")
@@ -199,6 +210,7 @@ with DAG(
         merge_trigger_tasks[0],
         dynamic_task_trigger_tasks[0],
         data_validation_trigger_tasks[0],
+        dataset_trigger_tasks[0],
         cleanup_snowflake_trigger_tasks[0],
     ]
 
@@ -212,6 +224,7 @@ with DAG(
         merge_trigger_tasks[-1],
         dynamic_task_trigger_tasks[-1],
         data_validation_trigger_tasks[-1],
+        dataset_trigger_tasks[-1],
         cleanup_snowflake_trigger_tasks[-1],
     ]
 

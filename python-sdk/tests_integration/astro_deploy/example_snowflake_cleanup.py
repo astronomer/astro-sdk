@@ -42,7 +42,7 @@ with DAG(
 
     snowflake_op_sql_multiple_stmts = SnowflakeOperator(
         task_id="snowflake_op_sql_multiple_stmts",
-        sql="{{ task_instance.xcom_pull(task_ids='create_drop_statement', dag_id='example_snowflake_cleanup', key='return_value') }}",  # noqa: E501 # PYL-W0104
+        sql="{{ task_instance.xcom_pull(task_ids='create_drop_statement', dag_id='example_snowflake_cleanup', key='return_value') }}",  # noqa: E501
     )
 
-    snowflake_op_sql_str >> create_drop_statement >> snowflake_op_sql_multiple_stmts  # PYL-W0104
+    snowflake_op_sql_str >> create_drop_statement >> snowflake_op_sql_multiple_stmts  # skipcq PYL-W0104
