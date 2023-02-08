@@ -26,6 +26,7 @@ with DAG(
     dag_id="example_google_bigquery_gcs_load_and_save",
     schedule_interval=None,
     start_date=timezone.datetime(2022, 1, 1),
+    catchup=False,
 ) as dag:
     # [START load_file_http_example]
     t1 = aql.load_file(
