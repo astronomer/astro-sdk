@@ -17,7 +17,9 @@ API hooks. By requesting the expected data and returning it as a dataframe, our 
 @task or @aql.transform tasks.
 """
 
-ALLOWED_DESERIALIZATION_CLASSES = os.getenv("AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES")
+ALLOWED_DESERIALIZATION_CLASSES = os.getenv(
+    "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES", default="airflow\\.* astro\\.*"
+)
 
 
 def _load_covid_data():
