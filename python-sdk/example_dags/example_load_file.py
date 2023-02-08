@@ -26,7 +26,7 @@ from airflow.models import DAG
 from astro import sql as aql
 from astro.constants import FileType
 from astro.databases.databricks.load_options import DeltaLoadOptions
-from astro.dataframes.load_options import PandasCsvLoadOptions
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.files import File
 from astro.options import SnowflakeLoadOptions
 from astro.table import Metadata, Table
@@ -299,7 +299,7 @@ with dag:
             conn_id=SNOWFLAKE_CONN_ID,
         ),
         use_native_support=False,
-        load_options=[PandasCsvLoadOptions(delimiter="$")],
+        load_options=[PandasLoadOptions(delimiter="$")],
     )
     # [END load_file_example_22]
 
