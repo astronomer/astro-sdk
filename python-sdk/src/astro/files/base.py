@@ -34,7 +34,6 @@ class File(LoggingMixin, Dataset):
     normalize_config: dict | None = None
     is_dataframe: bool = False
     is_bytes: bool = False
-    load_options: list[LoadOptions] | None = None
 
     uri: str = field(init=False)
     extra: dict | None = field(init=False, factory=dict)
@@ -43,6 +42,22 @@ class File(LoggingMixin, Dataset):
         "path",
         "conn_id",
     )
+
+    @property
+    def load_options(self):
+        """
+        Getter of all the load_options. load_options is a container with for the custom option passed by user for a
+         third-party integrations like pandas, azure etc.
+        """
+        return getattr(self, "_load_options", [])
+
+    @load_options.setter
+    def load_options(self, value: LoadOptionsList):
+        """
+        Setter of all the load_options. load_options is a container with for the custom option passed by user for a
+         third-party integrations like pandas, azure etc.
+        """
+        self._load_options = value
 
     @property
     def location(self) -> BaseFileLocation:
@@ -250,18 +265,17 @@ def resolve_file_path_pattern(
     :param normalize_config: parameters in dict format of pandas json_normalize() function
     """
     location = create_file_location(path_pattern, conn_id)
-
-    files = [
-        File(
-            path=path,
-            conn_id=conn_id,
-            filetype=filetype,
-            normalize_config=normalize_config,
-            load_options=load_options,
-        )
-        for path in location.paths
-        if not path.endswith("/")
-    ]
+    files = []
+    for path in location.paths:
+        if not path.endswith("/"):
+            file = File(
+                path=path,
+                conn_id=conn_id,
+                filetype=filetype,
+                normalize_config=normalize_config,
+            )
+            file.load_options = load_options
+            files.append(file)
     if len(files) == 0:
         raise FileNotFoundError(f"File(s) not found for path/pattern '{path_pattern}'")
 
