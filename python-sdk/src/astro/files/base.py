@@ -45,10 +45,18 @@ class File(LoggingMixin, Dataset):
 
     @property
     def load_options(self):
+        """
+        Getter of all the load_options. load_options is a container with for the custom option passed by user for a
+         third-party integrations like pandas, azure etc.
+        """
         return getattr(self, "_load_options", [])
 
     @load_options.setter
-    def load_options(self, value):
+    def load_options(self, value: LoadOptionsList):
+        """
+        Setter of all the load_options. load_options is a container with for the custom option passed by user for a
+         third-party integrations like pandas, azure etc.
+        """
         self._load_options = value
 
     @property
