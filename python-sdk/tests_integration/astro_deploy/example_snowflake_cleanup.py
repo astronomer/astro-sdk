@@ -19,6 +19,9 @@ def make_drop_statements(task_instance: Any):
     for temp_table in temp_tables:
         temp_table = "DROP TABLE IF EXISTS " + temp_table["TABLE_NAME"] + ";"
         delete_temp_tables += temp_table
+    print(len(delete_temp_tables))
+    if len(delete_temp_tables) == 0:
+        delete_temp_tables = "Select 1"
     return delete_temp_tables
 
 
