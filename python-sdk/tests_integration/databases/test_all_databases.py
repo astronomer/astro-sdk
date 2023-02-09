@@ -56,7 +56,7 @@ CWD = pathlib.Path(__file__).parent
         },
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite", "delta", "duckdb"],
+    ids=lambda db: db["database"],
 )
 def test_export_table_to_pandas_dataframe(
     database_table_fixture,
@@ -116,17 +116,49 @@ def test_export_table_to_pandas_dataframe_mssql(
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
+        {
+            "database": Database.MYSQL,
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample_without_unicode.csv"))),
+            "table": Table(metadata=Metadata(schema=SCHEMA.lower())),
+        },
+    ],
+    indirect=True,
+    ids=["mysql"],
+)
+def test_export_table_to_pandas_dataframe_mysql(
+    database_table_fixture,
+):
+    """Test export_table_to_pandas_dataframe() where the table exists"""
+    database, table = database_table_fixture
+
+    df = database.export_table_to_pandas_dataframe(table)
+    assert len(df) == 2
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+        ]
+    )
+    assert df.rename(columns=str.lower).to_dict() == expected.to_dict()
+    assert isinstance(df, PandasDataframe)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
         {"database": Database.REDSHIFT},
         {"database": Database.SNOWFLAKE},
         {"database": Database.SQLITE},
         {"database": Database.DELTA},
+        {"database": Database.MYSQL},
         {"database": Database.MSSQL},
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite", "delta", "mssql", "duckdb"],
+    ids=lambda db: db["database"],
 )
 def test_load_pandas_dataframe_to_table_with_append(database_table_fixture):
     """Load Pandas Dataframe to a SQL table with append strategy"""
@@ -171,11 +203,12 @@ def test_load_pandas_dataframe_to_table_with_append(database_table_fixture):
         {"database": Database.SQLITE},
         {"database": Database.DELTA},
         {"database": Database.DUCKDB},
+        {"database": Database.MYSQL},
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite", "delta", "duckdb"],
+    ids=lambda db: db["database"],
 )
-@pytest.mark.parametrize("row_count", [0, 100])
+@pytest.mark.parametrize("row_count", [-1, 0, 100])
 @mock.patch.object(BaseDatabase, "run_sql")
 def test_fetch_all_rows(mock_run_sql, database_table_fixture, row_count):
     db, table = database_table_fixture
@@ -222,10 +255,11 @@ def test_fetch_all_rows_mssql(mock_run_sql, database_table_fixture, row_count):
         {"database": Database.SNOWFLAKE},
         {"database": Database.SQLITE},
         {"database": Database.MSSQL},
+        {"database": Database.MYSQL},
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite", "mssql", "duckdb"],
+    ids=lambda db: db["database"],
 )
 def test_load_pandas_dataframe_to_table_with_replace(database_table_fixture):
     """Load Pandas Dataframe to a SQL table with replace strategy"""
@@ -276,9 +310,10 @@ def test_load_pandas_dataframe_to_table_with_replace(database_table_fixture):
         {"database": Database.DELTA, "table": Table()},
         {"database": Database.MSSQL, "table": Table(metadata=Metadata(schema=SCHEMA))},
         {"database": Database.DUCKDB, "table": Table()},
+        {"database": Database.MYSQL, "table": Table()},
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "snowflake", "sqlite", "delta", "mssql", "duckdb"],
+    ids=lambda db: db["database"],
 )
 @mock.patch("astro.files.base.File.export_to_dataframe")
 @mock.patch("astro.files.base.File.export_to_dataframe_via_byte_stream")

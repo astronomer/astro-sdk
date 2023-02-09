@@ -93,6 +93,20 @@ from astro.table import Metadata, Table
             "mssql://someserver.com:1433",
             "mssql://someserver.com:1433/astrodb.dataset.test_tb",
         ),
+        (
+            Connection(
+                conn_id="test_mysql",
+                conn_type="mysql",
+                host="someserver.com",
+                schema="astrodb",
+                port=3306,
+                login="username",
+                password="password",
+            ),
+            "dataset.test_tb",
+            "mysql://someserver.com:3306",
+            "mysql://someserver.com:3306/dataset.test_tb",
+        ),
     ],
 )
 @mock.patch("airflow.providers.google.cloud.utils.credentials_provider.get_credentials_and_project_id")

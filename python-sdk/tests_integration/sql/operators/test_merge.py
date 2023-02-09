@@ -100,7 +100,6 @@ def validate_results(df: pd.DataFrame, mode):
 @pytest.mark.parametrize(
     "merge_parameters",
     [
-        # "None",
         "single",
         "multi",
         "update",
@@ -113,9 +112,10 @@ def validate_results(df: pd.DataFrame, mode):
         {"database": Database.REDSHIFT},
         {"database": Database.POSTGRES},
         {"database": Database.MSSQL},
+        {"database": Database.MYSQL},
     ],
     indirect=True,
-    ids=["redshift", "postgres", "mssql"],
+    ids=["redshift", "postgres", "mssql", "mysql"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -152,9 +152,10 @@ def test_merge(database_table_fixture, multiple_tables_fixture, sample_dag, merg
         {"database": Database.BIGQUERY},
         {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
+        {"database": Database.MYSQL},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "redshift", "delta"],
+    ids=["snowflake", "bigquery", "redshift", "delta", "mysql"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -408,6 +409,21 @@ duckdb_update_result_sql = (
     "list=EXCLUDED.list,sell=EXCLUDED.sell,taxes=EXCLUDED.taxes"
 )
 
+mysql_single_result_sql = (
+    "insert into target_table(list)  select list from source_table  "
+    "on duplicate key update target_table.list=source_table.list;"
+)
+
+mysql_multi_result_sql = (
+    "insert into target_table(list,sell)  select list,sell from source_table  "
+    "on duplicate key update target_table.list=source_table.list,target_table.sell=source_table.sell;"
+)
+
+mysql_update_result_sql = (
+    "insert into target_table(list,sell,taxes)  select list,sell,age from source_table  "
+    "on duplicate key update target_table.list=source_table.list,"
+    "target_table.sell=source_table.sell,target_table.taxes=source_table.age;"
+)
 
 base_database_class = "astro.databases.base.BaseDatabase.run_sql"
 delta_database_class = "astro.databases.databricks.delta.DeltaDatabase.run_sql"
@@ -423,44 +439,41 @@ def get_result_sql(conn_id, mode):
 
 def get_result_sql_update(conn_id):
     database_type = create_database(conn_id=conn_id).sql_type
-    if database_type == "sqlite":
-        return sqlite_update_result_sql
-    elif database_type == "snowflake":
-        return snowflake_update_result_sql
-    elif database_type == "delta":
-        return delta_update_result_sql
-    elif database_type == "bigquery":
-        return bigquery_update_result_sql
-    elif database_type == "duckdb":
-        return duckdb_update_result_sql
+    update_result_sql = {
+        "sqlite": sqlite_update_result_sql,
+        "snowflake": snowflake_update_result_sql,
+        "delta": delta_update_result_sql,
+        "bigquery": bigquery_update_result_sql,
+        "duckdb": duckdb_update_result_sql,
+        "mysql": mysql_update_result_sql,
+    }
+    return update_result_sql[database_type]
 
 
 def get_result_sql_multi(conn_id):
     database_type = create_database(conn_id=conn_id).sql_type
-    if database_type == "sqlite":
-        return sqlite_multi_result_sql
-    elif database_type == "snowflake":
-        return snowflake_multi_result_sql
-    elif database_type == "delta":
-        return delta_multi_result_sql
-    elif database_type == "bigquery":
-        return bigquery_multi_result_sql
-    elif database_type == "duckdb":
-        return duckdb_multi_result_sql
+    multi_result_sql = {
+        "sqlite": sqlite_multi_result_sql,
+        "snowflake": snowflake_multi_result_sql,
+        "delta": delta_multi_result_sql,
+        "bigquery": bigquery_multi_result_sql,
+        "duckdb": duckdb_multi_result_sql,
+        "mysql": mysql_multi_result_sql,
+    }
+    return multi_result_sql[database_type]
 
 
 def get_result_sql_single(conn_id):
     database_type = create_database(conn_id=conn_id).sql_type
-    if database_type == "sqlite":
-        return sqlite_single_result_sql
-    elif database_type == "snowflake":
-        return snowflake_single_result_sql
-    elif database_type == "delta":
-        return delta_single_result_sql
-    elif database_type == "bigquery":
-        return bigquery_single_result_sql
-    elif database_type == "duckdb":
-        return duckdb_single_result_sql
+    single_result_sql = {
+        "sqlite": sqlite_single_result_sql,
+        "snowflake": snowflake_single_result_sql,
+        "delta": delta_single_result_sql,
+        "bigquery": bigquery_single_result_sql,
+        "duckdb": duckdb_single_result_sql,
+        "mysql": mysql_single_result_sql,
+    }
+    return single_result_sql[database_type]
 
 
 @pytest.mark.parametrize(
@@ -480,8 +493,9 @@ def get_result_sql_single(conn_id):
         (base_database_class, "snowflake_conn"),
         (delta_database_class, "databricks_conn"),
         (base_database_class, "duckdb_conn"),
+        (base_database_class, "mysql_conn"),
     ],
-    ids=["sqlite", "bigquery", "snowflake", "databricks", "duckdb"],
+    ids=["sqlite", "bigquery", "snowflake", "databricks", "duckdb", "mysql"],
 )
 def test_merge_sql_generation(database_class, conn_id, merge_parameters):
     parameters, mode = merge_parameters
