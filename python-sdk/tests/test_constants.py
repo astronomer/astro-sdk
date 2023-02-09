@@ -17,6 +17,7 @@ def test_supported_databases():
         "delta",
         "duckdb",
         "mssql",
+        "mysql",
         "postgres",
         "redshift",
         "snowflake",

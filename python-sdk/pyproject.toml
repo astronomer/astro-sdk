@@ -98,6 +98,10 @@ mssql = [
     "apache-airflow-providers-microsoft-mssql>=3.2",
 ]
 
+mysql = [
+    "apache-airflow-providers-mysql",
+]
+
 duckdb = [
     "airflow-provider-duckdb>=0.0.2",
 ]
@@ -125,6 +129,7 @@ all = [
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
+    "apache-airflow-providers-mysql"
 ]
 doc = [
     "myst-parser>=0.17",

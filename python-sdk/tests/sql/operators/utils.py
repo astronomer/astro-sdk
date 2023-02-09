@@ -48,6 +48,7 @@ SQL_SERVER_CONNECTION_KEY = {
     "sqlite": "sqlite_conn_id",
     "mssql": "mssql_conn_id",
     "duckdb": "duckdb_conn_id",
+    "mysql": "mysql_conn_id",
 }
 
 

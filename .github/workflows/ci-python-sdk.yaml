@@ -60,6 +60,10 @@ env:
   MSSQL_HOST: ${{ secrets.MSSQL_HOST }}
   MSSQL_LOGIN: ${{ secrets.MSSQL_LOGIN }}
   MSSQL_PASSWORD: ${{ secrets.MSSQL_PASSWORD }}
+  MYSQL_DB: ${{ secrets.MYSQL_DB }}
+  MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+  MYSQL_LOGIN: ${{ secrets.MYSQL_LOGIN }}
+  MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
 
 jobs:
   Markdown-link-check:
