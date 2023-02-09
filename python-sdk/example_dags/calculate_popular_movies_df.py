@@ -25,7 +25,7 @@ with DAG(
 ) as dag:
     imdb_movies = aql.load_file(
         File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"),
-        output_table=Table(conn_id="sqlite_default"),
+        output_table=Table(conn_id="postgres_conn"),
     )
     top_five_movies_task = top_five_animations(input_df=imdb_movies)
 

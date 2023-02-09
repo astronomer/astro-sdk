@@ -15,7 +15,7 @@ with DAG(
     # [START data_validation__check_table]
     imdb_movies = aql.load_file(
         File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/python-sdk/tests/data/homes.csv"),
-        output_table=Table(conn_id="sqlite_default"),
+        output_table=Table(conn_id="postgres_conn"),
     )
     aql.check_table(
         dataset=imdb_movies,
