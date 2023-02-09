@@ -392,6 +392,34 @@ class MssqlDatabase(BaseDatabase):
         }
         return statement, params
 
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: schema_name.table_name
+        """
+        database = self.hook.get_connection(self.conn_id).schema
+        schema = "dbo"
+        if table.metadata and table.metadata.schema:
+            schema = table.metadata.schema
+        return f"{database}.{schema}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: postgresql://localhost:5432
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{self.sql_type}://{conn.host}:{conn.port}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}/{self.openlineage_dataset_name(table=table)}"
+
 
 def wrap_identifier(inp: str) -> str:
     return f"{inp}"

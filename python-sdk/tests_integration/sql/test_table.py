@@ -79,6 +79,20 @@ from astro.table import Metadata, Table
             f"file://{socket.gethostbyname(socket.gethostname())}:22",
             f"file://{socket.gethostbyname(socket.gethostname())}:22/tmp/duckdb.db.test_tb",
         ),
+        (
+            Connection(
+                conn_id="test_mssql",
+                conn_type="mssql",
+                host="astroserver.database.windows.net",
+                schema="astrodb",
+                port=1433,
+                login="username",
+                password="password",
+            ),
+            "astrodb.dataset.test_tb",
+            "mssql://astroserver.database.windows.net:1433",
+            "mssql://astroserver.database.windows.net:1433/astrodb.dataset.test_tb",
+        ),
     ],
 )
 @mock.patch("airflow.providers.google.cloud.utils.credentials_provider.get_credentials_and_project_id")
