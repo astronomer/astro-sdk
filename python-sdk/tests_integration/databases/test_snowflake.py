@@ -47,7 +47,7 @@ def test_snowflake_run_sql():
 def test_table_exists_raises_exception():
     """Test if table exists in snowflake database"""
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
-    table = Table(name="inexistent-table", metadata=Metadata(schema=SCHEMA))
+    table = Table(name="inexistent-table", prefix="test_snwoflake_1", metadata=Metadata(schema=SCHEMA))
     assert not database.table_exists(table)
 
 
@@ -59,6 +59,7 @@ def test_table_exists_raises_exception():
             "database": Database.SNOWFLAKE,
             "table": Table(
                 metadata=Metadata(schema=SCHEMA),
+                prefix="test_snwoflake_2",
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                     sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
@@ -117,6 +118,7 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
         {
             "database": Database.SNOWFLAKE,
             "table": Table(
+                prefix="test_snwoflake_3",
                 metadata=Metadata(schema=SCHEMA),
             ),
         }
@@ -151,7 +153,7 @@ def test_snowflake_create_table_using_native_schema_autodetection(
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SCHEMA), prefix="test_snwoflake_4"),
         },
     ],
     indirect=True,
@@ -179,7 +181,7 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SCHEMA), prefix="test_snwoflake_5"),
         },
     ],
     indirect=True,
@@ -209,7 +211,7 @@ def test_load_file_to_table(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(conn_id="snowflake_conn"),
+            "table": Table(conn_id="snowflake_conn", prefix="test_snwoflake_6"),
         },
     ],
     indirect=True,
@@ -244,7 +246,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(name="test_table", metadata=Metadata(schema=SCHEMA)),
+            "table": Table(name="test_table", prefix="test_snwoflake_7", metadata=Metadata(schema=SCHEMA)),
         },
     ],
     indirect=True,
@@ -272,10 +274,11 @@ def test_build_merge_sql(mock_is_valid_snow_identifier, database_table_fixture):
             "database": Database.SNOWFLAKE,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
             "table": Table(
+                prefix="test_snwoflake_8",
                 metadata=Metadata(
                     schema=os.getenv("SNOWFLAKE_SCHEMA", SCHEMA),
                     database=os.getenv("SNOWFLAKE_DATABASE", "snowflake"),
-                )
+                ),
             ),
         },
     ],
@@ -310,7 +313,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SCHEMA), prefix="test_snwoflake_9"),
         }
     ],
     indirect=True,
@@ -335,7 +338,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(prefix="test_snwoflake_10", metadata=Metadata(schema=SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
@@ -379,7 +382,7 @@ def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(prefix="test_snwoflake_11", metadata=Metadata(schema=SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
@@ -391,7 +394,7 @@ def test_create_table_from_select_statement(database_table_fixture):
     database, original_table = database_table_fixture
 
     statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
-    target_table = Table(metadata=Metadata(schema=SCHEMA))
+    target_table = Table(prefix="test_snwoflake_11", metadata=Metadata(schema=SCHEMA))
     database.create_table_from_select_statement(statement, target_table)
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
@@ -511,7 +514,7 @@ def test_load_file_to_table_natively(remote_files_fixture, database_table_fixtur
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(prefix="test_snwoflake_12", metadata=Metadata(schema=SCHEMA)),
         },
     ],
     indirect=True,

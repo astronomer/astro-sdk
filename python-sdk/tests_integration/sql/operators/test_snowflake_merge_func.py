@@ -13,6 +13,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         self.target_table_name = test_utils.get_table_name("merge_test_1")
         self.target_table = Table(
             name=self.target_table_name,
+            prefix="test_snwoflake_merge_1",
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
@@ -22,6 +23,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         self.source_table_name = test_utils.get_table_name("merge_test_2")
         self.source_table = Table(
             name=self.source_table_name,
+            prefix="test_snwoflake_merge_2",
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),

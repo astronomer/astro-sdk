@@ -71,7 +71,9 @@ def create_table(table: Table):
 
 @dag(start_date=datetime(2021, 12, 1), schedule_interval=None, catchup=False)
 def example_snowflake_partial_table_with_append():
-    homes_reporting = Table(name="homes_reporting", temp=True, conn_id=SNOWFLAKE_CONN_ID)
+    homes_reporting = Table(
+        name="homes_reporting", prefix="ex_par_append_1", temp=True, conn_id=SNOWFLAKE_CONN_ID
+    )
     create_results_table = create_table(table=homes_reporting, conn_id=SNOWFLAKE_CONN_ID)
     # [END howto_run_raw_sql_snowflake_1]
 
@@ -80,6 +82,7 @@ def example_snowflake_partial_table_with_append():
         input_file=File(path=FILE_PATH + "homes.csv"),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
+            prefix="ex_par_append_2",
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
@@ -91,6 +94,7 @@ def example_snowflake_partial_table_with_append():
         input_file=File(path=FILE_PATH + "homes2.csv"),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
+            prefix="ex_par_append_3",
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
@@ -105,11 +109,13 @@ def example_snowflake_partial_table_with_append():
         output_table=Table(),
     )
 
-    transformed_data_table = transform_data(df=extracted_data_table, output_table=Table())
+    transformed_data_table = transform_data(
+        df=extracted_data_table, output_table=Table(prefix="ex_par_append_4")
+    )
 
     filtered_data = filter_data(
         homes_long=transformed_data_table,
-        output_table=Table(),
+        output_table=Table(prefix="ex_par_append_5"),
     )
 
     # Append transformed & filtered data to reporting table

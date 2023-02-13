@@ -38,7 +38,7 @@ drop_table_statement = "DROP TABLE IF EXISTS {table_name}"
     "temp_table",
     [
         Table(conn_id="sqlite_conn"),
-        Table(conn_id="snowflake_conn"),
+        Table(conn_id="snowflake_conn", prefix="test_cleanup_1"),
         Table(conn_id="bigquery"),
         Table(conn_id="databricks_conn"),
         Table(conn_id="redshift_conn"),
@@ -61,7 +61,10 @@ def test_cleanup_one_table(temp_table):
     "temp_table, non_temp_table",
     [
         (Table(conn_id="sqlite_conn"), Table(name="foo", conn_id="sqlite_conn")),
-        (Table(conn_id="snowflake_conn"), Table(name="foo", conn_id="snowflake_conn")),
+        (
+            Table(conn_id="snowflake_conn"),
+            Table(name="foo", prefix="test_cleanup_2", conn_id="snowflake_conn"),
+        ),
         (Table(conn_id="bigquery"), Table(name="foo", conn_id="bigquery")),
         (Table(conn_id="databricks_conn"), Table(name="foo", conn_id="databricks_conn")),
         (Table(conn_id="redshift_conn"), Table(name="foo", conn_id="redshift_conn")),
@@ -84,7 +87,7 @@ def test_cleanup_non_temp_table(temp_table, non_temp_table):
     "temp_table",
     [
         Table(conn_id="sqlite_conn"),
-        Table(conn_id="snowflake_conn"),
+        Table(conn_id="snowflake_conn", prefix="test_cleanup_3"),
         Table(conn_id="bigquery"),
         Table(conn_id="databricks_conn"),
         Table(conn_id="redshift_conn"),
@@ -114,7 +117,10 @@ def test_cleanup_non_table(temp_table):
     "temp_table_1, temp_table_2",
     [
         (Table(conn_id="sqlite_conn"), Table(conn_id="sqlite_conn")),
-        (Table(conn_id="snowflake_conn"), Table(conn_id="snowflake_conn")),
+        (
+            Table(conn_id="snowflake_conn", prefix="test_cleanup_4"),
+            Table(conn_id="snowflake_conn", prefix="test_cleanup_5"),
+        ),
         (Table(conn_id="bigquery"), Table(conn_id="bigquery")),
         (Table(conn_id="databricks_conn"), Table(conn_id="databricks_conn")),
         (Table(conn_id="redshift_conn"), Table(conn_id="redshift_conn")),
@@ -147,7 +153,10 @@ def test_cleanup_multiple_table(temp_table_1, temp_table_2):
     [
         (Table(conn_id="sqlite_conn"), Table(conn_id="sqlite_conn")),
         (Table(conn_id="bigquery"), Table(conn_id="bigquery")),
-        (Table(conn_id="snowflake_conn"), Table(conn_id="snowflake_conn")),
+        (
+            Table(conn_id="snowflake_conn", prefix="test_cleanup_6"),
+            Table(conn_id="snowflake_conn", prefix="test_cleanup_7"),
+        ),
         (Table(conn_id="databricks_conn"), Table(conn_id="databricks_conn")),
         (Table(conn_id="redshift_conn"), Table(conn_id="redshift_conn")),
         (Table(conn_id="postgres_conn"), Table(conn_id="postgres_conn")),
