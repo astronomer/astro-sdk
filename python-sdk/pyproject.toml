@@ -56,9 +56,11 @@ tests = [
 ]
 google = [
     "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed
-    "apache-airflow-providers-google>=6.4.0",
+    "apache-airflow-providers-google>6.4.0", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
     "sqlalchemy-bigquery>=1.3.0",
-    "smart-open[gcs]>=5.2.1"
+    "smart-open[gcs]>=5.2.1",
+    "pandas-gbq>=0.15.0", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
+    "protobuf>2.5.0" # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
 ]
 snowflake = [
     "apache-airflow-providers-snowflake",
@@ -101,7 +103,7 @@ duckdb = [
 
 all = [
     "apache-airflow-providers-amazon",
-    "apache-airflow-providers-google>=6.4.0",
+    "apache-airflow-providers-google>6.4.0", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
     "apache-airflow-providers-ftp",
     "apache-airflow-providers-postgres",
     "apache-airflow-providers-snowflake",
@@ -119,6 +121,8 @@ all = [
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
+    "pandas-gbq>=0.15.0", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
+    "protobuf>2.5.0" # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
 ]
 doc = [
     "myst-parser>=0.17",
