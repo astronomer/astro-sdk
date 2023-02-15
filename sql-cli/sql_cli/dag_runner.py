@@ -140,7 +140,7 @@ def run_dag(
     # than creating a BackfillJob and allows us to surface logs to the user
     while dr.state == State.RUNNING:
         schedulable_tis, _ = dr.update_state(session=session)
-        for index, ti in enumerate(schedulable_tis):
+        for ti in schedulable_tis:
             ti_task_id = ti.task_id
             add_loghandler(ti, verbose)
             ti.task = tasks[ti_task_id]
