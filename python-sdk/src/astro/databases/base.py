@@ -419,6 +419,16 @@ class BaseDatabase(ABC):
         response: list = self.run_sql(statement, handler=lambda x: x.fetchall())
         return response
 
+    @staticmethod
+    def check_for_minio_connection(input_file: File) -> bool:
+        """Returns True if minio is passed in extras in connections."""
+        from astro.files.locations import create_file_location
+
+        location = create_file_location(input_file.path)
+        if location.location_type == FileLocation.S3:
+            return True if location.hook.extra_args.get("minio") is not None else False
+        return False
+
     def load_file_to_table(
         self,
         input_file: File,
@@ -457,6 +467,8 @@ class BaseDatabase(ABC):
             normalize_config=normalize_config,
             use_native_support=use_native_support,
         )
+        if self.check_for_minio_connection(input_file=input_file):
+            use_native_support = False
 
         if use_native_support and self.is_native_load_file_available(
             source_file=input_file, target_table=output_table
@@ -548,7 +560,6 @@ class BaseDatabase(ABC):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         :param normalize_config: pandas json_normalize params config
         """
-
         try:
             logging.info("Loading file(s) with Native Support...")
             self.load_file_to_table_natively(
