@@ -51,7 +51,7 @@ def example_duckdb_load_transform_dataframe_and_save():
     )
 
     aql.export_to_file(
-        task_id="save_file_to_gcs",
+        task_id="save_file_to_s3",
         input_data=aggregated_dataframe,
         output_file=File(
             path=f"{s3_bucket}/{{{{ task_instance_key_str }}}}/aggregated_data_duckdb.csv",
