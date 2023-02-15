@@ -59,7 +59,7 @@ google = [
     "apache-airflow-providers-google>6.4.0", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
     "sqlalchemy-bigquery>=1.3.0",
     "smart-open[gcs]>=5.2.1",
-    "pandas-gbq>=0.15.0", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
+    "pandas-gbq", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
     "protobuf>2.5.0" # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
 ]
 snowflake = [
@@ -121,7 +121,7 @@ all = [
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
-    "pandas-gbq>=0.15.0", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
+    "pandas-gbq", # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
     "protobuf>2.5.0" # look at PR description for more information - https://github.com/astronomer/astro-sdk/pull/1757
 ]
 doc = [
