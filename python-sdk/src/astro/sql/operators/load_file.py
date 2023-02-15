@@ -34,6 +34,10 @@ class LoadFileOperator(AstroSQLBaseOperator):
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param skip_core_execution: Skips the core execution of the operator but run all ancillary operations. This is
+        useful for local run of tasks where subsequent tasks in the DAG might need the output of this operator like
+        XCOM results, but they do not want to actually run the core logic and hence not cause effects outside the
+        system.
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -53,6 +57,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         load_options: list[LoadOptions] | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        skip_core_execution: bool = False,
         **kwargs,
     ) -> None:
         kwargs.setdefault("task_id", get_unique_task_id("load_file"))
@@ -83,8 +88,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
         self.load_options_list = LoadOptionsList(load_options)
+        self.skip_core_execution = skip_core_execution
 
-    def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
+    def execute(self, context: Context) -> BaseTable | File | None:  # skipcq: PYL-W0613
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """
@@ -95,7 +101,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
         if self.output_table:
             context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
             context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
-        return self.load_data(input_file=self.input_file, context=context)
+        if not self.skip_core_execution:
+            return self.load_data(input_file=self.input_file, context=context)
+        return self.output_table
 
     def load_data(self, input_file: File, context: Context) -> BaseTable | pd.DataFrame:
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
@@ -315,6 +323,7 @@ def load_file(
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: bool | None = True,
     load_options: list[LoadOptions] | None = None,
+    skip_core_execution: bool = False,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -330,6 +339,10 @@ def load_file(
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param skip_core_execution: Skips the core execution of the operator but run all ancillary operations. This is
+        useful for local run of tasks where subsequent tasks in the DAG might need the output of this operator like
+        XCOM results, but they do not want to actually run the core logic and hence not cause effects outside the
+        system.
     :param load_options: load options while reading and loading file
     """
 
@@ -356,6 +369,7 @@ def load_file(
         columns_names_capitalization=columns_names_capitalization,
         enable_native_fallback=enable_native_fallback,
         load_options=load_options,
+        skip_core_execution=skip_core_execution,
         **kwargs,
     ).output
 

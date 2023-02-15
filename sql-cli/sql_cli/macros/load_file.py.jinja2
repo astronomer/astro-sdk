@@ -1,4 +1,4 @@
-{% macro load_file(yaml_file, dag) -%}
+{% macro load_file(yaml_file, dag, tasks_to_execute) -%}
 {% set yaml_content = yaml_file.get_yaml_content() -%}
 {{ yaml_file.get_variable_name() }} = aql.load_file(
     {#- Note: Unfortunately, we cannot simply use **kwargs as some of the deserialized fields
@@ -60,5 +60,8 @@
     enable_native_fallback={{ yaml_content.enable_native_fallback }},
     {%- endif %}
     task_id="{{ yaml_file.get_variable_name() }}",
+    {%- if tasks_to_execute and yaml_file.get_variable_name() not in tasks_to_execute %}
+    skip_core_execution=True,
+    {%- endif %}
 )
 {%- endmacro -%}

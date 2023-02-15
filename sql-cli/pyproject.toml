@@ -38,7 +38,7 @@ python-frontmatter = "^1.0.0"
 PyYAML = ">=5.4.1"
 python-dotenv = "^0.21.0"
 # Set the minimum version to v1.3.1 to include a fix for https://github.com/astronomer/astro-sdk/issues/1351
-astro-sdk-python = {extras = ["all"], version = ">=1.3.1,<1.5"}
+astro-sdk-python = {path = "../python-sdk", extras = ["all"]}
 apache-airflow = ">2.1"
 
 [tool.poetry.scripts]

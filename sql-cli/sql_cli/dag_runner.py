@@ -48,6 +48,39 @@ class AstroFilesystemBackend(LocalFilesystemBackend):
         return conns
 
 
+def _update_secrets(
+    operation: str,
+    conn_file_path: str | None = None,
+    variable_file_path: str | None = None,
+    connections: dict[str, Connection] | None = None,
+):
+    """Update secrets in secrets backend by fetching connections based on given arguments"""
+    if conn_file_path or variable_file_path or connections:
+        # To get around the fact that we reload certain modules, we need to import here
+        from airflow.configuration import secrets_backend_list
+
+        if operation == "add":
+            local_secrets = AstroFilesystemBackend(
+                variables_file_path=variable_file_path,
+                connections_file_path=conn_file_path,
+                connections=connections,
+            )
+            secrets_backend_list.insert(0, local_secrets)
+        elif operation == "remove":
+            # Remove the local variables we have added to the secrets_backend_list
+            secrets_backend_list.pop(0)  # noqa
+
+
+def _get_tailored_dag(dag: DAG, task_id: str | None, include_upstream: bool) -> DAG:
+    """Gets subset of the dag based on whether a task ID is given and asked to include its upstream tasks in the dag."""
+    if task_id and include_upstream:
+        dag = dag.partial_subset(
+            task_ids_or_regex=task_id,
+            include_upstream=True,
+        )
+    return dag
+
+
 @provide_session
 def run_dag(
     dag: DAG,
@@ -57,6 +90,8 @@ def run_dag(
     variable_file_path: str | None = None,
     connections: dict[str, Connection] | None = None,
     verbose: bool = False,
+    task_id: str | None = None,
+    include_upstream: bool = False,
     session: Session = NEW_SESSION,
 ) -> DagRun:
     """
@@ -67,6 +102,10 @@ def run_dag(
     :param run_conf: configuration to pass to newly created dagrun
     :param conn_file_path: file path to a connection file in either yaml or json
     :param variable_file_path: file path to a variable file in either yaml or json
+    :param connections: dictionary of connection objects
+    :param verbose: whether to show verbose output
+    :param task_id: ID of the single task to run
+    :param include_upstream: When running a single task, whether to run its upstream tasks too
     :param session: database connection (optional)
 
     :return: the dag run object
@@ -80,6 +119,9 @@ def run_dag(
         session=session,
     )
     log.debug("Getting dagrun for dag %s", dag.dag_id)
+
+    dag = _get_tailored_dag(dag, task_id, include_upstream)
+
     dr: DagRun = _get_or_create_dagrun(
         dag=dag,
         start_date=execution_date,
@@ -89,16 +131,7 @@ def run_dag(
         conf=run_conf,
     )
 
-    if conn_file_path or variable_file_path or connections:
-        # To get around the fact that we reload certain modules, we need to import here
-        from airflow.configuration import secrets_backend_list
-
-        local_secrets = AstroFilesystemBackend(
-            variables_file_path=variable_file_path,
-            connections_file_path=conn_file_path,
-            connections=connections,
-        )
-        secrets_backend_list.insert(0, local_secrets)
+    _update_secrets("add", conn_file_path, variable_file_path, connections)
 
     tasks = dag.task_dict
     log.debug("starting dagrun")
@@ -107,13 +140,15 @@ def run_dag(
     # than creating a BackfillJob and allows us to surface logs to the user
     while dr.state == State.RUNNING:
         schedulable_tis, _ = dr.update_state(session=session)
-        for ti in schedulable_tis:
+        for index, ti in enumerate(schedulable_tis):
+            ti_task_id = ti.task_id
             add_loghandler(ti, verbose)
-            ti.task = tasks[ti.task_id]
-            _run_task(ti, session=session)
-    if conn_file_path or variable_file_path or connections:
-        # Remove the local variables we have added to the secrets_backend_list
-        secrets_backend_list.pop(0)  # noqa
+            ti.task = tasks[ti_task_id]
+            skip_task_execution = False
+            if task_id and task_id != ti_task_id and not include_upstream:
+                skip_task_execution = True
+            _run_task(ti, session=session, skip_task_execution=skip_task_execution)
+    _update_secrets("remove", conn_file_path, variable_file_path, connections)
     return dr
 
 
@@ -135,7 +170,14 @@ def add_loghandler(ti: TaskInstance, verbose: bool) -> None:
     ti.log.addHandler(RichHandler(markup=True))
 
 
-def _run_task(ti: TaskInstance, session: Session) -> None:
+def _display_run_task_output(skip_task_execution: bool) -> None:
+    if not skip_task_execution:
+        rprint("[bold green]SUCCESS[/bold green]")
+    else:
+        rprint("[bold magenta]SKIPPED[/bold magenta]")
+
+
+def _run_task(ti: TaskInstance, session: Session, skip_task_execution: bool = False) -> None:
     """
     Run a single task instance, and push result to Xcom for downstream tasks. Bypasses a lot of
     extra steps used in `task.run` to keep our local running as fast as possible
@@ -153,7 +195,7 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
         ti._run_raw_task(session=session)  # skipcq: PYL-W0212
         session.flush()
         session.commit()
-        rprint("[bold green]SUCCESS[/bold green]")
+        _display_run_task_output(skip_task_execution)
     except OperationalError as operational_exception:
         rprint("[bold red]FAILED[/bold red]")
         orig_exception = operational_exception.orig
