@@ -52,6 +52,7 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
         my_df = get_dataframe(output_table=test_table)
         pg_df = sample_pg(my_df)
         validate_dataframe(pg_df)
+        aql.cleanup()
     test_utils.run_dag(sample_dag)
 
 
@@ -94,6 +95,7 @@ def test_transform(database_table_fixture, sample_dag):
             input_table=first_model,
         )
         validate_table(inherit_model)
+        aql.cleanup()
     test_utils.run_dag(sample_dag)
 
 
