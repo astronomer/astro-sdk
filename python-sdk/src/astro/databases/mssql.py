@@ -408,7 +408,7 @@ class MssqlDatabase(BaseDatabase):
         """
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        Example: postgresql://localhost:5432
+        Example: mysql://localhost:5432
         """
         conn = self.hook.get_connection(self.conn_id)
         return f"{self.sql_type}://{conn.host}:{conn.port}"
