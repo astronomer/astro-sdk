@@ -53,7 +53,6 @@ def example_amazon_s3_snowflake_transform():
 
     input_table_1 = Table(
         name="ADOPTION_CENTER_1_" + str(int(time.time())),
-        prefix="ex_sf_tr_1",
         metadata=Metadata(
             database=os.environ["SNOWFLAKE_DATABASE"],
             schema=os.environ["SNOWFLAKE_SCHEMA"],
@@ -64,7 +63,6 @@ def example_amazon_s3_snowflake_transform():
     # [START metadata_example_snowflake]
     input_table_2 = Table(
         name="ADOPTION_CENTER_2_" + str(int(time.time())),
-        prefix="ex_sf_tr_2",
         metadata=Metadata(
             database=os.environ["SNOWFLAKE_DATABASE"],
             schema=os.environ["SNOWFLAKE_SCHEMA"],
@@ -104,7 +102,6 @@ def example_amazon_s3_snowflake_transform():
     # [START dataframe_example_2]
     snowflake_output_table = Table(
         name="aggregated_adoptions_" + str(int(time.time())),
-        prefix="ex_sf_tr_3",
         metadata=Metadata(
             schema=os.environ["SNOWFLAKE_SCHEMA"],
             database=os.environ["SNOWFLAKE_DATABASE"],
