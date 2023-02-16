@@ -78,20 +78,20 @@ with DAG(
     imdb_movies = aql.load_file(
         input_file=File(path="s3://astro-sdk/imdb_v2.csv"),
         task_id="load_csv",
-        output_table=Table(conn_id="postgres_conn"),
+        output_table=Table(conn_id="sqlite_default"),
     )
 
     top_five = top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            conn_id="postgres_conn",
+            conn_id="sqlite_default",
         ),
     )
 
     last_five = last_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            conn_id="postgres_conn",
+            conn_id="sqlite_default",
         ),
     )
 

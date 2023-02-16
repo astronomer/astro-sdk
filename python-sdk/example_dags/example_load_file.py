@@ -62,7 +62,7 @@ with dag:
     my_homes_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
-            conn_id="sqlite_default",
+            conn_id="postgres_conn",
         ),
     )
     # [END load_file_example_1]

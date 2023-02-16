@@ -25,7 +25,10 @@ function echo_help() {
     echo "ASTRO_DEPLOYMENT_ID           Astro cloud Deployment id"
     echo "ASTRO_KEY_ID       Astro cloud service account API key id"
     echo "ASTRO_KEY_SECRET   Astro cloud service account API key secret"
-    echo "bash deploy.sh <ASTRO_DOCKER_REGISTRY> <ASTRO_ORGANIZATION_ID>  <ASTRO_DEPLOYMENT_ID> <ASTRO_KEY_ID> <ASTRO_KEY_SECRET>"
+    echo "ASTRO_DEPLOYMENT_ID_SINGLE_WORKER           Astro cloud Deployment id"
+    echo "ASTRO_KEY_ID_SINGLE_WORKER       Astro cloud service account for Single Worker API key id"
+    echo "ASTRO_KEY_SECRET_SINGLE_WORKER   Astro cloud service account for Single Worker API key secret"
+    echo "bash deploy.sh <ASTRO_DOCKER_REGISTRY> <ASTRO_ORGANIZATION_ID>  <ASTRO_DEPLOYMENT_ID> <ASTRO_KEY_ID> <ASTRO_KEY_SECRET> <ASTRO_DEPLOYMENT_ID_SINGLE_WORKER> <ASTRO_KEY_ID_SINGLE_WORKER> <ASTRO_KEY_SECRET_SINGLE_WORKER>"
 }
 
 if [ "$1" == "-h" ]; then
@@ -45,6 +48,9 @@ ASTRO_ORGANIZATION_ID=$2
 ASTRO_DEPLOYMENT_ID=$3
 ASTRO_KEY_ID=$4
 ASTRO_KEY_SECRET=$5
+ASTRO_DEPLOYMENT_ID_SINGLE_WORKER=$6
+ASTRO_KEY_ID_SINGLE_WORKER=$7
+ASTRO_KEY_SECRET_SINGLE_WORKER=$8
 
 clean
 
@@ -59,7 +65,7 @@ cp -r "${PROJECT_PATH}"/example_dags "${SCRIPT_PATH}"/example_dags
 cp -r "${PROJECT_PATH}"/tests/data "${SCRIPT_PATH}"/tests/data
 
 
-# Build image and deploy
+# Build image and deploy for multiple workers
 BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')
 IMAGE_NAME=${ASTRO_DOCKER_REGISTRY}/${ASTRO_ORGANIZATION_ID}/${ASTRO_DEPLOYMENT_ID}:ci-${BUILD_NUMBER}
 docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/Dockerfile "${SCRIPT_PATH}"
@@ -100,6 +106,51 @@ curl --location --request POST "https://api.astronomer.io/hub/v1" \
                     \"id\" : \"$IMAGE\",
                     \"tag\" : \"ci-$BUILD_NUMBER\",
                     \"repository\" : \"images.astronomer.cloud/$ASTRO_ORGANIZATION_ID/$ASTRO_DEPLOYMENT_ID\"
+                    }
+                }
+          }"
+
+# Build image and deploy to Single Worker
+BUILD_NUMBER_SINGLE_WORKER=$(awk 'BEGIN {srand(); print srand()}')
+IMAGE_SINGLE_WORKER=${ASTRO_DOCKER_REGISTRY}/${ASTRO_ORGANIZATION_ID}/${ASTRO_DEPLOYMENT_ID_SINGLE_WORKER}:ci-${BUILD_NUMBER_SINGLE_WORKER}
+docker build --platform=linux/amd64 -t "${IMAGE_SINGLE_WORKER}" -f "${SCRIPT_PATH}"/Dockerfile.single_worker "${SCRIPT_PATH}"
+docker login "${ASTRO_DOCKER_REGISTRY}" -u "${ASTRO_KEY_ID_SINGLE_WORKER}" -p "${ASTRO_KEY_SECRET_SINGLE_WORKER}"
+docker push "${IMAGE_SINGLE_WORKER}"
+
+TOKEN_SINGLE_WORKER=$( curl --location --request POST "https://auth.astronomer.io/oauth/token" \
+      --header "content-type: application/json" \
+      --data-raw "{
+          \"client_id\": \"$ASTRO_KEY_ID_SINGLE_WORKER\",
+          \"client_secret\": \"$ASTRO_KEY_SECRET_SINGLE_WORKER\",
+          \"audience\": \"astronomer-ee\",
+          \"grant_type\": \"client_credentials\"}" | jq -r '.access_token' )
+
+# Step 8. Create the Image
+echo "get image id"
+IMAGE_SINGLE_WORKER=$( curl --location --request POST "https://api.astronomer.io/hub/v1" \
+      --header "Authorization: Bearer $TOKEN_SINGLE_WORKER" \
+      --header "Content-Type: application/json" \
+      --data-raw "{
+          \"query\" : \"mutation imageCreate(\n    \$input: ImageCreateInput!\n) {\n    imageCreate (\n    input: \$input\n) {\n    id\n    tag\n    repository\n    digest\n    env\n    labels\n    deploymentId\n  }\n}\",
+          \"variables\" : {
+              \"input\" : {
+                  \"deploymentId\" : \"$ASTRO_DEPLOYMENT_ID_SINGLE_WORKER\",
+                  \"tag\" : \"ci-$BUILD_NUMBER_SINGLE_WORKER\"
+                  }
+              }
+          }" | jq -r '.data.imageCreate.id')
+# Step 9. Deploy the Image
+echo "deploy image for single worker"
+curl --location --request POST "https://api.astronomer.io/hub/v1" \
+        --header "Authorization: Bearer $TOKEN_SINGLE_WORKER" \
+        --header "Content-Type: application/json" \
+        --data-raw "{
+            \"query\" : \"mutation imageDeploy(\n    \$input: ImageDeployInput!\n  ) {\n    imageDeploy(\n      input: \$input\n    ) {\n      id\n      deploymentId\n      digest\n      env\n      labels\n      name\n      tag\n      repository\n    }\n}\",
+            \"variables\" : {
+                \"input\" : {
+                    \"id\" : \"$IMAGE_SINGLE_WORKER\",
+                    \"tag\" : \"ci-$BUILD_NUMBER_SINGLE_WORKER\",
+                    \"repository\" : \"images.astronomer.cloud/$ASTRO_ORGANIZATION_ID/$ASTRO_DEPLOYMENT_ID_SINGLE_WORKER\"
                     }
                 }
           }"

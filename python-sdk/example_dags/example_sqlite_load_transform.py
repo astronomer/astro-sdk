@@ -35,19 +35,19 @@ with DAG(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
         task_id="load_csv",
-        output_table=Table(name=imdb_movies_name, conn_id="postgres_conn"),
+        output_table=Table(name=imdb_movies_name, conn_id="sqlite_default"),
     )
 
     top_five_animations = get_top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
             name="top_animation",
-            conn_id="postgres_conn",
+            conn_id="sqlite_default",
         ),
     )
     # Note - Using persistent table just to showcase drop_table operator.
     # [START drop_table_example]
-    truncate_results = drop_table(table=Table(name=imdb_movies_name, conn_id="postgres_conn"))
+    truncate_results = drop_table(table=Table(name=imdb_movies_name, conn_id="sqlite_default"))
     # [END drop_table_example]
     truncate_results.set_upstream(top_five_animations)
     aql.cleanup()
