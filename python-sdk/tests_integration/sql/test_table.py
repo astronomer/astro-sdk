@@ -83,15 +83,15 @@ from astro.table import Metadata, Table
             Connection(
                 conn_id="test_mssql",
                 conn_type="mssql",
-                host="astroserver.database.windows.net",
+                host="someserver.com",
                 schema="astrodb",
                 port=1433,
                 login="username",
                 password="password",
             ),
             "astrodb.dataset.test_tb",
-            "mssql://astroserver.database.windows.net:1433",
-            "mssql://astroserver.database.windows.net:1433/astrodb.dataset.test_tb",
+            "mssql://someserver.com:1433",
+            "mssql://someserver.com:1433/astrodb.dataset.test_tb",
         ),
     ],
 )
