@@ -211,18 +211,18 @@ def test_load_file_native_support_kwargs_warnings_message(database_table_fixture
     "database_table_fixture",
     [
         {
-            "database": Database.SQLITE,
+            "database": Database.BIGQUERY,
         },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
 @mock.patch("astro.databases.base.BaseDatabase.load_file_to_table_using_pandas")
 @mock.patch("astro.databases.base.resolve_file_path_pattern")
 @mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
 @mock.patch("astro.databases.base.BaseDatabase.drop_table")
-@mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_table_using_schema_autodetection")
-@mock.patch("astro.databases.snowflake.SnowflakeDatabase.is_native_autodetect_schema_available")
+@mock.patch("astro.databases.base.BaseDatabase.create_table_using_schema_autodetection")
+@mock.patch("astro.databases.google.bigquery.is_native_autodetect_schema_available")
 def test_table_creation_and_population_done_via_pandas_path(
     load_file_to_table_using_pandas,
     resolve_file_path_pattern,
