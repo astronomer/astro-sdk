@@ -126,8 +126,6 @@ def generate(
         default=None, help="to export a SQL workflow to a specific directory", show_default=False
     ),
 ) -> None:
-    from sql_cli.project import Project
-
     set_verbose_mode(verbose)
     project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
@@ -164,7 +162,6 @@ def validate(
     verbose: bool = typer.Option(False, help="Whether to show verbose output", show_default=True),
 ) -> None:
     from sql_cli.connections import validate_connections
-    from sql_cli.project import Project
 
     set_verbose_mode(verbose)
     project_dir_absolute = resolve_project_dir(project_dir)
@@ -329,8 +326,6 @@ def init(
     ),
     verbose: bool = typer.Option(False, help="Whether to show verbose output", show_default=True),
 ) -> None:
-    from sql_cli.project import Project
-
     set_verbose_mode(verbose)
     project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder, data_dir)
