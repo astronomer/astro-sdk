@@ -396,7 +396,7 @@ class MssqlDatabase(BaseDatabase):
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        Example: schema_name.table_name
+        Example: database.schema.table.name
         """
         database = self.hook.get_connection(self.conn_id).schema
         schema = "dbo"
