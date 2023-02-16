@@ -95,9 +95,9 @@ databricks = ["databricks-cli",
 #    "apache-airflow-providers-microsoft-mssql>=3.2",
 #]
 
-duckdb = [
-    "airflow-provider-duckdb>=0.0.2",
-]
+#duckdb = [
+#    "airflow-provider-duckdb>=0.0.2",
+#]
 
 all = [
     "apache-airflow-providers-amazon",
@@ -118,7 +118,7 @@ all = [
     "apache-airflow-providers-microsoft-azure",
     "azure-storage-blob",
 #    "apache-airflow-providers-microsoft-mssql>=3.2",
-    "airflow-provider-duckdb>=0.0.2",
+#    "airflow-provider-duckdb>=0.0.2",
 ]
 doc = [
     "myst-parser>=0.17",
