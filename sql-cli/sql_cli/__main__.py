@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import typer
 from airflow import DAG
@@ -23,11 +22,9 @@ from sql_cli.constants import (
     LOGGER_NAME,
 )
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
+from sql_cli.project import Project
 from sql_cli.settings import STATE
 from sql_cli.utils.rich import RichHandler, rprint
-
-if TYPE_CHECKING:
-    from sql_cli.project import Project  # pragma: no cover
 
 load_dotenv()
 app = typer.Typer(
@@ -241,8 +238,7 @@ def run(
         show_default=True,
     ),
     verbose: bool = typer.Option(False, help="Whether to show verbose output", show_default=True),
-    task_id: str
-    | None = typer.Option(
+    task_id: str = typer.Option(
         None,
         help="Id of the single task to run. If given, only this task of the DAG will run. Otherwise, all tasks of the "
         "DAG will be run.",
