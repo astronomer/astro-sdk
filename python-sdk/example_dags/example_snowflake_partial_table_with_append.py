@@ -106,7 +106,7 @@ def example_snowflake_partial_table_with_append():
     extracted_data_table = extract_data(
         homes1=homes_data1,
         homes2=homes_data2,
-        output_table=Table(),
+        output_table=Table(prefix="ex_par_append"),
     )
 
     transformed_data_table = transform_data(

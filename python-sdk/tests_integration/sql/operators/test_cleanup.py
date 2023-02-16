@@ -62,7 +62,7 @@ def test_cleanup_one_table(temp_table):
     [
         (Table(conn_id="sqlite_conn"), Table(name="foo", conn_id="sqlite_conn")),
         (
-            Table(conn_id="snowflake_conn"),
+            Table(conn_id="snowflake_conn", prefix="test_cl"),
             Table(name="foo", prefix="test_cleanup_2", conn_id="snowflake_conn"),
         ),
         (Table(conn_id="bigquery"), Table(name="foo", conn_id="bigquery")),
