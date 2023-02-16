@@ -18,7 +18,7 @@ Pre-requisites for load_file_example_19:
 """
 import os
 import pathlib
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import sqlalchemy
 from airflow.models import DAG
@@ -26,7 +26,7 @@ from airflow.models import DAG
 from astro import sql as aql
 from astro.constants import FileType
 from astro.databases.databricks.load_options import DeltaLoadOptions
-from astro.dataframes.load_options import PandasCsvLoadOptions
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.files import File
 from astro.options import SnowflakeLoadOptions
 from astro.table import Metadata, Table
@@ -36,6 +36,9 @@ from astro.table import Metadata, Table
 REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN")
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 DATABRICKS_CONN_ID = "databricks_conn"
+MSSQL_CONN_ID = "mssql_conn"
+DUCKDB_CONN_ID = "duckdb_conn"
+AWS_CONN_ID = "aws_conn"
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -48,8 +51,9 @@ dag = DAG(
     dag_id="example_load_file",
     start_date=datetime(2019, 1, 1),
     max_active_runs=3,
-    schedule_interval=timedelta(minutes=30),
+    schedule_interval=None,
     default_args=default_args,
+    catchup=False,
 )
 
 
@@ -111,7 +115,7 @@ with dag:
 
     # [START load_file_example_7]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
@@ -119,7 +123,7 @@ with dag:
 
     # [START load_file_example_8]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
@@ -132,7 +136,7 @@ with dag:
 
     # [START load_file_example_9]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
@@ -154,7 +158,7 @@ with dag:
 
     # [START load_file_example_11]
     aql.load_file(
-        input_file=File("s3://astro-sdk/sample_pattern", conn_id="aws_conn", filetype=FileType.CSV),
+        input_file=File("s3://astro-sdk/sample_pattern", conn_id=AWS_CONN_ID, filetype=FileType.CSV),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
@@ -176,7 +180,7 @@ with dag:
     aql.load_file(
         input_file=File(
             "s3://astro-sdk/sample_pattern",
-            conn_id="aws_conn",
+            conn_id=AWS_CONN_ID,
             filetype=FileType.CSV,
         ),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
@@ -207,7 +211,7 @@ with dag:
 
     # [START load_file_example_16]
     aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
@@ -291,18 +295,18 @@ with dag:
 
     # [START load_file_example_22]
     aql.load_file(
-        input_file=File("s3://tmp9/delimiter_dollar.csv", conn_id="aws_conn"),
+        input_file=File("s3://tmp9/delimiter_dollar.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
         ),
         use_native_support=False,
-        load_options=[PandasCsvLoadOptions(delimiter="$")],
+        load_options=[PandasLoadOptions(delimiter="$")],
     )
     # [END load_file_example_22]
 
     # [START load_file_example_23]
     aql.load_file(
-        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id="aws_conn"),
+        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
         ),
@@ -317,7 +321,7 @@ with dag:
 
     # [START load_file_example_24]
     aql.load_file(
-        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id="aws_conn"),
+        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
             conn_id=DATABRICKS_CONN_ID,
         ),
@@ -332,7 +336,7 @@ with dag:
 
     # [START load_file_example_25]
     aql.load_file(
-        input_file=File("wasb://astro-sdk/sample.csv", conn_id="wasb_default_conn"),
+        input_file=File("wasb://astro-sdk/sample.csv"),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
@@ -342,5 +346,23 @@ with dag:
         ),
     )
     # [END load_file_example_25]
+
+    # [START load_file_example_26]
+    aql.load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
+        output_table=Table(
+            conn_id=MSSQL_CONN_ID,
+        ),
+    )
+    # [END load_file_example_26]
+
+    # [START load_file_example_27]
+    aql.load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
+        output_table=Table(
+            conn_id=DUCKDB_CONN_ID,
+        ),
+    )
+    # [END load_file_example_27]
 
     aql.cleanup()

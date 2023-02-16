@@ -31,7 +31,7 @@ def test_create_stage_google_fails_due_to_no_storage_integration():
     database = SnowflakeDatabase(conn_id="fake-conn")
     with pytest.raises(ValueError) as exc_info:
         database.create_stage(file=File("gs://some-bucket/some-file.csv"))
-    expected_msg = "In order to create an stage for GCS, `storage_integration` is required."
+    expected_msg = "In order to create a stage, `storage_integration` is required."
     assert exc_info.match(expected_msg)
 
 
@@ -94,6 +94,10 @@ def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable
         metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
     )
     database = SnowflakeDatabase()
+    database.load_options = SnowflakeLoadOptions(
+        copy_options={"ON_ERROR": "CONTINUE"},
+        file_options={"TYPE": "CSV", "TRIM_SPACE": True},
+    )
     with pytest.raises(DatabaseCustomError):
         database.load_file_to_table_natively_with_fallback(
             source_file=File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
@@ -124,7 +128,7 @@ def test_snowflake_load_options():
             storage_integration="foo",
         )
     assert "FILE_FORMAT=(foo=bar, TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
-    assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
+    assert "COPY_OPTIONS=()" in database.run_sql.call_args[0][0]
 
 
 def test_snowflake_load_options_default():
@@ -143,7 +147,7 @@ def test_snowflake_load_options_default():
             storage_integration="foo",
         )
     assert "FILE_FORMAT=(TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
-    assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
+    assert "COPY_OPTIONS=()" in database.run_sql.call_args[0][0]
 
 
 def test_snowflake_load_options_wrong_options():

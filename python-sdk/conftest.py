@@ -22,6 +22,8 @@ DATABASE_NAME_TO_CONN_ID = {
     Database.SNOWFLAKE: "snowflake_conn",
     Database.REDSHIFT: "redshift_conn",
     Database.DELTA: "databricks_conn",
+    Database.MSSQL: "mssql_conn",
+    Database.DUCKDB: "duckdb_conn",
 }
 
 

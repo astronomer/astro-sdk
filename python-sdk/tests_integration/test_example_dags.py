@@ -68,6 +68,8 @@ def get_dag_bag() -> DagBag:
     print(".airflowignore contents: ")
     print(airflow_ignore_file.read_text())
     dag_bag = DagBag(example_dags_dir, include_examples=False)
+    assert dag_bag.dags
+    assert not dag_bag.import_errors
     return dag_bag
 
 
@@ -90,8 +92,3 @@ dag_bag = get_dag_bag()
 def test_example_dag(session, dag_id: str):
     dag = dag_bag.get_dag(dag_id)
     wrapper_run_dag(dag)
-
-
-def test_example_dags_loaded_with_no_errors():
-    assert dag_bag.dags
-    assert not dag_bag.import_errors

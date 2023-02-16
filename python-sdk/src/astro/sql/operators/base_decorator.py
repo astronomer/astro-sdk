@@ -3,9 +3,12 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, Sequence, cast
 
+import jinja2
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
+from airflow.models import BaseOperator
+from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.airflow.datasets import kwargs_with_datasets
@@ -20,7 +23,8 @@ from astro.utils.table import find_first_table
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
-    template_fields: Sequence[str] = ("parameters", "op_args", "op_kwargs")
+    template_fields: Sequence[str] = ("sql", "parameters", "op_args", "op_kwargs")
+    template_ext: Sequence[str] = (".sql",)
 
     database_impl: BaseDatabase
 
@@ -59,7 +63,56 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: Context) -> None:
+    def _resolve_xcom_op_kwargs(self, context: Context) -> None:
+        """
+        Iterate through self.op_kwargs, resolving any XCom values with the given context.
+        Replace those values in-place.
+
+        :param context: The Airflow Context to be used to resolve the op_kwargs.
+        """
+        # TODO: confirm if it makes sense for us to always replace the op_kwargs or if we should
+        # only replace those that are within the decorator signature, by using
+        # inspect.signature(self.python_callable).parameters.values()
+        kwargs = {}
+        for kwarg_name, kwarg_value in self.op_kwargs.items():
+            if isinstance(kwarg_value, XComArg):
+                kwargs[kwarg_name] = kwarg_value.resolve(context)
+            else:
+                kwargs[kwarg_name] = kwarg_value
+        self.op_kwargs = kwargs
+
+    def _resolve_xcom_op_args(self, context: Context) -> None:
+        """
+        Iterates through self.op_args, resolving any XCom values with the given context.
+        Replace those values in-place.
+
+        :param context: The Airflow Context used to resolve the op_args.
+        """
+        args = []
+        for arg_value in self.op_args:
+            if isinstance(arg_value, XComArg):
+                item = arg_value.resolve(context)
+            else:
+                item = arg_value
+            args.append(item)
+        self.op_args = args  # type: ignore
+
+    def _enrich_context(self, context: Context) -> Context:
+        """
+        Prepare the sql and context for execution.
+
+        Specifically, it will do the following:
+        1. Preset database settings
+        2. Load dataframes into tables
+        3. Render sql as sqlalchemy executable string
+
+        :param context: The Airflow Context which will be extended.
+
+        :return: the enriched context with astro specific information.
+        """
+        self._resolve_xcom_op_args(context)
+        self._resolve_xcom_op_kwargs(context)
+
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -88,14 +141,12 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         # Find and load dataframes from op_arg and op_kwarg into Table
         self.create_output_table_if_needed()
         self.op_args = load_op_arg_dataframes_into_sql(  # type: ignore
-            conn_id=self.conn_id,
-            op_args=self.op_args,  # type: ignore
-            target_table=self.output_table.create_similar_table(),
+            conn_id=self.conn_id, op_args=self.op_args, output_table=self.output_table  # type: ignore
         )
         self.op_kwargs = load_op_kwarg_dataframes_into_sql(
             conn_id=self.conn_id,
             op_kwargs=self.op_kwargs,
-            target_table=self.output_table.create_similar_table(),
+            output_table=self.output_table,
         )
 
         # The transform decorator doesn't explicitly pass output_table as a
@@ -110,6 +161,25 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         # if there is no SQL to run we raise an error
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
+        return context
+
+    def render_template_fields(
+        self,
+        context: Context,
+        jinja_env: jinja2.Environment | None = None,
+    ) -> BaseOperator | None:
+        """Template all attributes listed in template_fields.
+
+        This mutates the attributes in-place and is irreversible.
+
+        :param context: Dict with values to apply on content
+        :param jinja_env: Jinja environment
+        """
+        context = self._enrich_context(context)
+        return super().render_template_fields(context, jinja_env)
+
+    def execute(self, context: Context) -> None:
+        context = self._enrich_context(context)
 
         # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
@@ -290,19 +360,20 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             return None
 
 
-def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:
+def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, output_table: BaseTable) -> tuple:
     """
     Identify dataframes in op_args and load them to the table.
 
     :param conn_id: Connection identifier to be used to load content to the target_table
     :param op_args: user-defined decorator's kwargs
-    :param target_table: Table where the dataframe content will be written to
+    :param output_table: Similar table where the dataframe content will be written to
     :return: New op_args, in which dataframes are replaced by tables
     """
-    final_args = []
+    final_args: list[Table | BaseTable] = []
     database = create_database(conn_id=conn_id)
     for arg in op_args:
         if isinstance(arg, pd.DataFrame):
+            target_table = output_table.create_similar_table()
             database.load_pandas_dataframe_to_table(source_dataframe=arg, target_table=target_table)
             final_args.append(target_table)
         elif isinstance(arg, BaseTable):
@@ -313,19 +384,20 @@ def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: 
     return tuple(final_args)
 
 
-def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, target_table: BaseTable) -> dict:
+def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, output_table: BaseTable) -> dict:
     """
     Identify dataframes in op_kwargs and load them to a table.
 
     :param conn_id: Connection identifier to be used to load content to the target_table
     :param op_kwargs: user-defined decorator's kwargs
-    :param target_table: Table where the dataframe content will be written to
+    :param output_table: Similar table where the dataframe content will be written to
     :return: New op_kwargs, in which dataframes are replaced by tables
     """
     final_kwargs = {}
-    database = create_database(conn_id=conn_id, table=target_table)
+    database = create_database(conn_id=conn_id, table=output_table)
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
+            target_table = output_table.create_similar_table()
             df_table = cast(BaseTable, target_table.create_similar_table())
             database.load_pandas_dataframe_to_table(source_dataframe=value, target_table=df_table)
             final_kwargs[key] = df_table

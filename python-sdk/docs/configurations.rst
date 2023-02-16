@@ -31,6 +31,8 @@ We can also configure the default schema specific to the database type (example:
    AIRFLOW__ASTRO_SDK__BIGQUERY_DEFAULT_SCHEMA = "bigquery_tmp"
    AIRFLOW__ASTRO_SDK__SNOWFLAKE_DEFAULT_SCHEMA = "snowflake_tmp"
    AIRFLOW__ASTRO_SDK__REDSHIFT_DEFAULT_SCHEMA = "redshift_tmp"
+   AIRFLOW__ASTRO_SDK__MSSQL_DEFAULT_SCHEMA = "mssql_tmp"
+
 
 or by updating Airflow's configuration
 
@@ -41,6 +43,7 @@ or by updating Airflow's configuration
    bigquery_default_schema = "bigquery_tmp"
    snowflake_default_schema = "snowflake_tmp"
    redshift_default_schema = "redshift_tmp"
+   mssql_default_schema = "mssql_tmp"
 
 Configuring the unsafe dataframe storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

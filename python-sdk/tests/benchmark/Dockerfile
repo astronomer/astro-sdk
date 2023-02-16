@@ -17,16 +17,16 @@ ENV GIT_HASH ${GIT_HASH}
 
 # Debian Bullseye is shipped with Python 3.9
 # Upgrade built-in pip
-RUN apt-get update
-RUN apt-get install -y python3-pip
-RUN apt install -y jq
-RUN apt install -y vim
-
-# Install the Google SDK
-RUN apt install -y curl
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-cli -y
-
-RUN apt install -y libpq-dev python3-dev
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    apt install -y jq && \
+    apt install -y vim && \
+    apt install -y curl && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+    apt-get update && \
+    apt-get install google-cloud-sdk -y && \
+    apt install -y libpq-dev python3-dev
 
 # Install Astro SDK dependencies
 COPY . .

@@ -54,7 +54,10 @@ def test_load_file_to_table_natively(sample_dag, database_table_fixture, remote_
     #   expected_args:  List of all the args that are passed to method mentioned in the method_path
     # }
     optimised_path_to_method = {
-        ("gs", "bigquery",): {
+        (
+            "gs",
+            "bigquery",
+        ): {
             "method_path": "airflow.providers.google.cloud.hooks.bigquery.BigQueryHook.insert_job",
             "expected_kwargs": {
                 "configuration": {

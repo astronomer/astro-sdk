@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 from unittest import mock
@@ -112,6 +113,13 @@ def test_version():
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
     assert f"Astro SQL CLI {__version__}" in result.stdout
+
+
+def test_version_json_output():
+    result = runner.invoke(app, ["version", "--json"])
+    assert result.exit_code == 0
+    result_json = json.loads(result.stdout)
+    assert result_json["version"] == __version__
 
 
 @pytest.mark.parametrize(
@@ -638,3 +646,12 @@ def test_main_no_debug(args, ext_loggers):
     result = runner.invoke(app, args)
     assert result.exit_code == 0
     assert all(logger.manager.disable == logging.CRITICAL for logger in ext_loggers)
+
+
+def test_deploy():
+    result = runner.invoke(app, ["deploy"])
+    assert result.exit_code == 1
+    assert (
+        "Please use the Astro CLI to deploy. See https://docs.astronomer.io/astro/cli/sql-cli for details."
+        in result.stdout
+    )

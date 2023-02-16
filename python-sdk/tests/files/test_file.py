@@ -8,13 +8,9 @@ import pytest
 from airflow import DAG
 
 from astro import constants
-from astro.dataframes.load_options import (
-    PandasCsvLoadOptions,
-    PandasJsonLoadOptions,
-    PandasNdjsonLoadOptions,
-    PandasParquetLoadOptions,
-)
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.files import File, get_file_list, resolve_file_path_pattern
+from astro.options import SnowflakeLoadOptions, WASBLocationLoadOptions
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
 sample_filepaths_per_filetype = [
@@ -220,10 +216,10 @@ def test_if_file_object_can_be_pickled():
 @pytest.mark.parametrize(
     "file_type",
     [
-        {"type": "csv", "expected_class": PandasCsvLoadOptions},
-        {"type": "ndjson", "expected_class": PandasNdjsonLoadOptions},
-        {"type": "json", "expected_class": PandasJsonLoadOptions},
-        {"type": "parquet", "expected_class": PandasParquetLoadOptions},
+        {"type": "csv", "expected_class": PandasLoadOptions},
+        {"type": "ndjson", "expected_class": PandasLoadOptions},
+        {"type": "json", "expected_class": PandasLoadOptions},
+        {"type": "parquet", "expected_class": PandasLoadOptions},
     ],
     ids=["csv", "ndjson", "json", "parquet"],
 )
@@ -252,12 +248,11 @@ def test_file_object_picks_load_options(file_type, file_location):
     location_path, location_expected_class = file_location.values()
     file = File(
         path=location_path + f".{type_name}",
-        load_options=[
-            PandasCsvLoadOptions(delimiter="$"),
-            PandasJsonLoadOptions(encoding="test"),
-            PandasParquetLoadOptions(columns=["name", "age"]),
-            PandasNdjsonLoadOptions(normalize_sep="__"),
-        ],
     )
+    file.load_options = [
+        PandasLoadOptions(delimiter="$"),
+        SnowflakeLoadOptions(copy_options={}),
+        WASBLocationLoadOptions(storage_account="some_account"),
+    ]
     assert type(file.type.load_options) is type_expected_class
     assert file.location.load_options is location_expected_class

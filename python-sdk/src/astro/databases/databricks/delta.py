@@ -24,9 +24,10 @@ from astro.table import BaseTable, Metadata
 
 
 class DeltaDatabase(BaseDatabase):
-
     LOAD_OPTIONS_CLASS_NAME = "DeltaLoadOptions"
-
+    # In run_raw_sql operator decides if we want to return results directly or process them by handler provided
+    # For delta tables we ignore the handler
+    IGNORE_HANDLER_IN_RUN_RAW_SQL: bool = True
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} USING DELTA AS {} "
 
     def __init__(self, conn_id: str, table: BaseTable | None = None, load_options: LoadOptions | None = None):
@@ -230,7 +231,7 @@ class DeltaDatabase(BaseDatabase):
             )
             return True
         except ServerOperationError as s:
-            if "Table or view not found" in s.message:
+            if "TABLE_OR_VIEW_NOT_FOUND" in s.message:
                 return False
             else:
                 raise s

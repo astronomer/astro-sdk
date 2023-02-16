@@ -1,0 +1,6 @@
+load_file:
+  input_file:
+    path: "s3://tmp9/order_check_nrows.ndjson"
+    conn_id: "aws_conn"
+  output_table:
+    conn_id: "snowflake_conn"

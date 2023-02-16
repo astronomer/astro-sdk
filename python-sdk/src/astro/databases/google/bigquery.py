@@ -255,7 +255,6 @@ class BigqueryDatabase(BaseDatabase):
         # We check if the schema exists first because BigQuery will fail on a create schema query even if it
         # doesn't actually create a schema.
         if schema and not self.schema_exists(schema):
-
             input_table_schema = self.table.metadata.schema if self.table and self.table.metadata else None
             input_table_location = self._get_schema_location(input_table_schema)
 

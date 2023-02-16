@@ -1,5 +1,5 @@
 import pathlib
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from airflow.models import DAG
 from pandas import DataFrame
@@ -22,8 +22,9 @@ dag = DAG(
     dag_id="example_merge_bigquery",
     start_date=datetime(2019, 1, 1),
     max_active_runs=3,
-    schedule_interval=timedelta(minutes=30),
+    schedule_interval=None,
     default_args=default_args,
+    catchup=False,
 )
 
 

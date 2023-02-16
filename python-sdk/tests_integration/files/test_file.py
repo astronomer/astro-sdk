@@ -66,7 +66,6 @@ def test_create_from_dataframe(mocked_smart_open, filetype, locations, type_meth
     data = {"id": [1, 2, 3], "name": ["First", "Second", "Third with unicode पांचाल"]}
     df = pd.DataFrame(data=data)
     with patch(type_method_map_fixture[FileType(filetype)]) as mocked_write:
-
         path = locations["path"] + "." + filetype
 
         File(path).create_from_dataframe(df=df)
@@ -111,7 +110,6 @@ def test_export_to_dataframe(filetype, locations, type_method_map_fixture):
     with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read, patch(
         "astro.files.base.smart_open.open", mock_open(read_data=data)
     ) as mocked_smart_open:
-
         path = locations["path"] + "." + filetype
 
         File(path).export_to_dataframe(normalize_config=None)
@@ -154,7 +152,6 @@ def test_read_with_explicit_valid_type(filetype, locations, type_method_map_fixt
     with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read, patch(
         "astro.files.base.smart_open.open", mock_open(read_data=data)
     ) as mocked_smart_open:
-
         path = locations["path"]
 
         File(path=path, filetype=FileType(filetype)).export_to_dataframe(normalize_config=None)

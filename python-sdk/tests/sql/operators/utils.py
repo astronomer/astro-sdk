@@ -38,12 +38,16 @@ SQL_SERVER_HOOK_PARAMETERS = {
     "postgres": {"postgres_conn_id": "postgres_conn"},
     "bigquery": {"gcp_conn_id": "google_cloud_default", "use_legacy_sql": False},
     "sqlite": {"sqlite_conn_id": "sqlite_conn"},
+    "mssql": {"mssql_conn_id": "mssql_conn"},
+    "duckdb": {"duckdb_conn_id": "duckdb_conn"},
 }
 SQL_SERVER_CONNECTION_KEY = {
     "snowflake": "snowflake_conn_id",
     "postgres": "postgres_conn_id",
     "bigquery": "gcp_conn_id",
     "sqlite": "sqlite_conn_id",
+    "mssql": "mssql_conn_id",
+    "duckdb": "duckdb_conn_id",
 }
 
 

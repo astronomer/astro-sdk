@@ -7,6 +7,7 @@ import random
 import string
 from dataclasses import dataclass, field
 from typing import Any, Sequence
+from urllib.parse import urlparse
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -51,11 +52,6 @@ ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP = {
     FileType.PARQUET: "PARQUET",
 }
 
-COPY_OPTIONS = {
-    FileType.CSV: "ON_ERROR=CONTINUE",
-    FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
-    FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
-}
 
 DEFAULT_STORAGE_INTEGRATION = {
     FileLocation.S3: settings.SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
@@ -63,7 +59,13 @@ DEFAULT_STORAGE_INTEGRATION = {
 }
 
 NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
-NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
+NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (
+    FileLocation.GS,
+    FileLocation.S3,
+    FileLocation.WASB,
+    FileLocation.WASBS,
+    FileLocation.AZURE,
+)
 
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.PARQUET}
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS, FileLocation.S3}
@@ -191,8 +193,10 @@ class SnowflakeStage:
         """
         # the stage URL needs to be the folder where the files are
         # https://docs.snowflake.com/en/sql-reference/sql/create-stage.html#external-stage-parameters-externalstageparams
-        url = file.path[: file.path.rfind("/") + 1]
-        self.url = url.replace("gs://", "gcs://")
+        url = urlparse(file.location.snowflake_stage_path)
+        url = url._replace(path=url.path[: url.path.rfind("/") + 1])
+        url = url._replace(scheme="gcs") if url.scheme == "gs" else url
+        self.url = url.geturl()
 
     @property  # type: ignore
     def name(self) -> str:
@@ -356,23 +360,8 @@ class SnowflakeDatabase(BaseDatabase):
             file.location.location_type
         )
         if storage_integration is not None:
-            auth = f"storage_integration = {storage_integration};"
-        else:
-            if file.location.location_type == FileLocation.GS:
-                raise DatabaseCustomError(
-                    "In order to create an stage for GCS, `storage_integration` is required."
-                )
-            elif file.location.location_type == FileLocation.S3:
-                aws = file.location.hook.get_credentials()
-                if aws.access_key and aws.secret_key:
-                    auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
-                else:
-                    raise DatabaseCustomError(
-                        "In order to create an stage for S3, one of the following is required: "
-                        "* `storage_integration`"
-                        "* AWS_KEY_ID and SECRET_KEY_ID"
-                    )
-        return auth
+            return f"storage_integration = {storage_integration};"
+        return file.location.get_snowflake_stage_auth_sub_statement()
 
     def create_stage(
         self,
@@ -399,6 +388,7 @@ class SnowflakeDatabase(BaseDatabase):
             `Snowflake official documentation on stage creation
             <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
         """
+
         auth = self._create_stage_auth_sub_statement(file=file, storage_integration=storage_integration)
 
         if not self.load_options:
@@ -408,7 +398,7 @@ class SnowflakeDatabase(BaseDatabase):
         stage.set_url_from_file(file)
 
         fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
-        copy_options = [COPY_OPTIONS[file.type.name]]
+        copy_options = []
         copy_options.extend([f"{k}={v}" for k, v in self.load_options.copy_options.items()])
         file_options = [f"{k}={v}" for k, v in self.load_options.file_options.items()]
         file_options.extend([f"TYPE={fileformat}", "TRIM_SPACE=TRUE"])
@@ -422,7 +412,7 @@ class SnowflakeDatabase(BaseDatabase):
                 auth,
             ]
         )
-
+        logging.debug("SQL statement executed: %s ", sql_statement)
         self.run_sql(sql_statement)
 
         return stage
@@ -637,6 +627,8 @@ class SnowflakeDatabase(BaseDatabase):
         file_path = os.path.basename(source_file.path) or ""
         sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
 
+        self._validate_before_copy_into(source_file, target_table, stage)
+
         # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
         # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
         # if we pass the handler provider raises an exception AttributeError
@@ -652,6 +644,25 @@ class SnowflakeDatabase(BaseDatabase):
         finally:
             self.drop_stage(stage)
         return rows
+
+    def _validate_before_copy_into(
+        self, source_file: File, target_table: BaseTable, stage: SnowflakeStage
+    ) -> None:
+        """Validate COPY INTO command to tests the files for errors but does not load them."""
+        if self.load_options:
+            if self.load_options.validation_mode is None:
+                return
+            table_name = self.get_table_qualified_name(target_table)
+            file_path = os.path.basename(source_file.path) or ""
+            sql_statement = (
+                f"COPY INTO {table_name} FROM "
+                f"@{stage.qualified_name}/{file_path} VALIDATION_MODE='{self.load_options.validation_mode}'"
+            )
+            try:
+                self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
+            except ProgrammingError as load_exception:
+                self.drop_stage(stage)
+                raise load_exception
 
     @staticmethod
     def evaluate_results(rows):
@@ -965,6 +976,7 @@ class SnowflakeDatabase(BaseDatabase):
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
         # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
+        sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         self.run_sql(sql=sql)
 

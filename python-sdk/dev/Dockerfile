@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/astro-runtime:7.1.0-base
+FROM quay.io/astronomer/astro-runtime:7.2.0-base
 
 USER root
 RUN apt-get update -y && apt-get install -y git
@@ -6,7 +6,11 @@ RUN apt-get install -y --no-install-recommends \
         build-essential \
         libsasl2-2 \
         libsasl2-dev \
-        libsasl2-modules
+        libsasl2-modules \
+        freetds-dev \
+        libssl-dev \
+        libkrb5-dev
+
 ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 
 COPY ../pyproject.toml  ${AIRFLOW_HOME}/astro_sdk/

@@ -197,6 +197,10 @@ Supported native transfers
      - Redshift
      - https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html
      - https://docs.aws.amazon.com/redshift/latest/dg/c-getting-started-using-spectrum-create-role.html
+   * - Azure
+     - Snowflake
+     - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
+     - https://docs.snowflake.com/en/user-guide/data-load-azure-config.html
 
 .. note::
    For loading from S3 to Redshift database, although Redshift allows the below two options for authorization, **we
@@ -207,6 +211,30 @@ Supported native transfers
    2. CREDENTIALS
 
    Reference on how to create such a role is here: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
+
+Loading to MS SQL
+~~~~~~~~~~~~~~~~~
+
+``load_file`` can load data to SQL Server database hosted on cloud or on-premise server.
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_26]
+   :end-before: [END load_file_example_26]
+
+.. note::
+   We do not support loading Unicode data to SQL Server due to limitations on the underlying ``pymssql`` library
+
+Loading to Duckdb
+~~~~~~~~~~~~~~~~~
+
+``load_file`` can load data to duckdb. If the database file is not specified in the connection, it will assume the user is using an in-memory duckdb. For more information about the supported files, check the [official documentation](https://duckdb.org/docs/extensions/overview.html).
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_27]
+   :end-before: [END load_file_example_27]
+
 
 Patterns in file path
 ~~~~~~~~~~~~~~~~~~~~~
@@ -397,10 +425,10 @@ If you want to provide the list of load options(specific to database or file loc
         ``load_options`` will be replacing ``native_support_kwargs`` parameter
 
     - :py:obj:`PandasLoadOptions <astro.options.LoadOptions>` - Pandas load options for reading and loading file using pandas path for various file types:
-        1. :py:obj:`PandasCsvLoadOptions <astro.dataframes.load_options.PandasCsvLoadOptions>` - Pandas load options while reading and loading csv file.
-        2. :py:obj:`PandasJsonLoadOptions <astro.dataframes.load_options.PandasJsonLoadOptions>` - Pandas load options while reading and loading json file.
-        3. :py:obj:`PandasNdjsonLoadOptions <astro.dataframes.load_options.PandasNdjsonLoadOptions>` - Pandas load options while reading and loading Ndjson file.
-        4. :py:obj:`PandasParquetLoadOptions <astro.dataframes.load_options.PandasParquetLoadOptions>` - Pandas load options while reading and loading Parquet file.
+        1. Pandas load options while reading and loading csv file. [ref doc](https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html)
+        2. Pandas load options while reading and loading json file. [ref doc](https://pandas.pydata.org/docs/reference/api/pandas.read_json.html)
+        3. Pandas load options while reading and loading Ndjson file. [ref doc](https://pandas.pydata.org/docs/reference/api/pandas.read_json.html)
+        4. Pandas load options while reading and loading Parquet file. [ref doc](https://pandas.pydata.org/docs/reference/api/pandas.read_parquet.html)
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
@@ -408,6 +436,13 @@ If you want to provide the list of load options(specific to database or file loc
        :end-before: [END load_file_example_22]
 
     - :py:obj:`SnowflakeLoadOptions <astro.options.SnowflakeLoadOptions>` - Load options to load file to snowflake using native approach.
+
+        .. note::
+
+            ``file_options`` default to
+                ```
+                file_options={"TYPE": "filetype", "TRIM_SPACE": True},
+                ```
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python

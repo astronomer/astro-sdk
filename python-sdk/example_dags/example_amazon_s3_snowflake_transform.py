@@ -9,6 +9,7 @@ from airflow.decorators import dag
 
 from astro import sql as aql
 from astro.files import File
+from astro.options import SnowflakeLoadOptions
 from astro.table import Metadata, Table
 
 
@@ -39,7 +40,7 @@ def aggregate_data(df: pd.DataFrame):
 @dag(
     start_date=datetime(2021, 1, 1),
     max_active_runs=1,
-    schedule_interval="@daily",
+    schedule_interval=None,
     default_args={
         "email_on_failure": False,
         "retries": 0,
@@ -48,7 +49,6 @@ def aggregate_data(df: pd.DataFrame):
     catchup=False,
 )
 def example_amazon_s3_snowflake_transform():
-
     s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
     input_table_1 = Table(
@@ -75,10 +75,22 @@ def example_amazon_s3_snowflake_transform():
     temp_table_1 = aql.load_file(
         input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv"),
         output_table=input_table_1,
+        load_options=[
+            SnowflakeLoadOptions(
+                file_options={"TYPE": "CSV", "TRIM_SPACE": True},
+                copy_options={"ON_ERROR": "CONTINUE"},
+            )
+        ],
     )
     temp_table_2 = aql.load_file(
         input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
         output_table=input_table_2,
+        load_options=[
+            SnowflakeLoadOptions(
+                file_options={"TYPE": "CSV", "TRIM_SPACE": True},
+                copy_options={"ON_ERROR": "CONTINUE"},
+            )
+        ],
     )
 
     combined_data = combine_data(

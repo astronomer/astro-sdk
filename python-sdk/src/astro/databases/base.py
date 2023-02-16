@@ -63,6 +63,8 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: list[str] = []
     illegal_column_name_chars_replacement: list[str] = []
+    # In run_raw_sql operator decides if we want to return results directly or process them by handler provided
+    IGNORE_HANDLER_IN_RUN_RAW_SQL: bool = False
     NATIVE_PATHS: dict[Any, Any] = {}
     DEFAULT_SCHEMA = SCHEMA
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
@@ -115,6 +117,7 @@ class BaseDatabase(ABC):
 
         :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
+        :param autocommit: Optional autocommit flag
         """
         if parameters is None:
             parameters = {}
@@ -298,6 +301,7 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        use_native_support: bool = True,
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -311,7 +315,7 @@ class BaseDatabase(ABC):
         """
         if table.columns:
             self.create_table_using_columns(table)
-        elif file and self.is_native_autodetect_schema_available(file):
+        elif use_native_support and file and self.is_native_autodetect_schema_available(file):
             self.create_table_using_native_schema_autodetection(table, file)
         else:
             self.create_table_using_schema_autodetection(
@@ -400,6 +404,7 @@ class BaseDatabase(ABC):
                 # We only use the first file for inferring the table schema
                 files[0],
                 columns_names_capitalization=columns_names_capitalization,
+                use_native_support=use_native_support,
             )
 
     def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
@@ -453,12 +458,12 @@ class BaseDatabase(ABC):
             columns_names_capitalization=columns_names_capitalization,
             if_exists=if_exists,
             normalize_config=normalize_config,
+            use_native_support=use_native_support,
         )
 
         if use_native_support and self.is_native_load_file_available(
             source_file=input_file, target_table=output_table
         ):
-
             self.load_file_to_table_natively_with_fallback(
                 source_file=input_file,
                 target_table=output_table,

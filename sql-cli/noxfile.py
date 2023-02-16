@@ -42,7 +42,7 @@ def test(session: nox.Session, airflow: str) -> None:
         )
         # We are duplicating the tests dependencies until we find a better solution.
         # The solution might be to move out of poetry.
-        dev_deps = ("pytest", "pytest-cov", "mypy", "types-pyyaml")
+        dev_deps = ("pytest", "pytest-cov", "mypy", "types-pyyaml", "freezegun")
         # Poetry does not support constraints:
         # https://github.com/python-poetry/poetry/issues/3225
         session.run("poetry", "run", "pip", "install", "-e", ".", *dev_deps, "-c", constraints_url)
@@ -58,13 +58,12 @@ def test(session: nox.Session, airflow: str) -> None:
         "TERMINAL_WIDTH": "3000",
         "_TYPER_FORCE_DISABLE_TERMINAL": "1",
     }
-    session.run("poetry", "run", "pytest", *session.posargs, env=pytest_env)
+    session.run("poetry", "run", "pytest", "-vv", *session.posargs, env=pytest_env)
 
 
 @nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
-    session.install("poetry")
     session.run("poetry", "install", "--with", "type_check")
     session.run("poetry", "run", "mypy", "--version")
     session.run("poetry", "run", "mypy")

@@ -24,6 +24,7 @@ class FileLocation(Enum):
     S3 = "s3"  # Amazon S3
     WASB = "wasb"  # Azure Blob Storage
     WASBS = "wasbs"  # Azure Blob Storage
+    AZURE = "azure"  # Azure Blob Storage
     SFTP = "sftp"  # Remote file location
     FTP = "ftp"  # Remote file location
     # [END filelocation]
@@ -53,6 +54,8 @@ class Database(Enum):
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
     REDSHIFT = "redshift"
+    MSSQL = "mssql"
+    DUCKDB = "duckdb"
     # [END database]
 
     def __str__(self) -> str:
@@ -76,3 +79,5 @@ ExportExistsStrategy = Literal["replace", "exception"]
 MergeConflictStrategy = Literal["ignore", "update", "exception"]
 
 ColumnCapitalization = Literal["upper", "lower", "original"]
+
+RunRawSQLResultFormat = Literal["list", "pandas_dataframe"]

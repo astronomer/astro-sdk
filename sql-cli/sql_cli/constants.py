@@ -1,6 +1,7 @@
 CONFIG_DIR = "config"
 GLOBAL_CONFIG_FILENAME = "global.yml"
 CONFIG_FILENAME = "configuration.yml"
+WORKFLOW_CONFIG_FILENAME = "workflow.yml"
 
 DEFAULT_ENVIRONMENT = "default"
 DEFAULT_BASE_AIRFLOW_HOME = ".airflow"

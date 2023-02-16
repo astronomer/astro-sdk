@@ -14,6 +14,7 @@ from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolute())
+DEFAULT_FILEPATH_MSSQL = str(pathlib.Path(CWD.parent.parent, "data/sample_without_unicode.csv").absolute())
 
 
 @pytest.mark.integration
@@ -40,9 +41,13 @@ DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolu
             "database": Database.REDSHIFT,
             "file": File(DEFAULT_FILEPATH),
         },
+        {
+            "database": Database.DUCKDB,
+            "file": File(DEFAULT_FILEPATH),
+        },
     ],
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake", "redshift"],
+    ids=["sqlite", "postgres", "bigquery", "snowflake", "redshift", "duckdb"],
 )
 def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
@@ -77,6 +82,46 @@ def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
     "database_table_fixture",
     [
         {
+            "database": Database.MSSQL,
+            "file": File(DEFAULT_FILEPATH_MSSQL),
+        },
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_drop_table_with_table_metadata_mssql(database_table_fixture, sample_dag):
+    """Test drop table operator for all databases."""
+    database, test_table = database_table_fixture
+    assert database.table_exists(test_table)
+    tmp_table = test_table.create_similar_table()
+
+    @aql.dataframe
+    def do_nothing(df: pandas.DataFrame):
+        return df
+
+    @task
+    def validate_table_exists(table: Table):
+        assert database.table_exists(table)
+        assert table.name == tmp_table.name
+        assert table.row_count == 2
+        return table
+
+    with sample_dag:
+        transformed_operator = do_nothing(test_table, output_table=tmp_table)
+        validated_table = validate_table_exists(transformed_operator)
+        aql.drop_table(
+            table=validated_table,
+        )
+    test_utils.run_dag(sample_dag)
+
+    assert not database.table_exists(tmp_table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
             "database": Database.POSTGRES,
             "table": Table(conn_id="postgres_conn"),
             "file": File(DEFAULT_FILEPATH),
@@ -86,11 +131,43 @@ def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
             "table": Table(conn_id="redshift_conn"),
             "file": File(DEFAULT_FILEPATH),
         },
+        {
+            "database": Database.DUCKDB,
+            "table": Table(conn_id="redshift_conn"),
+            "file": File(DEFAULT_FILEPATH),
+        },
     ],
     indirect=True,
-    ids=["postgres", "redshift"],
+    ids=["postgres", "redshift", "duckdb"],
 )
 def test_drop_table_without_table_metadata(database_table_fixture, sample_dag):
+    """Test drop table operator for all databases."""
+    database, test_table = database_table_fixture
+    assert database.table_exists(test_table)
+
+    with sample_dag:
+        aql.drop_table(
+            table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
+
+    assert not database.table_exists(test_table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.MSSQL,
+            "table": Table(conn_id="mssql_conn"),
+            "file": File(DEFAULT_FILEPATH_MSSQL),
+        },
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_drop_table_without_table_metadata_mssql(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
     database, test_table = database_table_fixture
     assert database.table_exists(test_table)

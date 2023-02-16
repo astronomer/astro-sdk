@@ -75,7 +75,6 @@ with DAG(
     start_date=START_DATE,
     catchup=False,
 ) as dag:
-
     imdb_movies = aql.load_file(
         input_file=File(path="s3://astro-sdk/imdb_v2.csv"),
         task_id="load_csv",

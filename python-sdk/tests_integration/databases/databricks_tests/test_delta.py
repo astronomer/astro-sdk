@@ -149,10 +149,9 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     database, non_existent_table = database_table_fixture
     from databricks.sql.exc import ServerOperationError
 
-    with pytest.raises(ServerOperationError) as exc_info:
+    with pytest.raises(ServerOperationError):
         database.export_table_to_pandas_dataframe(non_existent_table)
-    error_message = exc_info.value.args[0]
-    assert error_message.startswith("Table or view not found:")
+    assert not database.table_exists(non_existent_table)
 
 
 # TODO: uncomment these tests as we add functions
