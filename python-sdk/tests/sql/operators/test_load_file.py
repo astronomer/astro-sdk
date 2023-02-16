@@ -211,11 +211,11 @@ def test_load_file_native_support_kwargs_warnings_message(database_table_fixture
     "database_table_fixture",
     [
         {
-            "database": Database.SNOWFLAKE,
+            "database": Database.SQLITE,
         },
     ],
     indirect=True,
-    ids=["snowflake"],
+    ids=["sqlite"],
 )
 @mock.patch("astro.databases.base.BaseDatabase.load_file_to_table_using_pandas")
 @mock.patch("astro.databases.base.resolve_file_path_pattern")
