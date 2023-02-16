@@ -172,7 +172,7 @@ def validate(
     validate_connections(connections=project.connections, connection_id=connection)
 
 
-def _check_run_arguments_meet_constraints(include_upstream: bool, task_id: str | None):
+def _check_run_arguments_meet_constraints(include_upstream: bool, task_id: str | None) -> None:
     if include_upstream and not task_id:
         rprint(
             "\n[bold blue]include_upstream[/bold blue] is only meant for runs when [bold blue]task_id[/bold blue] is "

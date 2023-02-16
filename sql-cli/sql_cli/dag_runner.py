@@ -53,7 +53,7 @@ def _update_secrets(
     conn_file_path: str | None = None,
     variable_file_path: str | None = None,
     connections: dict[str, Connection] | None = None,
-):
+) -> None:
     """Update secrets in secrets backend by fetching connections based on given arguments"""
     if conn_file_path or variable_file_path or connections:
         # To get around the fact that we reload certain modules, we need to import here
