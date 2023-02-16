@@ -78,6 +78,7 @@ def run_append(output_table: Table):
         target_table=load_main,
         source_table=load_append,
     )
+    aql.drop_table(load_append)
 
 
 @task_group
@@ -100,7 +101,8 @@ def run_merge(output_table: Table):
         columns={"list": "list", "sell": "sell"},
         if_conflicts="ignore",
     )
-    con1 >> merged_table  # skipcq PYL-W0104
+
+    con1 >> merged_table >> aql.drop_table(merge_table)  # skipcq PYL-W0104
 
 
 @pytest.mark.parametrize(
