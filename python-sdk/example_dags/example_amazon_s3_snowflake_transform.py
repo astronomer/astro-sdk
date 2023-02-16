@@ -114,7 +114,7 @@ def example_amazon_s3_snowflake_transform():
         output_table=snowflake_output_table,
     )
     # [END dataframe_example_2]
-    aql.cleanup()
+    aql.cleanup()  # dummy comment
 
 
 dag = example_amazon_s3_snowflake_transform()
