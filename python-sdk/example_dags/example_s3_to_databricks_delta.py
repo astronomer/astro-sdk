@@ -50,23 +50,23 @@ def example_amazon_s3_delta_transform():
 
     input_table_1 = Table(
         name="ADOPTION_CENTER_1_" + str(int(time.time())),
-        conn_id="delta_conn",
+        conn_id="databricks_conn",
         temp=True,
     )
     # [START metadata_example_delta]
     input_table_2 = Table(
         name="ADOPTION_CENTER_2_" + str(int(time.time())),
-        conn_id="delta_conn",
+        conn_id="databricks_conn",
         temp=True,
     )
     # [END metadata_example_delta]
 
     temp_table_1 = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv"),
+        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv", conn_id="aws_default"),
         output_table=input_table_1,
     )
     temp_table_2 = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
+        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv", conn_id="aws_default"),
         output_table=input_table_2,
     )
 
@@ -91,3 +91,7 @@ def example_amazon_s3_delta_transform():
 
 
 dag = example_amazon_s3_delta_transform()
+
+if __name__ == "__main__":
+    conn_file = os.getenv("CONN_FILE_PATH")
+    dag.test(conn_file_path=conn_file)
