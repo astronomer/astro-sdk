@@ -29,7 +29,7 @@ connections:
     port: 443
     login: $SNOWFLAKE_ACCOUNT_NAME
     password: $SNOWFLAKE_PASSWORD
-    schema: ASTROFLOW_CI
+    schema: ASTROFLOW_TMP_CI
     extra:
       account: "gp21411"
       region: "us-east-1"
