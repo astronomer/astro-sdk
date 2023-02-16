@@ -36,6 +36,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
         **kwargs: Any,
     ):
         task_id = task_id or get_unique_task_id("transform")
+        self.skip_core_execution = kwargs.pop("skip_core_execution", None)
         super().__init__(
             conn_id=conn_id,
             parameters=parameters,
@@ -51,6 +52,11 @@ class TransformOperator(BaseSQLDecoratedOperator):
 
     def execute(self, context: Context):
         super().execute(context)
+        if self.skip_core_execution:
+            # Skips the core execution of the operator but run all ancillary operations. This is useful for local run of
+            # tasks where subsequent tasks in the DAG might need the output of this operator like XCOM results, but they
+            # do not want to actually run the core logic and hence not cause effects outside the system.
+            return self.output_table
         self.database_impl.create_schema_if_needed(self.output_table.metadata.schema)
         self.database_impl.drop_table(self.output_table)
         self.database_impl.create_table_from_select_statement(
