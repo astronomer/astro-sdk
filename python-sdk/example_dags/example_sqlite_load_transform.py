@@ -16,7 +16,7 @@ def get_top_five_animations(input_table: Table):  # skipcq: PYL-W0613
     return """
         SELECT title, rating
         FROM {{input_table}}
-        WHERE genre1='Animation'
+        WHERE genre1=='Animation'
         ORDER BY rating desc
         LIMIT 5;
     """
