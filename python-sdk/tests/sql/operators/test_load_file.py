@@ -222,6 +222,7 @@ def test_load_file_native_support_kwargs_warnings_message(database_table_fixture
 @mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
 @mock.patch("astro.databases.base.BaseDatabase.drop_table")
 @mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_table_using_schema_autodetection")
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.is_native_autodetect_schema_available")
 def test_table_creation_and_population_done_via_pandas_path(
     load_file_to_table_using_pandas,
     resolve_file_path_pattern,
@@ -230,6 +231,7 @@ def test_table_creation_and_population_done_via_pandas_path(
     create_table_using_schema_autodetection,
     sample_dag,
     database_table_fixture,
+    is_native_autodetect_schema_available,
 ):
     """
     When passing `use_native_support=False` both table creation and table population should be done via pandas path.
@@ -247,3 +249,4 @@ def test_table_creation_and_population_done_via_pandas_path(
     test_utils.run_dag(sample_dag)
     assert create_table_using_schema_autodetection.called
     assert load_file_to_table_using_pandas.called
+    assert not is_native_autodetect_schema_available.called
