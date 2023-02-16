@@ -111,3 +111,31 @@ def test_load_file_calls_resolve_file_path_pattern_with_filetype(
         use_native_support=True,
     )
     assert resolve_file_path_pattern.call_args.kwargs["filetype"] == FileType.CSV
+
+
+@pytest.mark.integration
+@mock.patch("astro.databases.base.BaseDatabase.drop_table")
+@mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
+@mock.patch("astro.databases.base.BaseDatabase.create_table")
+@mock.patch("astro.databases.base.BaseDatabase.load_file_to_table_natively_with_fallback")
+@mock.patch("astro.databases.base.resolve_file_path_pattern")
+def test_load_file_to_table_and_check_for_minio_connection(
+    resolve_file_path_pattern,
+    load_file_to_table_natively_with_fallback,
+    create_table,
+    create_schema_if_needed,
+    drop_table,
+):
+    resolve_file_path_pattern.return_value = [File(path="S3://somebucket/test.csv", conn_id="minio_conn")]
+    database = create_database("snowflake_conn")
+    database.load_file_to_table(
+        input_file=File(path="S3://somebucket/test.csv", conn_id="minio_conn"),
+        output_table=Table(conn_id="snowflake_conn"),
+        use_native_support=True,
+    )
+    assert (
+        database.check_for_minio_connection(
+            input_file=File(path="S3://somebucket/test.csv", conn_id="minio_conn")
+        )
+        is True
+    )

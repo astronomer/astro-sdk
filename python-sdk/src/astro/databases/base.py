@@ -422,11 +422,8 @@ class BaseDatabase(ABC):
     @staticmethod
     def check_for_minio_connection(input_file: File) -> bool:
         """Returns True if minio is passed in extras in connections."""
-        from astro.files.locations import create_file_location
-
-        location = create_file_location(input_file.path)
-        if location.location_type == FileLocation.S3:
-            return True if location.hook.extra_args.get("minio") is not None else False
+        if input_file.location.location_type == FileLocation.S3:
+            return True if input_file.location.hook.extra_args.get("minio") is not None else False
         return False
 
     def load_file_to_table(
