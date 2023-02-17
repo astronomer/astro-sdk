@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Callable
+from typing import Any, Callable
 
 import pandas as pd
 import sqlalchemy
@@ -17,8 +17,6 @@ from astro.table import BaseTable, Metadata
 from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = MsSqlHook.default_conn_name
-if TYPE_CHECKING:  # pragma: no cover
-    pass
 
 
 class MssqlDatabase(BaseDatabase):

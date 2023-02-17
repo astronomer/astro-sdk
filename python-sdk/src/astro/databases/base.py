@@ -3,19 +3,13 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import ABC
-from typing import TYPE_CHECKING, Any, Callable, Mapping
+from typing import Any, Callable, Mapping
 
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
-
-from astro.dataframes.pandas import PandasDataframe
-
-if TYPE_CHECKING:  # pragma: no cover
-    pass
-
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -29,6 +23,7 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
+from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
