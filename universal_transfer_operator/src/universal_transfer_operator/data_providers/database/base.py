@@ -210,6 +210,14 @@ class DatabaseDataProvider(DataProviders):
         """
         raise NotImplementedError
 
+    @property
+    def openlineage_dataset_uri(self) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError
+
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
@@ -451,9 +459,9 @@ class DatabaseDataProvider(DataProviders):
         :param table: The table metadata needed to fetch the rows
         :return: a list of rows
         """
-        statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
+        statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
         if row_limit > -1:
-            statement = statement + f" LIMIT {row_limit}"
+            statement = statement + f" LIMIT {row_limit}"  # skipcq: BAN-B608
         response = self.run_sql(statement)
         return response.fetchall()  # type: ignore
 
@@ -573,7 +581,7 @@ class DatabaseDataProvider(DataProviders):
         return file.export_to_dataframe()
 
     def check_schema_autodetection_is_supported(
-        self, source_file: File
+        self, source_file: File  # skipcq: PYL-R0201, PYL-W0613
     ) -> bool:  # skipcq: PYL-R0201, PYL-W0613
         """
         Checks if schema autodetection is handled natively by the database. Return False by default.
@@ -583,7 +591,7 @@ class DatabaseDataProvider(DataProviders):
         return False
 
     def check_file_pattern_based_schema_autodetection_is_supported(
-        self, source_file: File
+        self, source_file: File  # skipcq: PYL-R0201, PYL-W0613
     ) -> bool:  # skipcq: PYL-R0201, PYL-W0613
         """
         Checks if schema autodetection is handled natively by the database for file

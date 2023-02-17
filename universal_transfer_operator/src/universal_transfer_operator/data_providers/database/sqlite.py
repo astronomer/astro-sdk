@@ -8,7 +8,7 @@ from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider, FileStream
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.universal_transfer_operator import TransferParameters
 
@@ -58,6 +58,17 @@ class SqliteDataProvider(DatabaseDataProvider):
     def default_metadata(self) -> Metadata:
         """Since Sqlite does not use Metadata, we return an empty Metadata instances."""
         return Metadata()
+
+    def read(self):
+        """ ""Read the dataset and write to local reference location"""
+        raise NotImplementedError
+
+    def write(self, source_ref: FileStream):
+        """Write the data from local reference location to the dataset"""
+        return self.load_file_to_table(
+            input_file=source_ref.actual_file,
+            output_table=self.dataset,
+        )
 
     # ---------------------------------------------------------
     # Table metadata
@@ -120,9 +131,9 @@ class SqliteDataProvider(DatabaseDataProvider):
         return f"file://{socket.gethostbyname(socket.gethostname())}:{port}"
 
     @property
-    def openlineage_dataset_uri(self, table: Table) -> str:
+    def openlineage_dataset_uri(self) -> str:
         """
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name(table=table)}"
+        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name()}"
