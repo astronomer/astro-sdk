@@ -15,5 +15,6 @@ from universal_transfer_operator.datasets.file.base import File
     ids=lambda d: d["dataset"].conn_id,
 )
 def test_create_dataprovider(datasets):
+    """Test that the correct data-provider is created for a dataset"""
     data_provider = create_dataprovider(dataset=datasets["dataset"])
     assert isinstance(data_provider, datasets["expected"])
