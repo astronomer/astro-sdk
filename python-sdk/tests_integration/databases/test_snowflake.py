@@ -275,7 +275,7 @@ def test_build_merge_sql(mock_is_valid_snow_identifier, database_table_fixture):
                 metadata=Metadata(
                     schema=os.getenv("SNOWFLAKE_SCHEMA", SCHEMA),
                     database=os.getenv("SNOWFLAKE_DATABASE", "snowflake"),
-                ),
+                )
             ),
         },
     ],

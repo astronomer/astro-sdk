@@ -63,7 +63,6 @@ class BaseTable:
     )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
-    prefix: str = field(default="missed_one")
 
     def __attrs_post_init__(self) -> None:
         if not self.name:

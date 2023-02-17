@@ -74,10 +74,7 @@ def database_table_fixture(request):
         conn_id = user_table.conn_id
 
     database = create_database(conn_id)
-    table = params.get(
-        "table",
-        Table(conn_id=database.conn_id, metadata=database.default_metadata),
-    )
+    table = params.get("table", Table(conn_id=database.conn_id, metadata=database.default_metadata))
     if not isinstance(table, TempTable):
         # We create a unique table name to make the name unique across runs
         table.name = create_unique_table_name(UNIQUE_HASH_SIZE)
