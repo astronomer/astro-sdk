@@ -162,6 +162,7 @@ class Table(Dataset):
 
         database_provider = create_dataprovider(dataset=self)
         return f"{database_provider.openlineage_dataset_uri(table=self)}"
+<<<<<<< HEAD
 
     @uri.default
     def _path_to_dataset_uri(self) -> str:
@@ -177,3 +178,5 @@ class Table(Dataset):
         parsed_url = urlparse(url=path)
         new_parsed_url = parsed_url._replace(query=urlencode(db_extra))
         return new_parsed_url.geturl()
+=======
+>>>>>>> 1ccd347d (Add the DatabaseDataProvider and SqliteDataProvider)

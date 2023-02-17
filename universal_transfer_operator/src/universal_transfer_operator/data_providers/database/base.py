@@ -219,7 +219,6 @@ class DatabaseDataProvider(DataProviders):
         """
         raise NotImplementedError
 
-
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
