@@ -424,7 +424,7 @@ class BaseDatabase(ABC):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
         if row_limit > -1:
             statement = statement + f" LIMIT {row_limit}"
-        response = self.run_sql(statement, handler=lambda x: x.fetchall())  # type: ignore
+        response: list = self.run_sql(statement, handler=lambda x: x.fetchall())
         return response
 
     def load_file_to_table(

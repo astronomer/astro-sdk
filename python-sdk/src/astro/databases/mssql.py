@@ -241,7 +241,7 @@ class MssqlDatabase(BaseDatabase):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
         if row_limit > -1:
             statement = f"SELECT TOP {row_limit} * FROM {self.get_table_qualified_name(table)}"
-        response = self.run_sql(statement, handler=lambda x: x.fetchall())  # type: ignore
+        response: list = self.run_sql(statement, handler=lambda x: x.fetchall())
         return response
 
     def load_pandas_dataframe_to_table(

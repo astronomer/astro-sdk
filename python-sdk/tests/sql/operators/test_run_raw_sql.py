@@ -153,7 +153,7 @@ def test_handlers():
 
     class Val:
         def __init__(self, val):
-            self.value = [val]
+            self.value: list = [val]
 
         def values(self) -> list:
             return self.value
