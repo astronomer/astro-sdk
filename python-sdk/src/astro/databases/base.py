@@ -301,6 +301,7 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        use_native_support: bool = True,
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -314,7 +315,7 @@ class BaseDatabase(ABC):
         """
         if table.columns:
             self.create_table_using_columns(table)
-        elif file and self.is_native_autodetect_schema_available(file):
+        elif use_native_support and file and self.is_native_autodetect_schema_available(file):
             self.create_table_using_native_schema_autodetection(table, file)
         else:
             self.create_table_using_schema_autodetection(
@@ -403,6 +404,7 @@ class BaseDatabase(ABC):
                 # We only use the first file for inferring the table schema
                 files[0],
                 columns_names_capitalization=columns_names_capitalization,
+                use_native_support=use_native_support,
             )
 
     def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
@@ -456,6 +458,7 @@ class BaseDatabase(ABC):
             columns_names_capitalization=columns_names_capitalization,
             if_exists=if_exists,
             normalize_config=normalize_config,
+            use_native_support=use_native_support,
         )
 
         if use_native_support and self.is_native_load_file_available(
