@@ -406,7 +406,6 @@ def test_transform_using_table_metadata(sample_dag):
     with sample_dag:
         test_table = Table(
             conn_id="snowflake_conn_1",
-            prefix="test_tr_1",
             metadata=Metadata(
                 database=os.environ["SNOWFLAKE_DATABASE"],
                 schema=os.environ["SNOWFLAKE_SCHEMA"],
@@ -468,9 +467,7 @@ def test_cross_db_transform_raise_exception(sample_dag):
         """
 
     with sample_dag:
-        input_table = Table(
-            conn_id="snowflake_conn", name="test1", prefix="test_tr_3", metadata=Metadata(schema="test")
-        )
+        input_table = Table(conn_id="snowflake_conn", name="test1", metadata=Metadata(schema="test"))
         output_table = Table(conn_id="bigquery", name="test2", metadata=Metadata(schema="test"))
 
         top_five_animations(input_table=input_table, output_table=output_table)
