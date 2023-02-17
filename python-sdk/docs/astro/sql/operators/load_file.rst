@@ -212,6 +212,21 @@ Supported native transfers
 
    Reference on how to create such a role is here: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
 
+Loading from MinIO
+~~~~~~~~~~~~~~~~~~
+MinIO is a High Performance Object Storage released under GNU Affero General Public License v3.0. It is API compatible with the Amazon S3 cloud storage service. While loading files from MinIO to database as part of AWS connection in extra, user should pass ``minio=True`` if MinIO used as file location. Following is an example of MinIO connection:
+
+.. code-block::
+
+  - conn_id: minio_conn
+    conn_type: aws
+    description: null
+    extra:
+      aws_access_key_id: "dummy access key"
+      aws_secret_access_key: "dummy secret key"
+      endpoint_url: "http://127.0.0.1:9000"
+      minio: True
+
 Loading to MS SQL
 ~~~~~~~~~~~~~~~~~
 
