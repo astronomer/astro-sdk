@@ -6,7 +6,7 @@ from universal_transfer_operator.constants import FileType as FileTypeConstants
 from universal_transfer_operator.datasets.file.types.base import FileType
 from universal_transfer_operator.datasets.file.types.csv import CSVFileType
 from universal_transfer_operator.datasets.file.types.json import JSONFileType
-from universal_transfer_operator.datasets.file.types.ndjson import NDJSONFileType
+from universal_transfer_operator.datasets.file.types.ndjson import NDJsonFileType
 from universal_transfer_operator.datasets.file.types.parquet import ParquetFileType
 
 
@@ -19,7 +19,7 @@ def create_file_type(
     filetype_to_class: dict[FileTypeConstants, type[FileType]] = {
         FileTypeConstants.CSV: CSVFileType,
         FileTypeConstants.JSON: JSONFileType,
-        FileTypeConstants.NDJSON: NDJSONFileType,
+        FileTypeConstants.NDJSON: NDJsonFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
     }
     if not filetype:
