@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import pandas as pd
 import sqlalchemy
@@ -18,7 +18,7 @@ from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = MsSqlHook.default_conn_name
 if TYPE_CHECKING:  # pragma: no cover
-    from sqlalchemy.engine.cursor import CursorResult
+    pass
 
 
 class MssqlDatabase(BaseDatabase):
@@ -145,8 +145,9 @@ class MssqlDatabase(BaseDatabase):
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
+        handler: Callable | None = None,
         **kwargs,
-    ) -> CursorResult:
+    ) -> list:
         """
         Return the results to running a SQL statement.
         Whenever possible, this method should be implemented using Airflow Hooks,
@@ -177,11 +178,12 @@ class MssqlDatabase(BaseDatabase):
                 result = self.connection.execute(
                     sqlalchemy.text(sql).execution_options(autocommit=autocommit), parameters
                 )
-                return result
         else:
             # this is used for append
             result = self.connection.execute(sql, parameters)
-            return result
+        if handler:
+            return handler(result)
+        return []
 
     def create_schema_if_needed(self, schema: str | None) -> None:
         """
@@ -238,8 +240,8 @@ class MssqlDatabase(BaseDatabase):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
         if row_limit > -1:
             statement = f"SELECT TOP {row_limit} * FROM {self.get_table_qualified_name(table)}"
-        response = self.run_sql(statement)
-        return response.fetchall()  # type: ignore
+        response = self.run_sql(statement, handler=lambda x: x.fetchall())  # type: ignore
+        return response
 
     def load_pandas_dataframe_to_table(
         self,

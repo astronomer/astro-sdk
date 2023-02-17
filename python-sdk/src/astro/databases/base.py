@@ -107,8 +107,9 @@ class BaseDatabase(ABC):
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
+        handler: Callable | None = None,
         **kwargs,
-    ) -> CursorResult:
+    ) -> list:
         """
         Return the results to running a SQL statement.
 
@@ -139,7 +140,16 @@ class BaseDatabase(ABC):
             )
         else:
             result = self.connection.execute(sql, parameters)
-        return result
+        if handler:
+            return handler(result)
+        return []
+
+    def get_wrapped_handler(self, conversion_func: Callable, result: CursorResult):
+        try:
+            return conversion_func(result)
+        except Exception as e:  # skipcq: PYL-W0703
+            logging.info("Exception %s handled since sqlalchemy failing when there are no results", str(e))
+            return None
 
     def columns_exist(self, table: BaseTable, columns: list[str]) -> bool:
         """
@@ -419,8 +429,8 @@ class BaseDatabase(ABC):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
         if row_limit > -1:
             statement = statement + f" LIMIT {row_limit}"
-        response = self.run_sql(statement)
-        return response.fetchall()  # type: ignore
+        response = self.run_sql(statement, handler=lambda x: x.fetchall())  # type: ignore
+        return response
 
     def load_file_to_table(
         self,
@@ -777,8 +787,9 @@ class BaseDatabase(ABC):
         :return: The number of rows in the table
         """
         result = self.run_sql(
-            f"select count(*) from {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
-        ).scalar()
+            f"select count(*) from {self.get_table_qualified_name(table)}",  # skipcq: BAN-B608
+            handler=lambda x: x.scalar(),
+        )
         return result
 
     def parameterize_variable(self, variable: str):

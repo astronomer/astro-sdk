@@ -38,8 +38,8 @@ def test_bigquery_run_sql():
     """Test run_sql against bigquery database"""
     statement = "SELECT 1 + 1;"
     database = BigqueryDatabase(conn_id=DEFAULT_CONN_ID)
-    response = database.run_sql(statement)
-    assert response.first()[0] == 2
+    response = database.run_sql(statement, handler=lambda x: x.first())
+    assert response[0] == 2
 
 
 @pytest.mark.integration
@@ -77,12 +77,12 @@ def test_bigquery_create_table_with_columns(database_table_fixture):
         f"SELECT TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE "
         f"FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
     )
-    response = database.run_sql(statement)
-    assert response.first() is None
+    response = database.run_sql(statement, handler=lambda x: x.first())
+    assert response is None
 
     database.create_table(table)
-    response = database.run_sql(statement)
-    rows = response.fetchall()
+    response = database.run_sql(statement, handler=lambda x: x.fetchall())
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (
         "astronomer-dag-authoring",
@@ -121,9 +121,9 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     database.load_pandas_dataframe_to_table(pandas_dataframe, table)
 
     statement = f"SELECT * FROM {database.get_table_qualified_name(table)};"
-    response = database.run_sql(statement)
+    response = database.run_sql(statement, handler=lambda x: x.fetchall())
 
-    rows = response.fetchall()
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)
