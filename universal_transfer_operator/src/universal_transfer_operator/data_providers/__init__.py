@@ -23,6 +23,12 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = (
         ],
         "universal_transfer_operator.data_providers.database.sqlite",
     )
+    | dict.fromkeys(
+        [
+            ("snowflake", Table),
+        ],
+        "universal_transfer_operator.data_providers.database.snowflake",
+    )
 )
 
 

@@ -14,6 +14,7 @@ import attr
 from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy.sql import ClauseElement
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from universal_transfer_operator.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -146,6 +147,19 @@ class DatabaseDataProvider(DataProviders):
         sqla_table = self.get_sqla_table(table)
         return all(
             any(sqla_column.name == column for sqla_column in sqla_table.columns) for column in columns
+        )
+
+    def get_sqla_table(self, table: Table) -> SqlaTable:
+        """
+        Return SQLAlchemy table instance
+
+        :param table: Astro Table to be converted to SQLAlchemy table instance
+        """
+        return SqlaTable(
+            table.name,
+            table.sqlalchemy_metadata,
+            autoload_with=self.sqlalchemy_engine,
+            extend_existing=True,
         )
 
     def table_exists(self, table: Table) -> bool:
@@ -612,3 +626,28 @@ class DatabaseDataProvider(DataProviders):
             f"select count(*) from {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
         ).scalar()
         return result
+
+    # ---------------------------------------------------------
+    # Schema Management
+    # ---------------------------------------------------------
+
+    def create_schema_if_needed(self, schema: str | None) -> None:
+        """
+        This function checks if the expected schema exists in the database. If the schema does not exist,
+        it will attempt to create it.
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        # We check if the schema exists first because snowflake will fail on a create schema query even if it
+        # doesn't actually create a schema.
+        if schema and not self.schema_exists(schema):
+            statement = self._create_schema_statement.format(schema)
+            self.run_sql(statement)
+
+    def schema_exists(self, schema: str) -> bool:
+        """
+        Checks if a schema exists in the database
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        raise NotImplementedError
