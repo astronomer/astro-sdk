@@ -37,7 +37,7 @@ CWD = pathlib.Path(__file__).parent
         {
             "database": Database.SNOWFLAKE,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
-            "table": Table(metadata=Metadata(schema=SCHEMA), prefix="test_all_db_1"),
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
         },
         {
             "database": Database.SQLITE,
@@ -270,7 +270,7 @@ def test_load_pandas_dataframe_to_table_with_replace(database_table_fixture):
         },
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA), prefix="test_all_db_2"),
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
         },
         {"database": Database.SQLITE, "table": Table()},
         {"database": Database.DELTA, "table": Table()},

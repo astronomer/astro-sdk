@@ -101,7 +101,7 @@ def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
     unique_id = random.choice(string.ascii_lowercase) + "".join(
         random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
     )
-    return "test_conf" + unique_id
+    return unique_id
 
 
 @pytest.fixture
@@ -128,7 +128,7 @@ def multiple_tables_fixture(request, database_table_fixture):
     tables = []
 
     for item in items:
-        table = item.get("table", Table(conn_id=database.conn_id, prefix="multiple_table"))
+        table = item.get("table", Table(conn_id=database.conn_id))
         if not isinstance(table, TempTable):
             # We create a unique table name to make the name unique across runs
             table.name = create_unique_table_name(UNIQUE_HASH_SIZE)

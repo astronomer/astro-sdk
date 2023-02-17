@@ -253,7 +253,6 @@ with dag:
         input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="gdrive_conn"),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
-            prefix="ex_load_1",
             metadata=Metadata(
                 database=os.environ["SNOWFLAKE_DATABASE"],
                 schema=os.environ["SNOWFLAKE_SCHEMA"],
@@ -269,7 +268,6 @@ with dag:
         ),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
-            prefix="ex_load_2",
             metadata=Metadata(
                 database=os.environ["SNOWFLAKE_DATABASE"],
                 schema=os.environ["SNOWFLAKE_SCHEMA"],
@@ -287,7 +285,6 @@ with dag:
         ),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
-            prefix="ex_load_3",
             metadata=Metadata(
                 database=os.environ["SNOWFLAKE_DATABASE"],
                 schema=os.environ["SNOWFLAKE_SCHEMA"],
@@ -300,7 +297,6 @@ with dag:
     aql.load_file(
         input_file=File("s3://tmp9/delimiter_dollar.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
-            prefix="ex_load_4",
             conn_id=SNOWFLAKE_CONN_ID,
         ),
         use_native_support=False,
@@ -313,7 +309,6 @@ with dag:
         input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
-            prefix="ex_load_5",
         ),
         load_options=[
             SnowflakeLoadOptions(
@@ -344,7 +339,6 @@ with dag:
         input_file=File("wasb://astro-sdk/sample.csv"),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
-            prefix="ex_load_6",
             metadata=Metadata(
                 database=os.environ["SNOWFLAKE_DATABASE"],
                 schema=os.environ["SNOWFLAKE_SCHEMA"],

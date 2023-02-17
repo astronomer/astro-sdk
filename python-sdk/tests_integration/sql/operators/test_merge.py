@@ -485,8 +485,8 @@ def get_result_sql_single(conn_id):
 )
 def test_merge_sql_generation(database_class, conn_id, merge_parameters):
     parameters, mode = merge_parameters
-    target_table = Table("target_table", conn_id=conn_id, prefix="test_merge_1")
-    source_table = Table("source_table", conn_id=conn_id, prefix="test_merge_2")
+    target_table = Table("target_table", conn_id=conn_id)
+    source_table = Table("source_table", conn_id=conn_id)
     target_conflict_columns = parameters["target_conflict_columns"]
     columns = parameters["columns"]
     if_conflicts = parameters["if_conflicts"]

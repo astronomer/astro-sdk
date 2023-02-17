@@ -27,11 +27,10 @@ CWD = pathlib.Path(__file__).parent
             "database": Database.SNOWFLAKE,
             "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
             "table": Table(
-                prefix="test_ftp_1",
                 metadata=Metadata(
                     schema=os.getenv("SNOWFLAKE_SCHEMA", SCHEMA),
                     database=os.getenv("SNOWFLAKE_DATABASE", "snowflake"),
-                ),
+                )
             ),
         },
         {

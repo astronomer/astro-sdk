@@ -321,7 +321,7 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
         arr = {"col1": [1, 2]}
         return pandas.DataFrame(data=arr)
 
-    output_tb = Table(conn_id=conn_id, prefix="test_dataframe_1")
+    output_tb = Table(conn_id=conn_id)
     with sample_dag:
         get_sample_dataframe(output_table=output_tb)
 
@@ -356,7 +356,7 @@ def test_dataframe_append_table_if_exist(sample_dag, conn_id):
         arr = {"col1": [1, 2]}
         return pandas.DataFrame(data=arr)
 
-    output_tb = Table(conn_id=conn_id, prefix="test_dataframe_2")
+    output_tb = Table(conn_id=conn_id)
     with sample_dag:
         get_sample_dataframe(output_table=output_tb)
 

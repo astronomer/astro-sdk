@@ -67,7 +67,7 @@ class BaseTable:
 
     def __attrs_post_init__(self) -> None:
         if not self.name:
-            self.name = self._create_unique_table_name(TEMP_PREFIX + "_" + self.prefix + "_")
+            self.name = self._create_unique_table_name(TEMP_PREFIX + "_")
             self.temp = True
         if self.name.startswith(TEMP_PREFIX):
             self.temp = True
@@ -98,7 +98,7 @@ class BaseTable:
         Create a new table with a unique name but with the same metadata.
         """
         return Table(  # type: ignore
-            name=self._create_unique_table_name(self.prefix),
+            name=self._create_unique_table_name(),
             conn_id=self.conn_id,
             metadata=self.metadata,
         )
