@@ -424,8 +424,7 @@ class BaseDatabase(ABC):
         """Returns True if minio is passed in extras in connections."""
         if input_file.location.location_type == FileLocation.S3:
             conn = input_file.location.hook.get_connection(input_file.conn_id)
-            is_minio = True if conn.extra_dejson.get("minio") is not None else False
-            return is_minio
+            return bool(conn.extra_dejson.get("minio"))
         return False
 
     def load_file_to_table(
