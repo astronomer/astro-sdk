@@ -113,9 +113,6 @@ class BaseDatabase(ABC):
         :param parameters: Optional parameters to be used to render the query
         :param autocommit: Optional autocommit flag
         :param handler: function that takes in a cursor as an argument.
-
-        Args:
-            handler:
         """
         if parameters is None:
             parameters = {}
