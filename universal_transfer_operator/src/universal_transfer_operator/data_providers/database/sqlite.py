@@ -14,6 +14,8 @@ from universal_transfer_operator.universal_transfer_operator import TransferPara
 
 
 class SqliteDataProvider(DatabaseDataProvider):
+    """SqliteDataProvider represent all the DataProviders interactions with Sqlite Databases."""
+
     def __init__(
         self,
         dataset: Table,
@@ -96,15 +98,17 @@ class SqliteDataProvider(DatabaseDataProvider):
         """
         return SqlaTable(table.name, SqlaMetaData(), autoload_with=self.sqlalchemy_engine)
 
-    def openlineage_dataset_name(self, table: Table) -> str:
+    @property
+    def openlineage_dataset_name(self) -> str:
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         Example: /tmp/local.db.table_name
         """
         conn = self.hook.get_connection(self.dataset.conn_id)
-        return f"{conn.host}.{table.name}"
+        return f"{conn.host}.{self.dataset.name}"
 
+    @property
     def openlineage_dataset_namespace(self) -> str:
         """
         Returns the open lineage dataset namespace as per
@@ -115,6 +119,7 @@ class SqliteDataProvider(DatabaseDataProvider):
         port = conn.port or 22
         return f"file://{socket.gethostbyname(socket.gethostname())}:{port}"
 
+    @property
     def openlineage_dataset_uri(self, table: Table) -> str:
         """
         Returns the open lineage dataset uri as per
