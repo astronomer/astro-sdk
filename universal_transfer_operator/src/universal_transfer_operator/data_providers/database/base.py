@@ -580,9 +580,9 @@ class DatabaseDataProvider(DataProviders):
 
         return file.export_to_dataframe()
 
-    def check_schema_autodetection_is_supported(
-        self, source_file: File  # skipcq: PYL-R0201, PYL-W0613
-    ) -> bool:  # skipcq: PYL-R0201, PYL-W0613
+    def check_schema_autodetection_is_supported(  # skipcq: PYL-R0201
+        self, source_file: File  # skipcq: PYL-W0613
+    ) -> bool:
         """
         Checks if schema autodetection is handled natively by the database. Return False by default.
 
@@ -590,9 +590,9 @@ class DatabaseDataProvider(DataProviders):
         """
         return False
 
-    def check_file_pattern_based_schema_autodetection_is_supported(
-        self, source_file: File  # skipcq: PYL-R0201, PYL-W0613
-    ) -> bool:  # skipcq: PYL-R0201, PYL-W0613
+    def check_file_pattern_based_schema_autodetection_is_supported(  # skipcq: PYL-R0201
+        self, source_file: File  # skipcq: PYL-W0613
+    ) -> bool:
         """
         Checks if schema autodetection is handled natively by the database for file
         patterns and prefixes. Return False by default.
