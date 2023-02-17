@@ -107,3 +107,10 @@ def test_database_with_check_for_minio_connection():
         )
         is True
     )
+
+    assert (
+        database.check_for_minio_connection(
+            input_file=File(path="S3://somebucket/test.csv", conn_id="aws_conn")
+        )
+        is False
+    )
