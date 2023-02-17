@@ -117,6 +117,10 @@ class BaseDatabase(ABC):
         :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         :param autocommit: Optional autocommit flag
+        :param handler: function that takes in a cursor as an argument.
+
+        Args:
+            handler:
         """
         if parameters is None:
             parameters = {}
@@ -408,7 +412,7 @@ class BaseDatabase(ABC):
                 use_native_support=use_native_support,
             )
 
-    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
+    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> Any:
         """
         Fetches all rows for a table and returns as a list. This is needed because some
         databases have different cursors that require different methods to fetch rows

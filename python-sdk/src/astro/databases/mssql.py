@@ -155,6 +155,7 @@ class MssqlDatabase(BaseDatabase):
 
         :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
+        :param handler: function that takes in a cursor as an argument.
         """
         if parameters is None:
             parameters = {}
@@ -228,7 +229,7 @@ class MssqlDatabase(BaseDatabase):
         statement = self._drop_table_statement.format(self.get_table_qualified_name(table))
         self.run_sql(statement, autocommit=True)
 
-    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
+    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> Any:
         """
         Fetches all rows for a table and returns as a list. This is needed because some
         databases have different cursors that require different methods to fetch rows
