@@ -96,21 +96,3 @@ def test_subclass_missing_append_table_raises_exception():
     target_table = Table()
     with pytest.raises(NotImplementedError):
         db.append_table(source_table, target_table, source_to_target_columns_map={})
-
-
-def test_database_with_check_for_minio_connection():
-    """Test if the S3 path is passed with minio connection it recognizes it"""
-    database = create_database("snowflake_conn")
-    assert (
-        database.check_for_minio_connection(
-            input_file=File(path="S3://somebucket/test.csv", conn_id="minio_conn")
-        )
-        is True
-    )
-
-    assert (
-        database.check_for_minio_connection(
-            input_file=File(path="S3://somebucket/test.csv", conn_id="aws_conn")
-        )
-        is False
-    )
