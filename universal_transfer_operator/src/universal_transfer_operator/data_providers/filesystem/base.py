@@ -28,6 +28,7 @@ class TempFile:
 class FileStream:
     remote_obj_buffer: io.IOBase
     actual_filename: Path
+    actual_file: File
 
 
 class BaseFilesystemProviders(DataProviders):
@@ -90,7 +91,9 @@ class BaseFilesystemProviders(DataProviders):
         files = self.paths
         for file in files:
             yield FileStream(
-                remote_obj_buffer=self._convert_remote_file_to_byte_stream(file), actual_filename=file
+                remote_obj_buffer=self._convert_remote_file_to_byte_stream(file),
+                actual_filename=file,
+                actual_file=self.dataset,
             )
 
     def _convert_remote_file_to_byte_stream(self, file: str) -> io.IOBase:

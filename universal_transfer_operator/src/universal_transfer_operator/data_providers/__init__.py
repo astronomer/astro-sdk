@@ -5,12 +5,24 @@ from airflow.hooks.base import BaseHook
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.datasets.file.base import File
+from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_class_name
 
-DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = dict.fromkeys(
-    ["s3", "aws"], "universal_transfer_operator.data_providers.filesystem.aws.s3"
-) | dict.fromkeys(
-    ["gs", "google_cloud_platform"], "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs"
+DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = (
+    dict.fromkeys(
+        [("s3", File), ("aws", File)], "universal_transfer_operator.data_providers.filesystem.aws.s3"
+    )
+    | dict.fromkeys(
+        [("gs", File), ("google_cloud_platform", File)],
+        "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
+    )
+    | dict.fromkeys(
+        [
+            ("sqlite", Table),
+        ],
+        "universal_transfer_operator.data_providers.database.sqlite",
+    )
 )
 
 
@@ -20,7 +32,7 @@ def create_dataprovider(
     transfer_mode: TransferMode = TransferMode.NONNATIVE,
 ) -> DataProviders:
     conn_type = BaseHook.get_connection(dataset.conn_id).conn_type
-    module_path = DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING[conn_type]
+    module_path = DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING[(conn_type, type(dataset))]
     module = importlib.import_module(module_path)
     class_name = get_class_name(module_ref=module, suffix="DataProvider")
     data_provider: DataProviders = getattr(module, class_name)(

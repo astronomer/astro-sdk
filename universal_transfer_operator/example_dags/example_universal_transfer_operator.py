@@ -3,7 +3,7 @@ from datetime import datetime
 
 from airflow import DAG
 
-from universal_transfer_operator.constants import TransferMode
+from universal_transfer_operator.constants import FileType, TransferMode
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.integrations.fivetran import Connector, Destination, FiveTranOptions, Group
@@ -28,6 +28,22 @@ with DAG(
             path="gs://uto-test/uto/",
             conn_id="google_cloud_default",
         ),
+    )
+
+    transfer_non_native_s3_to_sqlite = UniversalTransferOperator(
+        task_id="transfer_non_native_s3_to_sqlite",
+        source_dataset=File(
+            path="s3://astro-sdk-test/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV
+        ),
+        destination_dataset=Table(name="uto_s3_table", conn_id="sqlite_default"),
+    )
+
+    transfer_non_native_gs_to_sqlite = UniversalTransferOperator(
+        task_id="transfer_non_native_gs_to_sqlite",
+        source_dataset=File(
+            path="gs://uto-test/uto/csv_files/", conn_id="google_cloud_default", filetype=FileType.CSV
+        ),
+        destination_dataset=Table(name="uto_gs_table", conn_id="sqlite_default"),
     )
 
     transfer_fivetran_with_connector_id = UniversalTransferOperator(

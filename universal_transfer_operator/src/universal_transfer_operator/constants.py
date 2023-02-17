@@ -99,3 +99,4 @@ SUPPORTED_DATABASES = [const.value for const in Database]
 LoadExistStrategy = Literal["replace", "append"]
 DEFAULT_CHUNK_SIZE = 1000000
 ColumnCapitalization = Literal["upper", "lower", "original"]
+DEFAULT_SCHEMA = "tmp_transfers"
