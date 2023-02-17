@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
 import sqlalchemy
@@ -147,7 +147,7 @@ class MssqlDatabase(BaseDatabase):
         parameters: dict | None = None,
         handler: Callable | None = None,
         **kwargs,
-    ) -> list:
+    ) -> Any:
         """
         Return the results to running a SQL statement.
         Whenever possible, this method should be implemented using Airflow Hooks,
@@ -183,7 +183,7 @@ class MssqlDatabase(BaseDatabase):
             result = self.connection.execute(sql, parameters)
         if handler:
             return handler(result)
-        return []
+        return None
 
     def create_schema_if_needed(self, schema: str | None) -> None:
         """

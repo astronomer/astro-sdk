@@ -14,7 +14,7 @@ from sqlalchemy import column, insert, select
 from astro.dataframes.pandas import PandasDataframe
 
 if TYPE_CHECKING:  # pragma: no cover
-    from sqlalchemy.engine.cursor import CursorResult
+    pass
 
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
@@ -63,8 +63,6 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: list[str] = []
     illegal_column_name_chars_replacement: list[str] = []
-    # In run_raw_sql operator decides if we want to return results directly or process them by handler provided
-    IGNORE_HANDLER_IN_RUN_RAW_SQL: bool = False
     NATIVE_PATHS: dict[Any, Any] = {}
     DEFAULT_SCHEMA = SCHEMA
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
@@ -109,7 +107,7 @@ class BaseDatabase(ABC):
         parameters: dict | None = None,
         handler: Callable | None = None,
         **kwargs,
-    ) -> list:
+    ) -> Any:
         """
         Return the results to running a SQL statement.
 
@@ -142,14 +140,7 @@ class BaseDatabase(ABC):
             result = self.connection.execute(sql, parameters)
         if handler:
             return handler(result)
-        return []
-
-    def get_wrapped_handler(self, conversion_func: Callable, result: CursorResult):
-        try:
-            return conversion_func(result)
-        except Exception as e:  # skipcq: PYL-W0703
-            logging.info("Exception %s handled since sqlalchemy failing when there are no results", str(e))
-            return None
+        return None
 
     def columns_exist(self, table: BaseTable, columns: list[str]) -> bool:
         """
