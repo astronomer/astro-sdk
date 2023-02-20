@@ -51,6 +51,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
     def execute(self, context: Context) -> Any:
         super().execute(context)
 
+        self.handler = self.get_handler()
         result = self.database_impl.run_sql(sql=self.sql, parameters=self.parameters, handler=self.handler)
         if self.response_size == -1 and not settings.IS_CUSTOM_XCOM_BACKEND:
             logging.warning(
@@ -60,22 +61,8 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 "backend."
             )
 
-        # ToDo: Currently, the handler param in run_sql() method is only used in databricks all other databases are
-        # not using it. Which leads to different response types since handler is processed within `run_sql()` for
-        # databricks and not for other databases. Also the signature of `run_sql()` in databricks deviates from base.
-        # We need to standardise and when we do, we can remove below check as well.
-        if self.database_impl.IGNORE_HANDLER_IN_RUN_RAW_SQL:
-            return result
-
-        self.handler = self.get_handler()
-
         if self.handler:
-            self.handler = self.get_wrapped_handler(
-                fail_on_empty=self.fail_on_empty, conversion_func=self.handler
-            )
-            # otherwise, call the handler and convert the result to a list
-            response = self.handler(result)
-            response = self.make_row_serializable(response)
+            response = self.make_row_serializable(result)
             if 0 <= self.response_limit < len(response):
                 raise IllegalLoadToDatabaseException()  # pragma: no cover
             if self.response_size >= 0:
