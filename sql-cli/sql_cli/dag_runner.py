@@ -171,6 +171,10 @@ def add_loghandler(ti: TaskInstance, verbose: bool) -> None:
 
 
 def _display_run_task_output(skip_task_execution: bool) -> None:
+    """Display status of task execution based on whether it was supposed to be skipped.
+
+    :param skip_task_execution: whether the task should skip its core execution and only run nominal steps.
+    """
     if not skip_task_execution:
         rprint("[bold green]SUCCESS[/bold green]")
     else:
@@ -184,6 +188,8 @@ def _run_task(ti: TaskInstance, session: Session, skip_task_execution: bool = Fa
     This function is only meant for the `dag.test` function as a helper function.
 
     :param ti: TaskInstance to run
+    :param session: sqlalchemy session
+    :param skip_task_execution: whether the task should skip its core execution and only run nominal steps.
     """
     if hasattr(ti, "map_index") and ti.map_index >= 0:
         rprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow][{ti.map_index}]...", end=" ")

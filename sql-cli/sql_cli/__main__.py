@@ -241,7 +241,9 @@ def run(
         "DAG will be run.",
     ),
     include_upstream: bool = typer.Option(
-        False, help="When running a single task, whether to run its upstream tasks too"
+        False,
+        help="When running a single task, whether to run its upstream tasks too. When it is set, we only show "
+        "the relevant subset tasks of the DAG being processed in the output.",
     ),
 ) -> None:
     _check_run_arguments_meet_constraints(include_upstream, task_id)
