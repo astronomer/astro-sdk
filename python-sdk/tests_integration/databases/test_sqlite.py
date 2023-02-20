@@ -56,8 +56,8 @@ def test_sqlite_run_sql_with_sqlalchemy_text():
     """Run a SQL statement using SQLAlchemy text"""
     statement = sqlalchemy.text("SELECT 1 + 1;")
     database = SqliteDatabase()
-    response = database.run_sql(statement)
-    assert response.first()[0] == 2
+    response = database.run_sql(statement, handler=lambda x: x.first())
+    assert response[0] == 2
 
 
 @pytest.mark.integration
@@ -65,8 +65,8 @@ def test_sqlite_run_sql():
     """Run a SQL statement using plain string."""
     statement = "SELECT 1 + 1;"
     database = SqliteDatabase()
-    response = database.run_sql(statement)
-    assert response.first()[0] == 2
+    response = database.run_sql(statement, handler=lambda x: x.first())
+    assert response[0] == 2
 
 
 @pytest.mark.integration
@@ -74,8 +74,8 @@ def test_sqlite_run_sql_with_parameters():
     """Test running a SQL query using SQLAlchemy templating engine"""
     statement = "SELECT 1 + :value;"
     database = SqliteDatabase()
-    response = database.run_sql(statement, parameters={"value": 1})
-    assert response.first()[0] == 2
+    response = database.run_sql(statement, parameters={"value": 1}, handler=lambda x: x.first())
+    assert response[0] == 2
 
 
 @pytest.mark.integration
@@ -107,12 +107,12 @@ def test_sqlite_create_table_with_columns(database_table_fixture):
     database, table = database_table_fixture
 
     statement = f"PRAGMA table_info({table.name});"
-    response = database.run_sql(statement)
-    assert response.first() is None
+    response = database.run_sql(statement, handler=lambda x: x.first())
+    assert response is None
 
     database.create_table(table)
-    response = database.run_sql(statement)
-    rows = response.fetchall()
+    response = database.run_sql(statement, handler=lambda x: x.fetchall())
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (0, "id", "INTEGER", 1, None, 1)
     assert rows[1] == (1, "name", "VARCHAR(60)", 1, None, 0)
@@ -130,13 +130,13 @@ def test_sqlite_create_table_autodetection_with_file(database_table_fixture):
     database, table = database_table_fixture
 
     statement = f"PRAGMA table_info({table.name});"
-    response = database.run_sql(statement)
-    assert response.first() is None
+    response = database.run_sql(statement, handler=lambda x: x.first())
+    assert response is None
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.create_table(table, File(filepath))
-    response = database.run_sql(statement)
-    rows = response.fetchall()
+    response = database.run_sql(statement, handler=lambda x: x.fetchall())
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (0, "id", "BIGINT", 0, None, 0)
     assert rows[1] == (1, "name", "TEXT", 0, None, 0)
@@ -154,8 +154,8 @@ def test_sqlite_create_table_autodetection_without_file(database_table_fixture):
     database, table = database_table_fixture
 
     statement = f"PRAGMA table_info({table.name});"
-    response = database.run_sql(statement)
-    assert response.first() is None
+    response = database.run_sql(statement, handler=lambda x: x.first())
+    assert response is None
 
     with pytest.raises(ValueError) as exc_info:
         database.create_table(table)
@@ -179,9 +179,9 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     database.load_pandas_dataframe_to_table(pandas_dataframe, table)
 
     statement = f"SELECT * FROM {table.name};"
-    response = database.run_sql(statement)
+    response = database.run_sql(statement, handler=lambda x: x.fetchall())
 
-    rows = response.fetchall()
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)

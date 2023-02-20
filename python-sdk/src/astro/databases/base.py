@@ -3,19 +3,13 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import ABC
-from typing import TYPE_CHECKING, Any, Callable, Mapping
+from typing import Any, Callable, Mapping
 
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
-
-from astro.dataframes.pandas import PandasDataframe
-
-if TYPE_CHECKING:  # pragma: no cover
-    from sqlalchemy.engine.cursor import CursorResult
-
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -29,6 +23,7 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
+from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
@@ -63,8 +58,6 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: list[str] = []
     illegal_column_name_chars_replacement: list[str] = []
-    # In run_raw_sql operator decides if we want to return results directly or process them by handler provided
-    IGNORE_HANDLER_IN_RUN_RAW_SQL: bool = False
     NATIVE_PATHS: dict[Any, Any] = {}
     DEFAULT_SCHEMA = SCHEMA
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
@@ -107,8 +100,9 @@ class BaseDatabase(ABC):
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
+        handler: Callable | None = None,
         **kwargs,
-    ) -> CursorResult:
+    ) -> Any:
         """
         Return the results to running a SQL statement.
 
@@ -118,6 +112,7 @@ class BaseDatabase(ABC):
         :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         :param autocommit: Optional autocommit flag
+        :param handler: function that takes in a cursor as an argument.
         """
         if parameters is None:
             parameters = {}
@@ -139,7 +134,9 @@ class BaseDatabase(ABC):
             )
         else:
             result = self.connection.execute(sql, parameters)
-        return result
+        if handler:
+            return handler(result)
+        return None
 
     def columns_exist(self, table: BaseTable, columns: list[str]) -> bool:
         """
@@ -407,7 +404,7 @@ class BaseDatabase(ABC):
                 use_native_support=use_native_support,
             )
 
-    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
+    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> Any:
         """
         Fetches all rows for a table and returns as a list. This is needed because some
         databases have different cursors that require different methods to fetch rows
@@ -419,8 +416,8 @@ class BaseDatabase(ABC):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
         if row_limit > -1:
             statement = statement + f" LIMIT {row_limit}"
-        response = self.run_sql(statement)
-        return response.fetchall()  # type: ignore
+        response: list = self.run_sql(statement, handler=lambda x: x.fetchall())
+        return response
 
     def load_file_to_table(
         self,
@@ -777,8 +774,9 @@ class BaseDatabase(ABC):
         :return: The number of rows in the table
         """
         result = self.run_sql(
-            f"select count(*) from {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
-        ).scalar()
+            f"select count(*) from {self.get_table_qualified_name(table)}",  # skipcq: BAN-B608
+            handler=lambda x: x.scalar(),
+        )
         return result
 
     def parameterize_variable(self, variable: str):
