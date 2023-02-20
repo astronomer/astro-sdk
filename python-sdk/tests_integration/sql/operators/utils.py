@@ -191,6 +191,10 @@ def _run_task(ti: TaskInstance, session):
     except AirflowSkipException:
         log.info("Task Skipped, continuing")
     except AstroCleanupException:
+        ti.set_state(state=None)
+        # Once the exception is raised the cleanup operator is set to FAILED state,
+        # because of which the cleanup operator was not executed at the end.
+        session.flush()
         log.info("aql.cleanup async, continuing", exc_info=True)
     log.info("*****************************************************")
 
