@@ -2,7 +2,7 @@
 {% set yaml_content = yaml_file.get_yaml_content() -%}
 {%- if tasks_to_execute and yaml_file.get_variable_name() not in tasks_to_execute %}
 {{ yaml_file.get_variable_name() }} = naql.nominal_load_file(
-{%- else %}
+{%- else -%}
 {{ yaml_file.get_variable_name() }} = aql.load_file(
 {%- endif %}
     {#- Note: Unfortunately, we cannot simply use **kwargs as some of the deserialized fields
