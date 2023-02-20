@@ -56,7 +56,6 @@ class LoadFileOperator(AstroSQLBaseOperator):
         **kwargs,
     ) -> None:
         kwargs.setdefault("task_id", get_unique_task_id("load_file"))
-        self.skip_core_execution = kwargs.pop("skip_core_execution", None)
         super().__init__(
             **kwargs_with_datasets(
                 kwargs=kwargs,
@@ -96,11 +95,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         if self.output_table:
             context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
             context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
-        if self.skip_core_execution:
-            # Skips the core execution of the operator but run all ancillary operations. This is useful for local run of
-            # tasks where subsequent tasks in the DAG might need the output of this operator like XCOM results, but they
-            # do not want to actually run the core logic and hence not cause effects outside the system.
-            return self.output_table
+
         return self.load_data(input_file=self.input_file, context=context)
 
     def load_data(self, input_file: File, context: Context) -> BaseTable | pd.DataFrame:

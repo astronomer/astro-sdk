@@ -10,6 +10,7 @@ from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
 from astro.table import Metadata, Table
+from sql_cli import operators as naql
 
 DAGS_FOLDER = Path(__file__).parent.as_posix()
 
@@ -18,6 +19,6 @@ DAGS_FOLDER = Path(__file__).parent.as_posix()
     {%- if workflow_file.operator_name == 'load_file' %}
     {{ load_file(workflow_file, dag, tasks_to_execute)|indent(width=4) }}
     {%- elif workflow_file.operator_name == 'transform_file' %}
-    {{ transform_file(workflow_file, dag)|indent(width=4) }}
+    {{ transform_file(workflow_file, dag, tasks_to_execute)|indent(width=4) }}
     {%- endif %}
     {%- endfor %}
