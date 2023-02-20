@@ -173,7 +173,9 @@ class Workflow:
         return Workflow(**workflow_params)
 
 
-def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) -> Path:
+def generate_dag(
+    directory: Path, dags_directory: Path, generate_tasks: bool, tasks_to_execute: list[str] | None = None
+) -> Path:
     """
     Generate a DAG from SQL files.
 
@@ -181,6 +183,7 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     :param dags_directory: The directory containing the generated DAG.
     :param generate_tasks: Whether the user wants to explicitly generate each task
         of the airflow DAG or rely on a less verbose `render` function.
+    :param tasks_to_execute: list of specified tasks to execute. If not provided, then all the tasks will be executed.
 
     :return: the path to the DAG file.
     """
@@ -212,7 +215,11 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     output_file = dags_directory / f"{workflow_files_dag.dag_id}.py"
     render(
         template_file=template_file,
-        context={"dag": workflow_files_dag, "schedule_type": type(workflow_files_dag.schedule).__name__},
+        context={
+            "dag": workflow_files_dag,
+            "schedule_type": type(workflow_files_dag.schedule).__name__,
+            "tasks_to_execute": tasks_to_execute,
+        },
         output_file=output_file,
     )
 
