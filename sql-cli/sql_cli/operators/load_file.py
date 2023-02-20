@@ -3,8 +3,8 @@ from __future__ import annotations
 import warnings
 from typing import Any
 
-from airflow import XComArg
 from airflow.decorators.base import get_unique_task_id
+from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.custom_backend.serializer import deserialize
@@ -87,11 +87,11 @@ class NominalLoadFileOperator(LoadFileOperator):
         if_exists: LoadExistStrategy = "replace",
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
-        native_support_kwargs: dict | None = None,
+        native_support_kwargs: dict[str, Any] | None = None,
         load_options: list[LoadOptions] | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
-        **kwargs,
+        **kwargs: Any,
     ):
         super().__init__(
             input_file=input_file,
@@ -131,7 +131,7 @@ def nominal_load_file(
     if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",
     use_native_support: bool = True,
-    native_support_kwargs: dict | None = None,
+    native_support_kwargs: dict[str, Any] | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: bool | None = True,
     load_options: list[LoadOptions] | None = None,

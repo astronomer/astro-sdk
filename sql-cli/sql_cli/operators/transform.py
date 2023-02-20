@@ -6,6 +6,7 @@ from airflow import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.sql import TransformOperator
+from astro.table import BaseTable
 from astro.utils.compat.typing import Context
 
 
@@ -18,7 +19,7 @@ class NominalTransformOperator(TransformOperator):
     def __init__(
         self,
         conn_id: str | None = None,
-        parameters: dict | None = None,
+        parameters: dict[str, Any] | None = None,
         handler: Function | None = None,
         database: str | None = None,
         schema: str | None = None,
@@ -41,7 +42,7 @@ class NominalTransformOperator(TransformOperator):
             **kwargs,
         )
 
-    def execute(self, context: Context):
+    def execute(self, context: Context) -> BaseTable:
         super().execute(context)
         # Skips the core execution of the operator but run all ancillary operations. This is useful for local run of
         # tasks where subsequent tasks in the DAG might need the output of this operator like XCOM results, but they
@@ -52,7 +53,7 @@ class NominalTransformOperator(TransformOperator):
 def nominal_transform_file(
     file_path: str,
     conn_id: str = "",
-    parameters: dict | None = None,
+    parameters: dict[str, Any] | None = None,
     database: str | None = None,
     schema: str | None = None,
     **kwargs: Any,
