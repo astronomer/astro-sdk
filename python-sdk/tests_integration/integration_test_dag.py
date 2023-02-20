@@ -100,7 +100,6 @@ def run_merge(output_table: Table):
         columns={"list": "list", "sell": "sell"},
         if_conflicts="ignore",
     )
-
     con1 >> merged_table  # skipcq PYL-W0104
 
 
