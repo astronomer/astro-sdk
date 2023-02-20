@@ -1,9 +1,6 @@
-import pathlib
-
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 
 sample_filepaths_per_location = [
@@ -23,4 +20,3 @@ def test_get_location_type_with_supported_location(expected_location, filepath):
     """test get_location_type() with all the supported locations"""
     location = BaseFileLocation.get_location_type(filepath)
     assert location == expected_location
-
