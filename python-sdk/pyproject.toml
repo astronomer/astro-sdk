@@ -56,12 +56,12 @@ tests = [
 ]
 google = [
     "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed
-    "apache-airflow-providers-google>=6.4.0",
+    "apache-airflow-providers-google==8.10.0rc1",
     "sqlalchemy-bigquery>=1.3.0",
     "smart-open[gcs]>=5.2.1"
 ]
 snowflake = [
-    "apache-airflow-providers-snowflake",
+    "apache-airflow-providers-snowflake==4.0.4rc1",
     "snowflake-sqlalchemy>=1.2.0",
     "snowflake-connector-python[pandas]<3.0.0",
     # pinning snowflake-connector-python[pandas]<3.0.0 due to a conflict in snowflake-connector-python/pyarrow/google
@@ -72,17 +72,17 @@ postgres = [
     "apache-airflow-providers-postgres",
 ]
 amazon = [
-    "apache-airflow-providers-amazon>=5.0.0",
+    "apache-airflow-providers-amazon==7.2.1rc1",
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
 azure = [
-    "apache-airflow-providers-microsoft-azure",
+    "apache-airflow-providers-microsoft-azure==5.2.1rc1",
     "azure-storage-blob",
     "smart-open[azure]>=5.2.1",
 ]
 sftp = [
-    "apache-airflow-providers-sftp>=4.0.0",
+    "apache-airflow-providers-sftp==4.2.3rc1",
     "smart-open[ssh]>=5.2.1",
 ]
 ftp = [
@@ -103,12 +103,12 @@ duckdb = [
 ]
 
 all = [
-    "apache-airflow-providers-amazon",
-    "apache-airflow-providers-google>=6.4.0",
+    "apache-airflow-providers-amazon==7.2.1rc1",
+    "apache-airflow-providers-google==8.10.0rc1",
     "apache-airflow-providers-ftp",
     "apache-airflow-providers-postgres",
-    "apache-airflow-providers-snowflake",
-    "apache-airflow-providers-sftp",
+    "apache-airflow-providers-snowflake==4.0.4rc1",
+    "apache-airflow-providers-sftp==4.2.3rc1",
     "smart-open[all]>=5.2.1",
     "snowflake-connector-python[pandas]<3.0.0",
     # pinning snowflake-connector-python[pandas]<3.0.0 due to a conflict in snowflake-connector-python/pyarrow/google
@@ -121,7 +121,7 @@ all = [
     "s3fs",
     "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed
     "openlineage-airflow>=0.17.0",
-    "apache-airflow-providers-microsoft-azure",
+    "apache-airflow-providers-microsoft-azure==5.2.1rc1",
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
