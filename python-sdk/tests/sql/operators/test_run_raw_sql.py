@@ -23,10 +23,10 @@ def test_make_row_serializable(rows):
 
 
 @mock.patch("astro.sql.operators.raw_sql.RawSQLOperator.results_as_list")
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
+@mock.patch("astro.databases.base.BaseDatabase.connection")
 def test_run_sql_calls_list_handler(run_sql, results_as_list, sample_dag):
     results_as_list.return_value = []
-    run_sql.return_value = []
+    run_sql.execute.return_value = []
     with sample_dag:
 
         @aql.run_raw_sql(results_format="list", conn_id="sqlite_default")
@@ -40,10 +40,10 @@ def test_run_sql_calls_list_handler(run_sql, results_as_list, sample_dag):
 
 
 @mock.patch("astro.sql.operators.raw_sql.RawSQLOperator.results_as_pandas_dataframe")
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
+@mock.patch("astro.databases.base.BaseDatabase.connection")
 def test_run_sql_calls_pandas_dataframe_handler(run_sql, results_as_pandas_dataframe, sample_dag):
     results_as_pandas_dataframe.return_value = []
-    run_sql.return_value = []
+    run_sql.execute.return_value = []
     with sample_dag:
 
         @aql.run_raw_sql(results_format="pandas_dataframe", conn_id="sqlite_default")
@@ -57,13 +57,13 @@ def test_run_sql_calls_pandas_dataframe_handler(run_sql, results_as_pandas_dataf
 
 
 @mock.patch("astro.sql.operators.raw_sql.RawSQLOperator.results_as_pandas_dataframe")
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
+@mock.patch("astro.databases.base.BaseDatabase.connection")
 def test_run_sql_gives_priority_to_pandas_dataframe_handler(run_sql, results_as_pandas_dataframe, sample_dag):
     """
     Test that run_sql calls `results_format` specified handler over handler passed in decorator.
     """
     results_as_pandas_dataframe.return_value = []
-    run_sql.return_value = []
+    run_sql.execute.return_value = []
     with sample_dag:
 
         @aql.run_raw_sql(
@@ -103,14 +103,11 @@ def test_run_sql_called_handler(run_sql, results_as_pandas_dataframe, sample_dag
 
 
 @mock.patch("astro.sql.operators.raw_sql.RawSQLOperator.results_as_pandas_dataframe")
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
-def test_run_sql_should_raise_exception(run_sql, results_as_pandas_dataframe, sample_dag):
+def test_run_sql_should_raise_exception(results_as_pandas_dataframe, sample_dag):
     """
     Test that run_sql should raise an exception when fail_on_empty=False
     """
     results_as_pandas_dataframe.return_value = []
-    return_value = [1, 2, 3]
-    run_sql.return_value = return_value
 
     def raise_exception(result):
         raise ValueError("dummy exception")
@@ -156,7 +153,7 @@ def test_handlers():
 
     class Val:
         def __init__(self, val):
-            self.value = [val]
+            self.value: list = [val]
 
         def values(self) -> list:
             return self.value
