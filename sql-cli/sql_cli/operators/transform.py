@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from airflow import XComArg
+from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.sql import TransformOperator
