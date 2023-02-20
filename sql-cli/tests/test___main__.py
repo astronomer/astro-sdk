@@ -474,6 +474,53 @@ def test_run_state(mock_run_dag, initialised_project, generate_tasks, dag_run_st
 
 
 @pytest.mark.parametrize(
+    "task_id,output_str_1,output_str_2, include_upstream",
+    [
+        (
+            "load_imdb_movies",
+            "Processing load_imdb_movies... SUCCESS",
+            "Processing transform_imdb_movies... SKIPPED",
+            "--no-include-upstream",
+        ),
+        (
+            "transform_imdb_movies",
+            "Processing load_imdb_movies... SKIPPED",
+            "Processing transform_imdb_movies... SUCCESS",
+            "--no-include-upstream",
+        ),
+        (
+            "transform_imdb_movies",
+            "Processing load_imdb_movies... SUCCESS",
+            "Processing transform_imdb_movies... SUCCESS",
+            "--include-upstream",
+        ),
+    ],
+)
+def test_run_single_task(task_id, output_str_1, output_str_2, include_upstream, initialised_project):
+    workflow_name = "example_load_file"
+    environment = "default"
+
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            workflow_name,
+            "--env",
+            environment,
+            "--project-dir",
+            initialised_project.directory.as_posix(),
+            "--generate-tasks",
+            "--task-id",
+            task_id,
+            include_upstream,
+        ],
+    )
+    assert output_str_1 in result.stdout
+    assert output_str_2 in result.stdout
+    assert result.exit_code == 0, result.output
+
+
+@pytest.mark.parametrize(
     "workflow_name,message",
     [
         ("non_existing", "The workflow non_existing does not exist!"),
