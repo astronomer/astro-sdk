@@ -335,6 +335,8 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
 
     @task
     def validate(input_df):
+        print("diff: ")
+        print(test_df.sort_values("sell").compare(input_df.sort_values("sell")))
         assert isinstance(input_df, pd.DataFrame)
         assert test_df.shape == input_df.shape
         assert test_df.sort_values("sell").equals(input_df.sort_values("sell"))
