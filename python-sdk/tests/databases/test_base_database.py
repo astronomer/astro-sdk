@@ -1,6 +1,8 @@
 import pathlib
+from unittest import mock
 
 import pytest
+from airflow.models.connection import Connection
 from pandas import DataFrame
 
 from astro.constants import FileType
@@ -96,3 +98,44 @@ def test_subclass_missing_append_table_raises_exception():
     target_table = Table()
     with pytest.raises(NotImplementedError):
         db.append_table(source_table, target_table, source_to_target_columns_map={})
+
+
+def test_database_with_check_for_minio_connection():
+    """Test if the S3 path is passed with minio connection it recognizes it"""
+    database = create_database("snowflake_conn")
+
+    class MockResponse:
+        def __init__(self, json_data, status_code):
+            self.json_data = json_data
+            self.status_code = status_code
+            self.ok = True if 200 >= status_code and status_code < 300 else False
+
+        def json(self):
+            return self.json_data
+
+    with mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_connection") as get_connection:
+        get_connection.return_value = Connection(
+            conn_id="minio_conn",
+            conn_type="aws",
+            extra={
+                "aws_access_key_id": "",
+                "aws_secret_access_key": "",
+                "endpoint_url": "http://127.0.0.1:9000",
+            },
+        )
+        with mock.patch("requests.get", side_effect=lambda x: MockResponse(None, 200)):
+            assert (
+                database.check_for_minio_connection(
+                    input_file=File(path="S3://somebucket/test.csv", conn_id="minio_conn")
+                )
+                is True
+            )
+    with mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_connection") as get_connection:
+        get_connection.return_value = Connection(conn_id="aws", conn_type="aws")
+        with mock.patch("requests.get", side_effect=lambda x: MockResponse(None, 404)):
+            assert (
+                database.check_for_minio_connection(
+                    input_file=File(path="S3://somebucket/test.csv", conn_id="aws_conn")
+                )
+                is False
+            )

@@ -14,8 +14,7 @@ from sqlalchemy import column, insert, select
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine.cursor import CursorResult
 
-from airflow.exceptions import AirflowNotFoundException
-
+import requests
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -427,15 +426,16 @@ class BaseDatabase(ABC):
 
     @staticmethod
     def check_for_minio_connection(input_file: File) -> bool:
-        """Returns True if minio is passed in extras in connections."""
+        """Automatically check if the connection is minio or S3"""
+        is_minio = False
         if input_file.location.location_type == FileLocation.S3:
+            conn = input_file.location.hook.get_connection(input_file.conn_id)
             try:
-                conn = input_file.location.hook.get_connection(input_file.conn_id)
-            except AirflowNotFoundException as exe:
-                logging.warning(exe)
-                return False
-            return bool(conn.extra_dejson.get("minio"))
-        return False
+                endpoint_url = conn.extra_dejson["endpoint_url"]
+                is_minio = requests.get(f"{endpoint_url}/minio/health/live").ok
+            except (requests.exceptions.RequestException, KeyError):
+                pass
+        return is_minio
 
     def load_file_to_table(
         self,

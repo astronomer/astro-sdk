@@ -111,22 +111,3 @@ def test_load_file_calls_resolve_file_path_pattern_with_filetype(
         use_native_support=True,
     )
     assert resolve_file_path_pattern.call_args.kwargs["filetype"] == FileType.CSV
-
-
-@pytest.mark.integration
-def test_database_with_check_for_minio_connection():
-    """Test if the S3 path is passed with minio connection it recognizes it"""
-    database = create_database("snowflake_conn")
-    assert (
-        database.check_for_minio_connection(
-            input_file=File(path="S3://somebucket/test.csv", conn_id="minio_conn")
-        )
-        is True
-    )
-
-    assert (
-        database.check_for_minio_connection(
-            input_file=File(path="S3://somebucket/test.csv", conn_id="aws_conn")
-        )
-        is False
-    )
