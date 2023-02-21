@@ -419,6 +419,19 @@ class BaseDatabase(ABC):
         response: list = self.run_sql(statement, handler=lambda x: x.fetchall())
         return response
 
+    @staticmethod
+    def check_for_minio_connection(input_file: File) -> bool:
+        """Automatically check if the connection is minio or S3"""
+        is_minio = False
+        if input_file.location.location_type == FileLocation.S3 and input_file.conn_id:
+            conn = input_file.location.hook.get_connection(input_file.conn_id)
+            try:
+                conn.extra_dejson["endpoint_url"]
+                is_minio = True
+            except KeyError:
+                pass
+        return is_minio
+
     def load_file_to_table(
         self,
         input_file: File,
@@ -448,6 +461,12 @@ class BaseDatabase(ABC):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
+        if self.check_for_minio_connection(input_file=input_file):
+            logging.info(
+                "No native support available for the service provided via endpoint_url! Setting use_native_support"
+                " to False."
+            )
+            use_native_support = False
 
         self.create_schema_and_table_if_needed(
             file=input_file,
@@ -548,7 +567,6 @@ class BaseDatabase(ABC):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         :param normalize_config: pandas json_normalize params config
         """
-
         try:
             logging.info("Loading file(s) with Native Support...")
             self.load_file_to_table_natively(
