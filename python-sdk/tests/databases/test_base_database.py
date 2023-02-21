@@ -102,7 +102,7 @@ def test_subclass_missing_append_table_raises_exception():
 
 def test_database_with_check_for_minio_connection():
     """Test if the S3 path is passed with minio connection it recognizes it"""
-    database = create_database("snowflake_conn")
+    database = create_database("sqlite_default")
 
     class MockResponse:
         def __init__(self, json_data, status_code):
