@@ -214,7 +214,7 @@ Supported native transfers
 
 Loading from MinIO
 ~~~~~~~~~~~~~~~~~~
-MinIO is a High Performance Object Storage released under GNU Affero General Public License v3.0. It is API compatible with the Amazon S3 cloud storage service. While loading files from MinIO to database as part of AWS connection in extra, user should pass ``minio=True`` if MinIO used as file location. Following is an example of MinIO connection:
+MinIO is a High-Performance Object Storage released under GNU Affero General Public License v3.0. It is API-compatible with the Amazon S3 cloud storage service. While loading files from MinIO to the database please make sure the MinIO server is up and running. Following is an example of a MinIO connection:
 
 .. code-block::
 
@@ -225,7 +225,6 @@ MinIO is a High Performance Object Storage released under GNU Affero General Pub
       aws_access_key_id: "dummy access key"
       aws_secret_access_key: "dummy secret key"
       endpoint_url: "http://127.0.0.1:9000"
-      minio: True
 
 Loading to MS SQL
 ~~~~~~~~~~~~~~~~~
