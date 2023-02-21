@@ -463,7 +463,7 @@ class BaseDatabase(ABC):
         normalize_config = normalize_config or {}
         if self.check_for_minio_connection(input_file=input_file):
             logging.info(
-                "Since Minio doesn't have a native load option, updated parameter use_native_support"
+                "Since non-native s3 service doesn't have a native load option, updated parameter use_native_support"
             )
             use_native_support = False
 
