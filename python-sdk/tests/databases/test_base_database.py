@@ -1,6 +1,8 @@
 import pathlib
+from unittest import mock
 
 import pytest
+from airflow.models.connection import Connection
 from pandas import DataFrame
 
 from astro.constants import FileType
@@ -96,3 +98,37 @@ def test_subclass_missing_append_table_raises_exception():
     target_table = Table()
     with pytest.raises(NotImplementedError):
         db.append_table(source_table, target_table, source_to_target_columns_map={})
+
+
+@mock.patch("astro.files.locations.base.BaseFileLocation.validate_conn")
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_connection")
+def test_database_for_minio_conn_with_check_for_minio_connection(get_connection, validate_conn):
+    database = create_database("sqlite_default")
+    get_connection.return_value = Connection(
+        conn_id="minio_conn",
+        conn_type="aws",
+        extra={
+            "aws_access_key_id": "",
+            "aws_secret_access_key": "",
+            "endpoint_url": "http://127.0.0.1:9000",
+        },
+    )
+    assert (
+        database.check_for_minio_connection(
+            input_file=File(path="S3://somebucket/test.csv", conn_id="minio_conn")
+        )
+        is True
+    )
+
+
+@mock.patch("astro.files.locations.base.BaseFileLocation.validate_conn")
+@mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_connection")
+def test_database_for_s3_conn_with_check_for_minio_connection(get_connection, validate_conn):
+    database = create_database("sqlite_default")
+    get_connection.return_value = Connection(conn_id="aws", conn_type="aws")
+    assert (
+        database.check_for_minio_connection(
+            input_file=File(path="S3://somebucket/test.csv", conn_id="aws_conn")
+        )
+        is False
+    )

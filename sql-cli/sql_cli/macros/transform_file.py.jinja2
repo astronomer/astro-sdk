@@ -1,5 +1,9 @@
-{% macro transform_file(sql_file, dag) -%}
+{% macro transform_file(sql_file, dag, tasks_to_execute) -%}
+{%- if tasks_to_execute and sql_file.get_variable_name() not in tasks_to_execute %}
+{{ sql_file.get_variable_name() }} = naql.nominal_transform_file(
+{%- else -%}
 {{ sql_file.get_variable_name() }} = aql.transform_file(
+{%- endif %}
     file_path=f"{DAGS_FOLDER}/{{ sql_file.get_relative_target_path() }}",
     parameters={
         {%- for parameter in sql_file.get_parameters() %}

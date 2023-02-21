@@ -39,8 +39,8 @@ def test_snowflake_run_sql():
     """Test run_sql against snowflake database"""
     statement = "SELECT 1 + 1;"
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
-    response = database.run_sql(statement)
-    assert response.first()[0] == 2
+    response = database.run_sql(statement, handler=lambda x: x.first())
+    assert response[0] == 2
 
 
 @pytest.mark.integration
@@ -79,8 +79,8 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
     assert e.match("does not exist or not authorized")
 
     database.create_table(table)
-    response = database.run_sql(statement)
-    rows = response.fetchall()
+    response = database.run_sql(statement, handler=lambda x: x.fetchall())
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (
         "ID",
@@ -137,11 +137,11 @@ def test_snowflake_create_table_using_native_schema_autodetection(
 
     file = File("s3://astro-sdk/sample.parquet", conn_id="aws_conn")
     database.create_table(table, file)
-    response = database.run_sql(statement)
-    rows = response.fetchall()
+    response = database.run_sql(statement, handler=lambda x: x.fetchall())
+    rows = response
     assert len(rows) == 2
     statement = f"SELECT COUNT(*) FROM {database.get_table_qualified_name(table)}"
-    count = database.run_sql(statement).scalar()
+    count = database.run_sql(statement, handler=lambda x: x.scalar())
     assert count == 0
 
 
@@ -165,9 +165,9 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     database.load_pandas_dataframe_to_table(pandas_dataframe, table)
 
     statement = f"SELECT * FROM {database.get_table_qualified_name(table)}"
-    response = database.run_sql(statement)
+    response = database.run_sql(statement, handler=lambda x: x.fetchall())
 
-    rows = response.fetchall()
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)

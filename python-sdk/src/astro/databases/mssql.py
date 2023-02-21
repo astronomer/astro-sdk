@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import Any, Callable
 
 import pandas as pd
 import sqlalchemy
@@ -17,8 +17,6 @@ from astro.table import BaseTable, Metadata
 from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = MsSqlHook.default_conn_name
-if TYPE_CHECKING:  # pragma: no cover
-    from sqlalchemy.engine.cursor import CursorResult
 
 
 class MssqlDatabase(BaseDatabase):
@@ -145,8 +143,9 @@ class MssqlDatabase(BaseDatabase):
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
+        handler: Callable | None = None,
         **kwargs,
-    ) -> CursorResult:
+    ) -> Any:
         """
         Return the results to running a SQL statement.
         Whenever possible, this method should be implemented using Airflow Hooks,
@@ -154,6 +153,7 @@ class MssqlDatabase(BaseDatabase):
 
         :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
+        :param handler: function that takes in a cursor as an argument.
         """
         if parameters is None:
             parameters = {}
@@ -177,11 +177,12 @@ class MssqlDatabase(BaseDatabase):
                 result = self.connection.execute(
                     sqlalchemy.text(sql).execution_options(autocommit=autocommit), parameters
                 )
-                return result
         else:
             # this is used for append
             result = self.connection.execute(sql, parameters)
-            return result
+        if handler:
+            return handler(result)
+        return None
 
     def create_schema_if_needed(self, schema: str | None) -> None:
         """
@@ -226,7 +227,7 @@ class MssqlDatabase(BaseDatabase):
         statement = self._drop_table_statement.format(self.get_table_qualified_name(table))
         self.run_sql(statement, autocommit=True)
 
-    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
+    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> Any:
         """
         Fetches all rows for a table and returns as a list. This is needed because some
         databases have different cursors that require different methods to fetch rows
@@ -238,8 +239,8 @@ class MssqlDatabase(BaseDatabase):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
         if row_limit > -1:
             statement = f"SELECT TOP {row_limit} * FROM {self.get_table_qualified_name(table)}"
-        response = self.run_sql(statement)
-        return response.fetchall()  # type: ignore
+        response: list = self.run_sql(statement, handler=lambda x: x.fetchall())
+        return response
 
     def load_pandas_dataframe_to_table(
         self,
