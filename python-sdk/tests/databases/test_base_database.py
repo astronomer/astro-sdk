@@ -100,20 +100,9 @@ def test_subclass_missing_append_table_raises_exception():
         db.append_table(source_table, target_table, source_to_target_columns_map={})
 
 
-class MockResponse:
-    def __init__(self, json_data, status_code):
-        self.json_data = json_data
-        self.status_code = status_code
-        self.ok = True if 200 >= status_code and status_code < 300 else False
-
-    def json(self):
-        return self.json_data
-
-
-@mock.patch("requests.get", side_effect=lambda x: MockResponse(None, 200))
 @mock.patch("astro.files.locations.base.BaseFileLocation.validate_conn")
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_connection")
-def test_database_for_minio_conn_with_check_for_minio_connection(get_connection, validate_conn, requests_get):
+def test_database_for_minio_conn_with_check_for_minio_connection(get_connection, validate_conn):
     database = create_database("sqlite_default")
     get_connection.return_value = Connection(
         conn_id="minio_conn",
@@ -132,10 +121,9 @@ def test_database_for_minio_conn_with_check_for_minio_connection(get_connection,
     )
 
 
-@mock.patch("requests.get", side_effect=lambda x: MockResponse(None, 404))
 @mock.patch("astro.files.locations.base.BaseFileLocation.validate_conn")
 @mock.patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_connection")
-def test_database_for_s3_conn_with_check_for_minio_connection(get_connection, validate_conn, requests_get):
+def test_database_for_s3_conn_with_check_for_minio_connection(get_connection, validate_conn):
     database = create_database("sqlite_default")
     get_connection.return_value = Connection(conn_id="aws", conn_type="aws")
     assert (
