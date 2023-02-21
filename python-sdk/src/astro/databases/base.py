@@ -6,7 +6,6 @@ from abc import ABC
 from typing import Any, Callable, Mapping
 
 import pandas as pd
-import requests
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
@@ -427,9 +426,9 @@ class BaseDatabase(ABC):
         if input_file.location.location_type == FileLocation.S3 and input_file.conn_id:
             conn = input_file.location.hook.get_connection(input_file.conn_id)
             try:
-                endpoint_url = conn.extra_dejson["endpoint_url"]
-                is_minio = requests.get(f"{endpoint_url}/minio/health/live").ok
-            except (requests.exceptions.RequestException, KeyError):
+                conn.extra_dejson["endpoint_url"]
+                is_minio = True
+            except KeyError:
                 pass
         return is_minio
 
