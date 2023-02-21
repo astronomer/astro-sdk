@@ -462,6 +462,8 @@ class BaseDatabase(ABC):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
+        if self.check_for_minio_connection(input_file=input_file):
+            use_native_support = False
 
         self.create_schema_and_table_if_needed(
             file=input_file,
@@ -471,8 +473,6 @@ class BaseDatabase(ABC):
             normalize_config=normalize_config,
             use_native_support=use_native_support,
         )
-        if self.check_for_minio_connection(input_file=input_file):
-            use_native_support = False
 
         if use_native_support and self.is_native_load_file_available(
             source_file=input_file, target_table=output_table
