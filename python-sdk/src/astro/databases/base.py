@@ -424,7 +424,7 @@ class BaseDatabase(ABC):
     def check_for_minio_connection(input_file: File) -> bool:
         """Automatically check if the connection is minio or S3"""
         is_minio = False
-        if input_file.location.location_type == FileLocation.S3:
+        if input_file.location.location_type == FileLocation.S3 and input_file.conn_id:
             conn = input_file.location.hook.get_connection(input_file.conn_id)
             try:
                 endpoint_url = conn.extra_dejson["endpoint_url"]
