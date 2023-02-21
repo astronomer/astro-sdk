@@ -6,15 +6,11 @@ from abc import ABC
 from typing import Any, Callable, Mapping
 
 import pandas as pd
+import requests
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
-
-if TYPE_CHECKING:  # pragma: no cover
-    from sqlalchemy.engine.cursor import CursorResult
-
-import requests
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
