@@ -214,7 +214,7 @@ Supported native transfers
 
 Loading from MinIO
 ~~~~~~~~~~~~~~~~~~
-MinIO is a High-Performance Object Storage released under GNU Affero General Public License v3.0. It is API-compatible with the Amazon S3 cloud storage service. While loading files from MinIO to the database please make sure the MinIO server is up and running. Following is an example of a MinIO connection:
+MinIO is a High-Performance Object Storage released under GNU Affero General Public License v3.0. It is API-compatible with the Amazon S3 cloud storage service. While loading files from MinIO to the database please make sure the MinIO server is up and running. Also, It's important to pass ``endpoint_url`` in connection to distinguish between S3 and MinIO connection. Following is an example of a MinIO connection:
 
 .. code-block::
 
