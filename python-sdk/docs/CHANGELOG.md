@@ -1,6 +1,18 @@
 # Changelog
 
 
+## 1.5.1
+
+### Improvements
+- Add Openlineage facets for Microsoft SQL server. [#1752](https://github.com/astronomer/astro-sdk/pull/1752)
+
+### Bug fixes
+- Use `use_native_support` param in load_file operator for table creation. [#1756](https://github.com/astronomer/astro-sdk/pull/1756)
+- Resolved `pandas-gbq` dependency issue. [#1768](https://github.com/astronomer/astro-sdk/pull/1768)
+- Fix Minio support for Snowflake. [#1767](https://github.com/astronomer/astro-sdk/pull/1767)
+- Add handler param in database.run_sql() method [1773](https://github.com/astronomer/astro-sdk/pull/1773)
+
+
 ## 1.5.0
 
 ### Feature:
