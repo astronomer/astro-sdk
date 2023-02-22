@@ -43,6 +43,12 @@ classifiers = [
 [project.optional-dependencies]
 tests = [
     "pytest>=6.0",
+    "pytest-split",
+    "pytest-dotenv",
+    "pytest-describe",
+    "requests-mock",
+    "types-requests",
+    "mypy",
     "sqlalchemy-stubs", # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
 ]
 google = [
@@ -98,7 +104,7 @@ provider_info = "universal_transfer_operator.__init__:get_provider_info"
 minversion = "6.0"
 addopts = "--durations=30 --durations-min=1.0"
 env_files = [".env"]
-testpaths = ["tests", "tests_integration"]
+testpaths = ["tests"]
 markers = [
     "integration"
 ]
