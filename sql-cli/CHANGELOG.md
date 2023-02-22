@@ -19,7 +19,7 @@
 * Add developer documentation ([#1534](https://github.com/astronomer/astro-sdk/issues/1534))
 
 
-## 0.3.2 (Astro CLI 0.10)
+## 0.3.2 (Astro CLI 1.10.0)
 
 Pin Python SDK to 1.4.x, so the SQL CLI and Astro CLI are not affected by breaking changes introduced in the project.
 
