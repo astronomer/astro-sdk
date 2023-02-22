@@ -5,7 +5,6 @@
 ### Features
 
 * Deployment to Astro Software ([#1522](https://github.com/astronomer/astro-sdk/issues/1522))
-
 * Support to run a single SQL CLI workflow task ([#1766](https://github.com/astronomer/astro-sdk/pull/1766)):
 
 ```
