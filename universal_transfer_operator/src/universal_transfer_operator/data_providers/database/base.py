@@ -175,6 +175,8 @@ class DatabaseDataProvider(DataProviders):
     def check_if_transfer_supported(self, source_dataset: Table) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
+
+        :param source_dataset: Table present in the source location
         """
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
@@ -184,7 +186,11 @@ class DatabaseDataProvider(DataProviders):
         raise NotImplementedError
 
     def write(self, source_ref: FileStream):
-        """Write the data from local reference location to the dataset"""
+        """
+        Write the data from local reference location to the dataset.
+
+        :param source_ref: Stream of data to be loaded into output table..
+        """
         return self.load_file_to_table(
             input_file=source_ref.actual_file,
             output_table=self.dataset,

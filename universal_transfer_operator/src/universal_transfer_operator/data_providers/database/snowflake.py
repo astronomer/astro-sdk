@@ -73,7 +73,11 @@ class SnowflakeDataProvider(DatabaseDataProvider):
         raise NotImplementedError
 
     def write(self, source_ref: FileStream):
-        """Write the data from local reference location to the dataset"""
+        """
+        Write the data from local reference location to the dataset
+        
+        :param source_ref: Stream of data to be loaded into snowflake table.
+        """
         return self.load_file_to_table(
             input_file=source_ref.actual_file,
             output_table=self.dataset,
