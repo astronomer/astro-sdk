@@ -1,6 +1,25 @@
 # Changelog
 
-## 0.3.2
+## 0.4.0 (Astro CLI 0.11)
+
+### Features
+
+* Deployment to Astro Software ([#1522](https://github.com/astronomer/astro-sdk/issues/1522))
+
+* Support to run a single SQL CLI workflow task ([#1766](https://github.com/astronomer/astro-sdk/pull/1766)):
+
+```
+    astro flow run <workflow> --task-id load_imdb_movies
+```
+
+### Others
+
+* Render SQL in Airflow UI ([#1003](https://github.com/astronomer/astro-sdk/issues/1003))
+* Update compatibility matrix to support matching minor digits ([#1673](https://github.com/astronomer/astro-sdk/issues/1673))
+* Add developer documentation ([#1534](https://github.com/astronomer/astro-sdk/issues/1534))
+
+
+## 0.3.2 (Astro CLI 0.10)
 
 Pin Python SDK to 1.4.x, so the SQL CLI and Astro CLI are not affected by breaking changes introduced in the project.
 
