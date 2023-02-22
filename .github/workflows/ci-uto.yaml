@@ -3,7 +3,6 @@ on:
   push:
     branches: [ 'main', 'release-**' ]
     paths:
-      - 'python-sdk/**'
       - 'universal_transfer_operator/**'
 
   pull_request:
