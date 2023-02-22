@@ -1,19 +1,19 @@
 name: Build and test astro SQL CLI
 on:
   push:
-    branches: [ 'main', 'release-**' ]
+    branches: [ 'main', 'release-**', 'astro-cli' ]
     paths:
       - 'python-sdk/**'
       - 'sql-cli/**'
 
   pull_request:
-    branches: [ 'main', 'release-**' ]
+    branches: [ 'main', 'release-**', 'astro-cli' ]
     paths:
       - 'python-sdk/**'
       - 'sql-cli/**'
   # Run on PRs from forks
   pull_request_target:
-    branches: [ 'main' ]
+    branches: [ 'main', 'astro-cli' ]
     types: ['labeled']
   release:
     types: [ 'created' ]
