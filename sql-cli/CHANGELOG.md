@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 (Astro CLI 0.11)
+## 0.4.0 (Astro CLI 1.11.0)
 
 ### Features
 
