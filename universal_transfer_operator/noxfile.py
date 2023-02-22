@@ -27,11 +27,6 @@ def test(session: nox.Session, airflow) -> None:
     }
 
     if airflow == "2.2.5":
-        env[
-            "AIRFLOW__CORE__XCOM_BACKEND"
-        ] = "astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend"
-        env["AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV"] = "True"
-
         # If you need a pinned version of a provider to be present in a nox session then
         # update the constraints file used below with that  version of provider
         # For example as part of MSSQL support we need apache-airflow-providers-microsoft-mssql>=3.2 and this
@@ -42,8 +37,6 @@ def test(session: nox.Session, airflow) -> None:
         # install smart-open 6.3.0 since it has FTP implementation
         session.install("smart-open>=6.3.0")
     else:
-        env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
-
         session.install(f"apache-airflow=={airflow}")
         session.install("-e", ".[all,tests]")
 
