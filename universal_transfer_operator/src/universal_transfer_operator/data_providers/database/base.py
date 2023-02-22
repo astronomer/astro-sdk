@@ -190,7 +190,7 @@ class DatabaseDataProvider(DataProviders):
         """
         Write the data from local reference location to the dataset.
 
-        :param source_ref: Stream of data to be loaded into output table..
+        :param source_ref: Stream of data to be loaded into output table.
         """
         return self.load_file_to_table(
             input_file=source_ref.actual_file,
