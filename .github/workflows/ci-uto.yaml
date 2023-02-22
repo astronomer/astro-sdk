@@ -1,0 +1,191 @@
+name: Build and test Universal Transfer Operator
+on:
+  push:
+    branches: [ 'main', 'release-**' ]
+    paths:
+      - 'python-sdk/**'
+      - 'universal_transfer_operator/**'
+
+  pull_request:
+    branches: [ 'main', 'release-**' ]
+    paths:
+      - 'python-sdk/**'
+      - 'universal_transfer_operator/**'
+  # Run on PRs from forks
+  pull_request_target:
+    branches: [ 'main' ]
+    types: ['labeled']
+  release:
+    types: [ 'created' ]
+defaults:
+  run:
+    working-directory: universal_transfer_operator
+
+# This allows a subsequently queued workflow run to interrupt and cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# This list should only have non-sensitive env vars.
+# Env vars with secrets should be in the specific jobs
+env:
+  GOOGLE_CLOUD_PROJECT: astronomer-dag-authoring
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  REDSHIFT_DATABASE: dev
+  REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+  SNOWFLAKE_SCHEMA: ASTROFLOW_CI
+  SNOWFLAKE_DATABASE: SANDBOX
+  SNOWFLAKE_WAREHOUSE: DEMO
+  SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+  SNOWFLAKE_ACCOUNT: gp21411
+  SNOWFLAKE_REGION: us-east-1
+  SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+
+jobs:
+  Type-Check:
+    if: github.event.action != 'labeled'
+    runs-on: ubuntu-latest
+    env:
+      MYPY_FORCE_COLOR: 1
+      TERM: xterm-color
+      SETUPTOOLS_USE_DISTUTILS: stdlib
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - uses: actions/cache@v3
+        with:
+           path: |
+             ~/.cache/pip
+             universal_transfer_operator/.nox
+             .local
+           key: universal_transfer_operator-type-check-os-${{ runner.os }}-deps-${{ hashFiles('universal_transfer_operator/pyproject.toml') }}
+
+      - name: Install Nox
+        run: |
+          pipx install nox
+          nox --version
+
+      - name: Run type check
+        run: nox -s type_check
+
+  Run-UTO-tests:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) ||
+      (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
+      )||
+      (
+        github.event_name == 'release'
+      )
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ 3.8, 3.9 ]
+        airflow: [ 2.2.5, 2.3.4, 2.4, 2.5 ]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '${{ matrix.python }}'
+          architecture: 'x64'
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            universal_transfer_operator/.nox
+            .local/
+          key: universal_transfer_operator-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('universal_transfer_operator/pyproject.toml') }}
+
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS environment variable
+        run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+
+      - name: Install Nox
+        run: |
+          pipx install nox
+          nox --version
+
+      - name: Run tests
+        run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-${{ matrix.python }}-${{ matrix.airflow }}
+          path: ./universal_transfer_operator/.coverage
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      GOOGLE_CLOUD_KEY_PATH: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
+
+
+  Code-Coverage:
+    if: github.event.action != 'labeled'
+    needs:
+      - Run-UTO-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+      - name: Install coverage
+        run: |
+          pip3 install coverage
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: ./universal_transfer_operator/coverage
+      - name: Run coverage
+        run: |
+          coverage combine ./coverage/coverage*/.coverage
+          coverage report
+          coverage xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./universal_transfer_operator/coverage.xml
