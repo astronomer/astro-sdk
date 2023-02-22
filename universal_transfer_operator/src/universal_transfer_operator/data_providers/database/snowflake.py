@@ -144,6 +144,8 @@ class SnowflakeDataProvider(DatabaseDataProvider):
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
         """
         if file is None:
             if dataframe is None:
