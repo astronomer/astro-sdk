@@ -156,8 +156,6 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
-      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 
 
   Code-Coverage:
