@@ -1,10 +1,10 @@
 name: "Pull Request Labeler"
 on:
   pull_request:
-    branches: [ 'main', 'release-**' ]
+    branches: [ 'main', 'release-**', 'astro-cli' ]
   # Run on PRs from forks
   pull_request_target:
-    branches: [ 'main' ]
+    branches: [ 'main', 'astro-cli' ]
 
 jobs:
   triage:
