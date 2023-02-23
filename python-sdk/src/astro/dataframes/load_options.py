@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import attr
 from pandas._typing import DtypeArg
 
@@ -42,3 +44,70 @@ class PandasLoadOptions(LoadOptions):
         for key in exclude_key:
             kwargs.update(self.to_dict()[key])
         return kwargs
+
+
+class PandasCsvLoadOptions(PandasLoadOptions):
+    """
+    Pandas load options while reading and loading csv file.
+    """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            """This class is deprecated.
+            Please use `astro.dataframe.load_options.PandasLoadOptions`.
+            And, will be removed in astro-sdk-python>=2.0.0.""",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
+class PandasJsonLoadOptions(PandasLoadOptions):
+    """
+    Pandas load options while reading and loading json file.
+
+    :param encoding: Encoding to use for UTF when reading/writing (ex. ‘utf-8’).
+        List of Python standard encodings: https://docs.python.org/3/library/codecs.html#standard-encodings
+    """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            """This class is deprecated.
+            Please use `astro.dataframe.load_options.PandasLoadOptions`.
+            And, will be removed in astro-sdk-python>=2.0.0.""",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
+class PandasNdjsonLoadOptions(PandasLoadOptions):
+    """
+    Pandas load options while reading and loading Ndjson file.
+    """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            """This class is deprecated.
+            Please use `astro.dataframe.load_options.PandasLoadOptions`.
+            And, will be removed in astro-sdk-python>=2.0.0.""",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
+class PandasParquetLoadOptions(PandasLoadOptions):
+    """
+    Pandas load options while reading and loading Parquet file.
+    """
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            """This class is deprecated.
+            Please use `astro.dataframe.load_options.PandasLoadOptions`.
+            And, will be removed in astro-sdk-python>=2.0.0.""",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)

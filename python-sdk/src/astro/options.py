@@ -42,7 +42,12 @@ class LoadOptionsList:
         """
         if not hasattr(option_class, "LOAD_OPTIONS_CLASS_NAME"):
             return None
-        return self.get_by_class_name(option_class.LOAD_OPTIONS_CLASS_NAME)
+        cls = None
+        for cls_name in option_class.LOAD_OPTIONS_CLASS_NAME:
+            cls = self.get_by_class_name(cls_name)
+            if cls is not None:
+                break
+        return cls
 
     def get_by_class_name(self, option_class_name) -> Optional[LoadOptions]:
         """

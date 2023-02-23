@@ -16,7 +16,7 @@ class WASBLocation(BaseFileLocation):
 
     location_type = FileLocation.WASB
     supported_conn_type = {WasbHook.conn_type, "wasbs"}
-    LOAD_OPTIONS_CLASS_NAME = "WASBLocationLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = ("WASBLocationLoadOptions",)
     AZURE_HOST = "blob.core.windows.net"
 
     def exists(self) -> bool:

@@ -14,7 +14,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 class JSONFileType(FileType):
     """Concrete implementation to handle JSON file type"""
 
-    LOAD_OPTIONS_CLASS_NAME = "PandasLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = ("PandasJsonLoadOptions", "PandasLoadOptions")
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
     def export_to_dataframe(

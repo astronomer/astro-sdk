@@ -12,6 +12,12 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.dataframes.load_options import (
+    PandasCsvLoadOptions,
+    PandasJsonLoadOptions,
+    PandasNdjsonLoadOptions,
+    PandasParquetLoadOptions,
+)
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File, resolve_file_path_pattern
 from astro.options import LoadOptions, LoadOptionsList
@@ -19,6 +25,13 @@ from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.compat.typing import Context
+
+DEPRECATED_LOAD_OPTIONS_CLASSES = [
+    PandasCsvLoadOptions,
+    PandasJsonLoadOptions,
+    PandasNdjsonLoadOptions,
+    PandasParquetLoadOptions,
+]
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
@@ -50,7 +63,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
-        load_options: list[LoadOptions] | None = None,
+        load_options: LoadOptions | list[LoadOptions] | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
@@ -70,6 +83,23 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 DeprecationWarning,
                 stacklevel=2,
             )
+
+        if load_options is not None:
+            if not isinstance(load_options, list):
+                load_options = [load_options]
+
+            deprecated_classes = {type(cls).__name__ for cls in load_options}.intersection(
+                [cls.__name__ for cls in DEPRECATED_LOAD_OPTIONS_CLASSES]
+            )
+            if deprecated_classes:
+                warnings.warn(
+                    f"""`{", ".join(deprecated_classes)}` will be replaced by
+                    `astro.dataframes.load_options.PandasLoadOptions` in astro-sdk-python>=2.0.0. Please use
+                     ``astro.dataframes.load_options.PandasLoadOptions` class instead.""",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
         self.output_table = output_table
         self.input_file = input_file
         self.input_file.load_options = load_options
