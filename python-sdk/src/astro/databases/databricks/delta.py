@@ -25,7 +25,7 @@ from astro.table import BaseTable, Metadata
 
 
 class DeltaDatabase(BaseDatabase):
-    LOAD_OPTIONS_CLASS_NAME = "DeltaLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = ("DeltaLoadOptions",)
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} USING DELTA AS {} "
 
     def __init__(self, conn_id: str, table: BaseTable | None = None, load_options: LoadOptions | None = None):
