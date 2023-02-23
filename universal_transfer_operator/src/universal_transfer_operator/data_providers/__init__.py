@@ -14,6 +14,10 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = (
         [("s3", File), ("aws", File)], "universal_transfer_operator.data_providers.filesystem.aws.s3"
     )
     | dict.fromkeys(
+        [("gs", Table), ("google_cloud_platform", Table)],
+        "universal_transfer_operator.data_providers.database.google.bigquery",
+    )
+    | dict.fromkeys(
         [("gs", File), ("google_cloud_platform", File)],
         "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
     )

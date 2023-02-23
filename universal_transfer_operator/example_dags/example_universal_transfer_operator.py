@@ -62,6 +62,20 @@ with DAG(
         destination_dataset=Table(name="uto_gs_table", conn_id="snowflake_default"),
     )
 
+    transfer_non_native_gs_to_bigquery = UniversalTransferOperator(
+        task_id="transfer_non_native_gs_to_bigquery",
+        source_dataset=File(path="gs://uto-test/uto/homes_main.csv", conn_id="google_cloud_default"),
+        destination_dataset=Table(name="uto_gs_to_bigquery_table", conn_id="google_cloud_default",metadata=Metadata(schema="astro")),
+    )
+
+    transfer_non_native_s3_to_bigquery = UniversalTransferOperator(
+        task_id="transfer_non_native_s3_to_bigquery",
+        source_dataset=File(
+            path="s3://astro-sdk-test/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV
+        ),
+        destination_dataset=Table(name="uto_s3_to_bigquery_table", conn_id="google_cloud_default",metadata=Metadata(schema="astro")),
+    )
+
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_with_connector_id",
         source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
