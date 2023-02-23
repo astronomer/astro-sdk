@@ -52,7 +52,7 @@ def test_snowflake_stage_path_raise_exception():
     Test snowflake_stage_path raise exception when 'storage_account' is missing.
     """
     location = WASBLocation(path="azure://somepath")
-    error_message = f"Required param missing 'storage_account', pass {location.LOAD_OPTIONS_CLASS_NAME}"
+    error_message = f"Required param missing 'storage_account', pass {location.LOAD_OPTIONS_CLASS_NAME[0]}"
     "(storage_account=<account_name>) to load_options"
     with pytest.raises(ValueError, match=error_message):
         location.snowflake_stage_path

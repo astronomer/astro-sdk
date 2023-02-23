@@ -16,7 +16,7 @@ class WASBLocation(BaseFileLocation):
 
     location_type = FileLocation.WASB
     supported_conn_type = {WasbHook.conn_type, "wasbs"}
-    LOAD_OPTIONS_CLASS_NAME = "WASBLocationLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = ("WASBLocationLoadOptions",)
     AZURE_HOST = "blob.core.windows.net"
 
     def exists(self) -> bool:
@@ -105,7 +105,7 @@ class WASBLocation(BaseFileLocation):
         """
         if not contains_required_option(self.load_options, "storage_account"):
             raise ValueError(
-                f"Required param missing 'storage_account', pass {self.LOAD_OPTIONS_CLASS_NAME}"
+                f"Required param missing 'storage_account', pass {self.LOAD_OPTIONS_CLASS_NAME[0]}"
                 f"(storage_account=<account_name>) to load_options"
             )
         url = urlparse(self.path)

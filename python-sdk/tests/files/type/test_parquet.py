@@ -4,7 +4,7 @@ from unittest import mock
 
 import pandas as pd
 
-from astro.dataframes.load_options import PandasLoadOptions
+from astro.dataframes.load_options import PandasLoadOptions, PandasParquetLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import ParquetFileType
 from astro.settings import NEED_CUSTOM_SERIALIZATION
@@ -31,6 +31,21 @@ def test_read_parquet_file_with_pandas_opts(mock_read_parquet, mock_file_to_byte
     """Test pandas option get pass to read_parquet"""
     path = str(sample_file.absolute())
     parquet_type = ParquetFileType(path, load_options=PandasLoadOptions(columns=["col1"]))
+    stream = b"12345"
+    mock_file_to_byte.return_value = stream
+    with open(path, mode="rb") as file:
+        parquet_type.export_to_dataframe(file)
+    mock_read_parquet.assert_called_once_with(stream, columns=["col1"])
+
+
+@mock.patch("astro.files.types.parquet.ParquetFileType._convert_remote_file_to_byte_stream")
+@mock.patch("astro.files.types.parquet.pd.read_parquet")
+def test_read_parquet_file_with_pandas_opts_with_deprecated_load_options(
+    mock_read_parquet, mock_file_to_byte
+):
+    """Test pandas option get pass to read_parquet"""
+    path = str(sample_file.absolute())
+    parquet_type = ParquetFileType(path, load_options=PandasParquetLoadOptions(columns=["col1"]))
     stream = b"12345"
     mock_file_to_byte.return_value = stream
     with open(path, mode="rb") as file:
