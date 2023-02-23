@@ -291,7 +291,7 @@ def test_file_object_picks_load_options(file_type, file_location):
 def test_file_object_picks_load_options_with_deprecated_load_options(file_type, file_location):
     """Test file object pick correct load_options"""
     type_name, type_expected_class = file_type.values()
-    location_path, location_expected_class = file_location.values()
+    location_path, _ = file_location.values()
     file = File(path=location_path + f".{type_name}")
     file.load_options = [
         PandasCsvLoadOptions(delimiter="$"),
