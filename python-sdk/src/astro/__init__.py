@@ -1,6 +1,6 @@
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
-__version__ = "1.5.1"
+__version__ = "1.5.2"
 
 
 # This is needed to allow Airflow to pick up specific metadata fields it needs
