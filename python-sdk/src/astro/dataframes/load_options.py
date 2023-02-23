@@ -54,8 +54,7 @@ class PandasCsvLoadOptions(PandasLoadOptions):
     def __init__(self, *args, **kwargs):
         warnings.warn(
             """This class is deprecated, and will be removed in astro-sdk-python>=2.0.0.
-            Please use `astro.dataframe.load_options.PandasLoadOptions`.
-            """,
+            Please use `astro.dataframe.load_options.PandasLoadOptions`.""",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -72,9 +71,8 @@ class PandasJsonLoadOptions(PandasLoadOptions):
 
     def __init__(self, *args, **kwargs):
         warnings.warn(
-            """This class is deprecated.
-            Please use `astro.dataframe.load_options.PandasLoadOptions`.
-            And, will be removed in astro-sdk-python>=2.0.0.""",
+            """This class is deprecated, and will be removed in astro-sdk-python>=2.0.0.
+            Please use `astro.dataframe.load_options.PandasLoadOptions`.""",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -88,9 +86,8 @@ class PandasNdjsonLoadOptions(PandasLoadOptions):
 
     def __init__(self, *args, **kwargs):
         warnings.warn(
-            """This class is deprecated.
-            Please use `astro.dataframe.load_options.PandasLoadOptions`.
-            And, will be removed in astro-sdk-python>=2.0.0.""",
+            """This class is deprecated, and will be removed in astro-sdk-python>=2.0.0.
+            Please use `astro.dataframe.load_options.PandasLoadOptions`.""",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -104,9 +101,8 @@ class PandasParquetLoadOptions(PandasLoadOptions):
 
     def __init__(self, *args, **kwargs):
         warnings.warn(
-            """This class is deprecated.
-            Please use `astro.dataframe.load_options.PandasLoadOptions`.
-            And, will be removed in astro-sdk-python>=2.0.0.""",
+            """This class is deprecated, and will be removed in astro-sdk-python>=2.0.0.
+            Please use `astro.dataframe.load_options.PandasLoadOptions`.""",
             DeprecationWarning,
             stacklevel=2,
         )
