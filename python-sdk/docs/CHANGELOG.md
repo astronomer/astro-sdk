@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.2
+
+### Improvements
+- Restore pandas load option classes - `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` introduced in SDK version 1.4.0 with deprecation warning, which was removed in SDK version 1.5.0. [#1795](https://github.com/astronomer/astro-sdk/pull/1795)
+
 
 ## 1.5.1
 
@@ -26,7 +31,6 @@
 - Use cache to reduce redundant database calls [#1488](https://github.com/astronomer/astro-sdk/pull/1488)
 - Remove default `copy_options` as part of `SnowflakeLoadOptions`. All `copy_options` are now supported as part of `SnowflakeLoadOptions` as per [documentation](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions). [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
 - Remove `load_options` from `File` object. [#1721](https://github.com/astronomer/astro-sdk/pull/1721)
-- Consolidated `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` to single `PandasLoadOptions`. [#1722](https://github.com/astronomer/astro-sdk/pull/1722)
 - Render SQL code with parameters in BaseSQLDecoratedOperator. [#897](https://github.com/astronomer/astro-sdk/pull/897)
 
 ### Bug fixes
@@ -42,6 +46,9 @@
 ### Misc
 - Add cleanup DAG to clean snowflake tables created as part of CI when the runners fail as part of GitHub actions. [#1663](https://github.com/astronomer/astro-sdk/issues/1663)
 - Run example DAGs on astro-cloud and collect the results. [#1499](https://github.com/astronomer/astro-sdk/pull/1499)
+
+### Breaking Change
+- Consolidated `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` to single `PandasLoadOptions`. [#1722](https://github.com/astronomer/astro-sdk/pull/1722)
 
 
 ## 1.4.1
