@@ -53,9 +53,9 @@ class PandasCsvLoadOptions(PandasLoadOptions):
 
     def __init__(self, *args, **kwargs):
         warnings.warn(
-            """This class is deprecated.
+            """This class is deprecated, and will be removed in astro-sdk-python>=2.0.0.
             Please use `astro.dataframe.load_options.PandasLoadOptions`.
-            And, will be removed in astro-sdk-python>=2.0.0.""",
+            """,
             DeprecationWarning,
             stacklevel=2,
         )
