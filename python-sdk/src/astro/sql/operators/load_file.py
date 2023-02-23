@@ -93,9 +93,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
             )
             if deprecated_classes:
                 warnings.warn(
-                    f"""`{", ".join(deprecated_classes)}` will be replaced by
-                    `astro.dataframes.load_options.PandasLoadOptions` in astro-sdk-python>=2.0.0. Please use
-                     ``astro.dataframes.load_options.PandasLoadOptions` class instead.""",
+                    f'`{", ".join(deprecated_classes)}` will be replaced by'
+                    f" `astro.dataframes.load_options.PandasLoadOptions` in astro-sdk-python>=2.0.0."
+                    f" Please use `astro.dataframes.load_options.PandasLoadOptions` class instead.",
                     DeprecationWarning,
                     stacklevel=2,
                 )
