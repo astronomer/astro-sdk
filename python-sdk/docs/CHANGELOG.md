@@ -3,7 +3,7 @@
 ## 1.5.2
 
 ### Improvements
-- Restore pandas load option classes - `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` introduced in SDK version 1.4.0 with deprecation warning, which was removed in SDK version 1.5.0. [#1795](https://github.com/astronomer/astro-sdk/pull/1795)
+- Restore pandas load option classes - `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` [#1795](https://github.com/astronomer/astro-sdk/pull/1795)
 
 
 ## 1.5.1
