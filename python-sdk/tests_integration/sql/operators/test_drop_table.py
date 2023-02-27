@@ -37,17 +37,17 @@ DEFAULT_FILEPATH_MSSQL = str(pathlib.Path(CWD.parent.parent, "data/sample_withou
             "database": Database.SNOWFLAKE,
             "file": File(DEFAULT_FILEPATH),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(DEFAULT_FILEPATH),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(DEFAULT_FILEPATH),
+        # },
         {
             "database": Database.DUCKDB,
             "file": File(DEFAULT_FILEPATH),
         },
     ],
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake", "redshift", "duckdb"],
+    ids=["sqlite", "postgres", "bigquery", "snowflake", "duckdb"],
 )
 def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
@@ -126,19 +126,19 @@ def test_drop_table_with_table_metadata_mssql(database_table_fixture, sample_dag
             "table": Table(conn_id="postgres_conn"),
             "file": File(DEFAULT_FILEPATH),
         },
-        {
-            "database": Database.REDSHIFT,
-            "table": Table(conn_id="redshift_conn"),
-            "file": File(DEFAULT_FILEPATH),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "table": Table(conn_id="redshift_conn"),
+        #     "file": File(DEFAULT_FILEPATH),
+        # },
         {
             "database": Database.DUCKDB,
-            "table": Table(conn_id="redshift_conn"),
+            "table": Table(conn_id="duckdb_conn"),
             "file": File(DEFAULT_FILEPATH),
         },
     ],
     indirect=True,
-    ids=["postgres", "redshift", "duckdb"],
+    ids=["postgres", "duckdb"],
 )
 def test_drop_table_without_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""

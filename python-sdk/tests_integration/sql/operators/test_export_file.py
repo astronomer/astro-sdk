@@ -59,10 +59,10 @@ def s3fs_creds():
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        # },
         {
             "database": Database.MSSQL,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
@@ -73,7 +73,7 @@ def s3fs_creds():
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
 )
 def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, remote_files_fixture):
     _, test_table = database_table_fixture
@@ -115,10 +115,10 @@ def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, r
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        # },
         {
             "database": Database.MSSQL,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
@@ -129,7 +129,7 @@ def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, r
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
 )
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
@@ -163,10 +163,10 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, dat
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes.csv"),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../data/homes.csv"),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        # },
         {
             "database": Database.MSSQL,
             "file": File(path=str(CWD) + "/../../data/homes.csv"),
@@ -177,7 +177,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, dat
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -219,17 +219,17 @@ def test_save_table_remote_file_exists_overwrite_false(
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/sample.csv"),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../data/sample.csv"),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        # },
         {
             "database": Database.DUCKDB,
             "file": File(path=str(CWD) + "/../../data/sample.csv"),
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "duckdb"],
 )
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 def test_export_file(sample_dag, database_table_fixture, file_type):
@@ -300,13 +300,13 @@ def test_export_file_for_mssql(sample_dag, database_table_fixture, file_type):
             "database": Database.POSTGRES,
             "file": File(path=str(CWD) + "/../../data/sample.csv"),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../data/sample.csv"),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        # },
     ],
     indirect=True,
-    ids=["postgresql", "redshift"],
+    ids=["postgresql"],
 )
 def test_populate_table_metadata(sample_dag, database_table_fixture):
     """

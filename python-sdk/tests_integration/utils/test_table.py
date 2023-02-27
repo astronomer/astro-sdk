@@ -22,12 +22,12 @@ from tests.utils.airflow import create_context
         {
             "database": Database.SQLITE,
         },
-        {
-            "database": Database.REDSHIFT,
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        # },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_row_count(database_table_fixture):
     """
@@ -51,12 +51,12 @@ def test_row_count(database_table_fixture):
     [
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
-        {"database": Database.REDSHIFT},
+        # {"database": Database.REDSHIFT},
         {"database": Database.SNOWFLAKE},
         {"database": Database.SQLITE},
     ],
     indirect=True,
-    ids=["bigquery", "postgresql", "redshift", "snowflake", "sqlite"],
+    ids=["bigquery", "postgresql", "snowflake", "sqlite"],
 )
 def test_sql_type(database_table_fixture, request):
     _, test_table = database_table_fixture

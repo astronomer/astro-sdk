@@ -177,27 +177,27 @@ with dag:
     # [END load_file_example_12]
 
     # [START load_file_example_13]
-    aql.load_file(
-        input_file=File(
-            "s3://astro-sdk/sample_pattern",
-            conn_id=AWS_CONN_ID,
-            filetype=FileType.CSV,
-        ),
-        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-        use_native_support=False,
-    )
+    # aql.load_file(
+    #     input_file=File(
+    #         "s3://astro-sdk/sample_pattern",
+    #         conn_id=AWS_CONN_ID,
+    #         filetype=FileType.CSV,
+    #     ),
+    #     output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+    #     use_native_support=False,
+    # )
     # [END load_file_example_13]
 
     # [START load_file_example_14]
-    aql.load_file(
-        input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern.csv",
-            conn_id="bigquery",
-            filetype=FileType.CSV,
-        ),
-        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-        use_native_support=False,
-    )
+    # aql.load_file(
+    #     input_file=File(
+    #         "gs://astro-sdk/workspace/sample_pattern.csv",
+    #         conn_id="bigquery",
+    #         filetype=FileType.CSV,
+    #     ),
+    #     output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+    #     use_native_support=False,
+    # )
     # [END load_file_example_14]
 
     # [START load_file_example_15]
@@ -210,16 +210,16 @@ with dag:
     # [END load_file_example_15]
 
     # [START load_file_example_16]
-    aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-        use_native_support=True,
-        native_support_kwargs={
-            "IGNOREHEADER": 1,
-            "REGION": "us-west-2",
-            "IAM_ROLE": REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN,
-        },
-    )
+    # aql.load_file(
+    #     input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
+    #     output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+    #     use_native_support=True,
+    #     native_support_kwargs={
+    #         "IGNOREHEADER": 1,
+    #         "REGION": "us-west-2",
+    #         "IAM_ROLE": REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN,
+    #     },
+    # )
     # [END load_file_example_16]
 
     # [START load_file_example_17]

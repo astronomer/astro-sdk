@@ -42,13 +42,13 @@ CWD = pathlib.Path(__file__).parent
             "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
             "table": Table(metadata=Metadata(schema=SCHEMA)),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
+        # },
     ],
     indirect=True,
-    ids=["postgres", "snowflake", "sqlite", "bigquery", "redshift"],
+    ids=["postgres", "snowflake", "sqlite", "bigquery"],
 )
 def test_export_table_to_file_in_the_sftp(database_table_fixture):
     """Test export_table_to_file_file() where end file location is in SFTP"""

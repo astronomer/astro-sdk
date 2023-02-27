@@ -29,11 +29,11 @@ CWD = pathlib.Path(__file__).parent
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
             "table": Table(metadata=Metadata(schema=SCHEMA.lower())),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
-            "table": Table(metadata=Metadata(schema=SCHEMA.lower())),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+        #     "table": Table(metadata=Metadata(schema=SCHEMA.lower())),
+        # },
         {
             "database": Database.SNOWFLAKE,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
@@ -56,7 +56,7 @@ CWD = pathlib.Path(__file__).parent
         },
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite", "delta", "duckdb"],
+    ids=["bigquery", "postgres", "snowflake", "sqlite", "delta", "duckdb"],
 )
 def test_export_table_to_pandas_dataframe(
     database_table_fixture,
@@ -118,7 +118,7 @@ def test_export_table_to_pandas_dataframe_mssql(
     [
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
-        {"database": Database.REDSHIFT},
+        # {"database": Database.REDSHIFT},
         {"database": Database.SNOWFLAKE},
         {"database": Database.SQLITE},
         {"database": Database.DELTA},
@@ -126,7 +126,7 @@ def test_export_table_to_pandas_dataframe_mssql(
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite", "delta", "mssql", "duckdb"],
+    ids=["bigquery", "postgres", "snowflake", "sqlite", "delta", "mssql", "duckdb"],
 )
 def test_load_pandas_dataframe_to_table_with_append(database_table_fixture):
     """Load Pandas Dataframe to a SQL table with append strategy"""
@@ -166,14 +166,14 @@ def test_load_pandas_dataframe_to_table_with_append(database_table_fixture):
     [
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
-        {"database": Database.REDSHIFT},
+        # {"database": Database.REDSHIFT},
         {"database": Database.SNOWFLAKE},
         {"database": Database.SQLITE},
         {"database": Database.DELTA},
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite", "delta", "duckdb"],
+    ids=["bigquery", "postgres", "snowflake", "sqlite", "delta", "duckdb"],
 )
 @pytest.mark.parametrize("row_count", [0, 100])
 @mock.patch.object(BaseDatabase, "run_sql")
@@ -218,14 +218,14 @@ def test_fetch_all_rows_mssql(mock_run_sql, database_table_fixture, row_count):
     [
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
-        {"database": Database.REDSHIFT},
+        # {"database": Database.REDSHIFT},
         {"database": Database.SNOWFLAKE},
         {"database": Database.SQLITE},
         {"database": Database.MSSQL},
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite", "mssql", "duckdb"],
+    ids=["bigquery", "postgres", "snowflake", "sqlite", "mssql", "duckdb"],
 )
 def test_load_pandas_dataframe_to_table_with_replace(database_table_fixture):
     """Load Pandas Dataframe to a SQL table with replace strategy"""

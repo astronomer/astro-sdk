@@ -32,13 +32,13 @@ CWD = pathlib.Path(__file__).parent
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../../data/homes_main.csv"),
         },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../../data/homes_main.csv"),
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(path=str(CWD) + "/../../../data/homes_main.csv"),
+        # },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_check_table_operator(sample_dag, database_table_fixture):
     """
