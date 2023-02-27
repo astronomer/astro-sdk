@@ -25,7 +25,7 @@ def test_sftp_read():
     remote_path = f"/upload/{create_unique_str(10)}.csv"
     upload_file_to_sftp_server(conn_id="sftp_conn", local_path=filepath, remote_path=remote_path)
 
-    dataprovider = create_dataprovider(dataset=File(path=f"sftp://{remote_path}", conn_id="sftp_conn"))
+    dataprovider = create_dataprovider(dataset=File(path=f"sftp:/{remote_path}", conn_id="sftp_conn"))
     iterator_obj = dataprovider.read()
     source_data = iterator_obj.__next__()
 
