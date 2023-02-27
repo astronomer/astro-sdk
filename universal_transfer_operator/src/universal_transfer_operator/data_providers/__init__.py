@@ -9,21 +9,13 @@ from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_class_name
 
-DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = (
-    dict.fromkeys(
-        [("s3", File), ("aws", File)], "universal_transfer_operator.data_providers.filesystem.aws.s3"
-    )
-    | dict.fromkeys(
-        [("gs", File), ("google_cloud_platform", File)],
-        "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
-    )
-    | dict.fromkeys(
-        [
-            ("sqlite", Table),
-        ],
-        "universal_transfer_operator.data_providers.database.sqlite",
-    )
-)
+DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
+    ("s3", File): "universal_transfer_operator.data_providers.filesystem.aws.s3",
+    ("aws", File): "universal_transfer_operator.data_providers.filesystem.aws.s3",
+    ("gs", File): "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
+    ("google_cloud_platform", File): "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
+    ("sqlite", Table): "universal_transfer_operator.data_providers.database.sqlite",
+}
 
 
 def create_dataprovider(
