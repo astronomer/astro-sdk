@@ -31,9 +31,6 @@ from astro.files import File
 from astro.options import SnowflakeLoadOptions
 from astro.table import Metadata, Table
 
-# To create IAM role with needed permissions,
-# refer: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
-REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN")
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 DATABRICKS_CONN_ID = "databricks_conn"
 MSSQL_CONN_ID = "mssql_conn"
@@ -176,30 +173,6 @@ with dag:
     )
     # [END load_file_example_12]
 
-    # [START load_file_example_13]
-    # aql.load_file(
-    #     input_file=File(
-    #         "s3://astro-sdk/sample_pattern",
-    #         conn_id=AWS_CONN_ID,
-    #         filetype=FileType.CSV,
-    #     ),
-    #     output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-    #     use_native_support=False,
-    # )
-    # [END load_file_example_13]
-
-    # [START load_file_example_14]
-    # aql.load_file(
-    #     input_file=File(
-    #         "gs://astro-sdk/workspace/sample_pattern.csv",
-    #         conn_id="bigquery",
-    #         filetype=FileType.CSV,
-    #     ),
-    #     output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-    #     use_native_support=False,
-    # )
-    # [END load_file_example_14]
-
     # [START load_file_example_15]
     aql.load_file(
         input_file=File(path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV),
@@ -208,19 +181,6 @@ with dag:
         ),
     )
     # [END load_file_example_15]
-
-    # [START load_file_example_16]
-    # aql.load_file(
-    #     input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-    #     output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-    #     use_native_support=True,
-    #     native_support_kwargs={
-    #         "IGNOREHEADER": 1,
-    #         "REGION": "us-west-2",
-    #         "IAM_ROLE": REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN,
-    #     },
-    # )
-    # [END load_file_example_16]
 
     # [START load_file_example_17]
     aql.load_file(

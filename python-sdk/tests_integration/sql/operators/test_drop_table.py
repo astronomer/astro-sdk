@@ -133,7 +133,7 @@ def test_drop_table_with_table_metadata_mssql(database_table_fixture, sample_dag
         },
         {
             "database": Database.DUCKDB,
-            "table": Table(conn_id="redshift_conn"),
+            "table": Table(conn_id="duckdb_conn"),
             "file": File(DEFAULT_FILEPATH),
         },
     ],
