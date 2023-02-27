@@ -1203,12 +1203,12 @@ def test_load_file_snowflake_error_out_provider_3_1_0(sample_dag, database_table
         {
             "database": Database.BIGQUERY,
         },
-        {
-            "database": Database.REDSHIFT,
-        },
+        # {
+        #     "database": Database.REDSHIFT,
+        # },
     ],
     indirect=True,
-    ids=["bigquery", "redshift"],
+    ids=["bigquery"],
 )
 def test_aql_nested_ndjson_file_to_database_explicit_sep_params(sample_dag, database_table_fixture):
     """Test the flattening of single level nested ndjson, with explicit separator '___'."""

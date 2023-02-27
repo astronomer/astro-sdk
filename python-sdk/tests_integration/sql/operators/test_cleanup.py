@@ -190,21 +190,22 @@ def test_cleanup_default_all_tables(temp_table_1, temp_table_2, sample_dag):
 )
 def test_cleanup_mapped_task(sample_dag, database_temp_table_fixture):
     db, temp_table = database_temp_table_fixture
+    # TODO: remove this if condition for redshift once we have solved cluster cost optimisation
+    if db.conn_id != "redshift_conn":
+        with sample_dag:
+            load_file_mapped = LoadFileOperator.partial(task_id="load_file_mapped").expand_kwargs(
+                [
+                    {
+                        "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
+                        "output_table": temp_table,
+                    }
+                ]
+            )
 
-    with sample_dag:
-        load_file_mapped = LoadFileOperator.partial(task_id="load_file_mapped").expand_kwargs(
-            [
-                {
-                    "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
-                    "output_table": temp_table,
-                }
-            ]
-        )
+            aql.cleanup(upstream_tasks=[load_file_mapped])
+        test_utils.run_dag(sample_dag)
 
-        aql.cleanup(upstream_tasks=[load_file_mapped])
-    test_utils.run_dag(sample_dag)
-
-    assert not db.table_exists(temp_table)
+        assert not db.table_exists(temp_table)
 
 
 @pytest.mark.integration
@@ -217,18 +218,19 @@ def test_cleanup_mapped_task(sample_dag, database_temp_table_fixture):
 )
 def test_cleanup_default_all_tables_mapped_task(sample_dag, database_temp_table_fixture):
     db, temp_table = database_temp_table_fixture
+    # TODO: remove this if condition for redshift once we have solved cluster cost optimisation
+    if db.conn_id != "redshift_conn":
+        with sample_dag:
+            LoadFileOperator.partial(task_id="load_file_mapped").expand_kwargs(
+                [
+                    {
+                        "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
+                        "output_table": temp_table,
+                    }
+                ]
+            )
 
-    with sample_dag:
-        LoadFileOperator.partial(task_id="load_file_mapped").expand_kwargs(
-            [
-                {
-                    "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
-                    "output_table": temp_table,
-                }
-            ]
-        )
+            aql.cleanup()
+        test_utils.run_dag(sample_dag)
 
-        aql.cleanup()
-    test_utils.run_dag(sample_dag)
-
-    assert not db.table_exists(temp_table)
+        assert not db.table_exists(temp_table)
