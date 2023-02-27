@@ -2,4 +2,4 @@ product/sql-cli:
 - sql-cli/**/*
 
 product/uto:
-- got /**/*
+- universal_transfer_operator/**/*
