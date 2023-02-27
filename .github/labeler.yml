@@ -1,2 +1,5 @@
 product/sql-cli:
 - sql-cli/**/*
+
+product/uto:
+- got /**/*
