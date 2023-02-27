@@ -657,3 +657,15 @@ class DatabaseDataProvider(DataProviders):
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
         raise NotImplementedError
+
+    def export_table_to_pandas_dataframe(self) -> pd.DataFrame:
+        """
+        Copy the content of a table to an in-memory Pandas dataframe.
+        """
+
+        if self.table_exists(self.dataset):
+            ValueError(f"The table {self.dataset.name} does not exist")
+
+        sqla_table = self.get_sqla_table(self.dataset)
+        df = pd.read_sql(sql=sqla_table.select(), con=self.sqlalchemy_engine)
+        return pd.from_pandas_df(df)

@@ -70,7 +70,8 @@ class SnowflakeDataProvider(DatabaseDataProvider):
 
     def read(self):
         """ ""Read the dataset and write to local reference location"""
-        raise NotImplementedError
+        df = self.export_table_to_pandas_dataframe()
+        df.to_parquet()
 
     def write(self, source_ref: FileStream):
         """
