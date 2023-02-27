@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from tempfile import NamedTemporaryFile
 from typing import Sequence
 
 import attr
@@ -70,8 +71,10 @@ class SnowflakeDataProvider(DatabaseDataProvider):
 
     def read(self):
         """ ""Read the dataset and write to local reference location"""
-        df = self.export_table_to_pandas_dataframe()
-        df.to_parquet()
+        with NamedTemporaryFile(delete=True) as tmp_file:
+            df = self.export_table_to_pandas_dataframe()
+            df.to_parquet(tmp_file.name)
+            return tmp_file.file
 
     def write(self, source_ref: FileStream):
         """
