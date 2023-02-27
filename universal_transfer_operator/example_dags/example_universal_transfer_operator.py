@@ -9,6 +9,9 @@ from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.integrations.fivetran import Connector, Destination, FiveTranOptions, Group
 from universal_transfer_operator.universal_transfer_operator import UniversalTransferOperator
 
+s3_bucket = os.getenv("S3_BUCKET", "s3://astro-sdk-test")
+gcs_bucket = os.getenv("GCS_BUCKET", "gs://uto-test")
+
 with DAG(
     "example_universal_transfer_operator",
     schedule_interval=None,
@@ -17,38 +20,36 @@ with DAG(
 ) as dag:
     transfer_non_native_gs_to_s3 = UniversalTransferOperator(
         task_id="transfer_non_native_gs_to_s3",
-        source_dataset=File(path="gs://uto-test/uto/", conn_id="google_cloud_default"),
-        destination_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        source_dataset=File(path=f"{gcs_bucket}/uto/", conn_id="google_cloud_default"),
+        destination_dataset=File(path=f"{s3_bucket}/uto/", conn_id="aws_default"),
     )
 
     transfer_non_native_s3_to_gs = UniversalTransferOperator(
         task_id="transfer_non_native_s3_to_gs",
-        source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        source_dataset=File(path=f"{s3_bucket}/uto/", conn_id="aws_default"),
         destination_dataset=File(
-            path="gs://uto-test/uto/",
+            path=f"{gcs_bucket}/uto/",
             conn_id="google_cloud_default",
         ),
     )
 
     transfer_non_native_s3_to_sqlite = UniversalTransferOperator(
         task_id="transfer_non_native_s3_to_sqlite",
-        source_dataset=File(
-            path="s3://astro-sdk-test/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV
-        ),
+        source_dataset=File(path=f"{s3_bucket}/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV),
         destination_dataset=Table(name="uto_s3_table", conn_id="sqlite_default"),
     )
 
     transfer_non_native_gs_to_sqlite = UniversalTransferOperator(
         task_id="transfer_non_native_gs_to_sqlite",
         source_dataset=File(
-            path="gs://uto-test/uto/csv_files/", conn_id="google_cloud_default", filetype=FileType.CSV
+            path=f"{gcs_bucket}/uto/csv_files/", conn_id="google_cloud_default", filetype=FileType.CSV
         ),
         destination_dataset=Table(name="uto_gs_table", conn_id="sqlite_default"),
     )
 
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_with_connector_id",
-        source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        source_dataset=File(path=f"{s3_bucket}/uto/", conn_id="aws_default"),
         destination_dataset=Table(name="fivetran_test", conn_id="snowflake_default"),
         transfer_mode=TransferMode.THIRDPARTY,
         transfer_params=FiveTranOptions(conn_id="fivetran_default", connector_id="filing_muppet"),
@@ -56,7 +57,7 @@ with DAG(
 
     transfer_fivetran_without_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_without_connector_id",
-        source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        source_dataset=File(path=f"{s3_bucket}/uto/", conn_id="aws_default"),
         destination_dataset=Table(
             name="fivetran_test",
             conn_id="snowflake_default",
