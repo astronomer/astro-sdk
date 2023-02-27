@@ -17,16 +17,15 @@ def upload_file_to_sftp_server(conn_id: str, local_path: str, remote_path: str):
     sftp.store_file(remote_full_path=remote_path, local_full_path=local_path)
 
 
-def test_sftp_read(sample_dag):
+def test_sftp_read():
     """
     Test to validate working of SFTPDataProvider.read() method
     """
     filepath = DATA_DIR + "sample.csv"
-    upload_file_to_sftp_server(
-        conn_id="sftp_conn", local_path=filepath, remote_path=f"/upload/{create_unique_str(10)}.csv"
-    )
+    remote_path = f"/upload/{create_unique_str(10)}.csv"
+    upload_file_to_sftp_server(conn_id="sftp_conn", local_path=filepath, remote_path=remote_path)
 
-    dataprovider = create_dataprovider(dataset=File(path="sftp://upload/sample_1.csv", conn_id="sftp_conn"))
+    dataprovider = create_dataprovider(dataset=File(path=remote_path, conn_id="sftp_conn"))
     iterator_obj = dataprovider.read()
     source_data = iterator_obj.__next__()
 
@@ -43,7 +42,7 @@ def download_file_from_sftp(conn_id: str, local_path: str, remote_path: str):
     )
 
 
-def test_sftp_write(sample_dag):
+def test_sftp_write():
     """
     Test to validate working of SFTPDataProvider.write() method
     """
