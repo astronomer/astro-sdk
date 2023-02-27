@@ -21,11 +21,11 @@ log = logging.getLogger(__name__)
 
 
 def run_dag(dag: DAG) -> DagRun:
-    return test_dag(dag=dag)
+    return _run_dag(dag=dag)
 
 
 @provide_session
-def test_dag(
+def _run_dag(
     dag,
     execution_date: datetime | None = None,
     run_conf: dict[str, Any] | None = None,
