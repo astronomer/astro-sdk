@@ -24,12 +24,12 @@ cwd = pathlib.Path(__file__).parent
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
-        # {"database": Database.REDSHIFT},
+        {"database": Database.REDSHIFT},
         {"database": Database.MSSQL},
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_dataframe_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -64,12 +64,12 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
-        # {"database": Database.REDSHIFT},
+        {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "delta", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta", "duckdb"],
 )
 def test_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -141,12 +141,12 @@ def test_transform_mssql(database_table_fixture, sample_dag):
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
-        # {"database": Database.REDSHIFT},
+        {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "delta", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta", "duckdb"],
 )
 def test_raw_sql(database_table_fixture, sample_dag):
     db, test_table = database_table_fixture

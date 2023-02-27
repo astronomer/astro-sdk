@@ -39,10 +39,10 @@ test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
         {
             "database": Database.MSSQL,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
@@ -53,7 +53,7 @@ test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
     """Test basic operation of dataframe operator."""
@@ -96,10 +96,10 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
         {
             "database": Database.MSSQL,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
@@ -110,7 +110,7 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
     """Test custom and taskId increment when same task is added multiple times."""
@@ -151,10 +151,10 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
         {
             "database": Database.MSSQL,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
@@ -165,7 +165,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
     """Test basic operation of dataframe operator with op_args."""
@@ -207,10 +207,10 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
         {
             "database": Database.MSSQL,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
@@ -221,7 +221,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_dataframe_from_sql_basic_op_arg_and_kwarg(
     sample_dag,
@@ -276,7 +276,7 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
     [
         "bigquery",
         "postgres_conn",
-        # "redshift_conn",
+        "redshift_conn",
         "snowflake_conn",
         "sqlite_conn",
         "mssql_conn",
@@ -308,7 +308,7 @@ def test_empty_dataframe_fail(sample_dag, conn_id):
     [
         "bigquery",
         "postgres_conn",
-        # "redshift_conn",
+        "redshift_conn",
         "snowflake_conn",
         "sqlite_conn",
         "mssql_conn",
@@ -343,7 +343,7 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
     [
         "bigquery",
         "postgres_conn",
-        # "redshift_conn",
+        "redshift_conn",
         "snowflake_conn",
         "sqlite_conn",
         "mssql_conn",

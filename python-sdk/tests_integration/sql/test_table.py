@@ -19,20 +19,20 @@ from astro.table import Metadata, Table
             "bigquery",
             "bigquery:astronomer-dag-authoring.dataset.test_tb",
         ),
-        # (
-        #     Connection(
-        #         conn_id="test_redshift",
-        #         conn_type="redshift",
-        #         schema="astro",
-        #         host="local",
-        #         port=5439,
-        #         login="astro-sdk",
-        #         password="",
-        #     ),
-        #     "astro.test_tb",
-        #     "redshift://local:5439",
-        #     "redshift://local:5439/astro.test_tb",
-        # ),
+        (
+            Connection(
+                conn_id="test_redshift",
+                conn_type="redshift",
+                schema="astro",
+                host="local",
+                port=5439,
+                login="astro-sdk",
+                password="",
+            ),
+            "astro.test_tb",
+            "redshift://local:5439",
+            "redshift://local:5439/astro.test_tb",
+        ),
         (
             Connection(
                 conn_id="test_pg",

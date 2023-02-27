@@ -1,3 +1,4 @@
+import os
 import pathlib
 from unittest import mock
 
@@ -60,9 +61,9 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
         {
             "database": Database.SQLITE,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
         {
             "database": Database.MSSQL,
         },
@@ -71,7 +72,7 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -121,9 +122,9 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
         {
             "database": Database.SQLITE,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
         {
             "database": Database.MSSQL,
         },
@@ -132,7 +133,7 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_files_fixture):
     db, test_table = database_table_fixture
@@ -180,10 +181,10 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
         {
             "database": Database.MSSQL,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
@@ -194,7 +195,7 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_aql_replace_existing_table(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -228,9 +229,9 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
         {
             "database": Database.SQLITE,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
         {
             "database": Database.MSSQL,
         },
@@ -239,7 +240,7 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_aql_local_file_with_no_table_name(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -402,9 +403,9 @@ def test_load_file_using_file_connection(sample_dag, remote_files_fixture, datab
         {
             "database": Database.SQLITE,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
         {
             "database": Database.MSSQL,
         },
@@ -413,7 +414,7 @@ def test_load_file_using_file_connection(sample_dag, remote_files_fixture, datab
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_load_file_using_sftp_connection(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -439,12 +440,16 @@ def test_load_file_using_sftp_connection(sample_dag, database_table_fixture):
         {
             "database": Database.POSTGRES,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["bigquery", "postgresql"],
+    ids=[
+        "bigquery",
+        "postgresql",
+        "redshift",
+    ],
 )
 @pytest.mark.parametrize("file_type", ["csv"])
 def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_type):
@@ -522,12 +527,12 @@ def test_load_file_with_named_schema_for_mssql(sample_dag, database_table_fixtur
         {
             "database": Database.BIGQUERY,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery"],
+    ids=["snowflake", "bigquery", "redshift"],
 )
 def test_load_file_chunks(sample_dag, database_table_fixture):
     file_type = "csv"
@@ -536,13 +541,13 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
     chunk_function = {
         "bigquery": "pandas.DataFrame.to_gbq",
         "snowflake": "snowflake.connector.pandas_tools.write_pandas",
-        # "redshift": "pandas.DataFrame.to_sql",
+        "redshift": "pandas.DataFrame.to_sql",
     }[db.sql_type]
 
     chunk_size_argument = {
         "bigquery": "chunksize",
         "snowflake": "chunk_size",
-        # "redshift": "chunksize",
+        "redshift": "chunksize",
     }[db.sql_type]
 
     with mock.patch("astro.databases.snowflake.SnowflakeDatabase.truncate_table"), mock.patch(
@@ -559,43 +564,43 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
     assert kwargs[chunk_size_argument] == 1000000
 
 
-# @pytest.mark.integration
-# @pytest.mark.parametrize(
-#     "database_table_fixture,native_support_kwargs",
-#     [
-#         (
-#             {
-#                 "database": Database.REDSHIFT,
-#             },
-#             {
-#                 "IGNOREHEADER": 1,
-#                 "REGION": "us-west-2",
-#                 "IAM_ROLE": os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN"),
-#             },
-#         ),
-#     ],
-#     indirect=["database_table_fixture"],
-#     ids=["Redshift"],
-# )
-# def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture, native_support_kwargs):
-#     """
-#     Verify that the optimised path method is skipped in case use_native_support is set to False.
-#     """
-#     db, test_table = database_table_fixture
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture,native_support_kwargs",
+    [
+        (
+            {
+                "database": Database.REDSHIFT,
+            },
+            {
+                "IGNOREHEADER": 1,
+                "REGION": "us-west-2",
+                "IAM_ROLE": os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN"),
+            },
+        ),
+    ],
+    indirect=["database_table_fixture"],
+    ids=["Redshift"],
+)
+def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture, native_support_kwargs):
+    """
+    Verify that the optimised path method is skipped in case use_native_support is set to False.
+    """
+    db, test_table = database_table_fixture
 
-#     # We are using a preexisting file for integration test, since the dynamically populating
-#     # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
-#     # and we might hit a server where the file in not yet populated, resulting in file not found issue.
-#     load_file_task = load_file(
-#         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
-#         output_table=test_table,
-#         use_native_support=True,
-#         native_support_kwargs=native_support_kwargs,
-#     )
-#     load_file_task.operator.execute(context=create_context(load_file_task.operator))
+    # We are using a preexisting file for integration test, since the dynamically populating
+    # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
+    # and we might hit a server where the file in not yet populated, resulting in file not found issue.
+    load_file_task = load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        output_table=test_table,
+        use_native_support=True,
+        native_support_kwargs=native_support_kwargs,
+    )
+    load_file_task.operator.execute(context=create_context(load_file_task.operator))
 
-#     df = db.export_table_to_pandas_dataframe(test_table)
-#     assert df.shape == (3, 9)
+    df = db.export_table_to_pandas_dataframe(test_table)
+    assert df.shape == (3, 9)
 
 
 @pytest.mark.integration
@@ -605,15 +610,15 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
         {
             "database": Database.BIGQUERY,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
         {
             "database": Database.MSSQL,
         },
     ],
     indirect=True,
-    ids=["Bigquery", "mssql"],
+    ids=["Bigquery", "redshift", "mssql"],
 )
 def test_loading_local_file_to_database(database_table_fixture):
     """
@@ -787,15 +792,15 @@ def test_load_file_bigquery_error_out(sample_dag, database_table_fixture):
         {
             "database": Database.SQLITE,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
         {
             "database": Database.DUCKDB,
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "duckdb"],
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, database_table_fixture, file_type):
@@ -883,9 +888,9 @@ def test_load_file_for_mssql(sample_dag, database_table_fixture, file_type):
         {
             "database": Database.SQLITE,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
         {
             "database": Database.MSSQL,
         },
@@ -894,7 +899,7 @@ def test_load_file_for_mssql(sample_dag, database_table_fixture, file_type):
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
 )
 def test_aql_nested_ndjson_file_with_default_sep_param(sample_dag, database_table_fixture):
     """Test the flattening of single level nested ndjson, with default separator '_'."""
@@ -1203,12 +1208,12 @@ def test_load_file_snowflake_error_out_provider_3_1_0(sample_dag, database_table
         {
             "database": Database.BIGQUERY,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["bigquery"],
+    ids=["bigquery", "redshift"],
 )
 def test_aql_nested_ndjson_file_to_database_explicit_sep_params(sample_dag, database_table_fixture):
     """Test the flattening of single level nested ndjson, with explicit separator '___'."""
@@ -1229,41 +1234,41 @@ def test_aql_nested_ndjson_file_to_database_explicit_sep_params(sample_dag, data
     assert "payload___size" in df.columns
 
 
-# @pytest.mark.integration
-# @pytest.mark.parametrize(
-#     "database_table_fixture,native_support_kwargs",
-#     [
-#         (
-#             {
-#                 "database": Database.REDSHIFT,
-#             },
-#             {
-#                 "IGNOREHEADER": 1,
-#                 "REGION": "us-east-1",
-#                 "IAM_ROLE": os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN"),
-#             },
-#         ),
-#     ],
-#     indirect=["database_table_fixture"],
-#     ids=["redshift"],
-# )
-# def test_aql_load_column_name_mixed_case_json_file_to_dbs(database_table_fixture, native_support_kwargs):
-#     """Test that json with mixed column name case loads fine natively to the database."""
-#     db, test_table = database_table_fixture
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture,native_support_kwargs",
+    [
+        (
+            {
+                "database": Database.REDSHIFT,
+            },
+            {
+                "IGNOREHEADER": 1,
+                "REGION": "us-east-1",
+                "IAM_ROLE": os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN"),
+            },
+        ),
+    ],
+    indirect=["database_table_fixture"],
+    ids=["redshift"],
+)
+def test_aql_load_column_name_mixed_case_json_file_to_dbs(database_table_fixture, native_support_kwargs):
+    """Test that json with mixed column name case loads fine natively to the database."""
+    db, test_table = database_table_fixture
 
-#     # We are using a preexisting file for integration test, since the dynamically populating
-#     # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
-#     # and we might hit a server where the file in not yet populated, resulting in file not found issue.
-#     load_file_task = load_file(
-#         input_file=File("s3://astro-sdk/sample.ndjson", conn_id="aws_conn"),
-#         output_table=test_table,
-#         use_native_support=True,
-#         native_support_kwargs=native_support_kwargs,
-#     )
-#     load_file_task.operator.execute(context=create_context(load_file_task.operator))
+    # We are using a preexisting file for integration test, since the dynamically populating
+    # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
+    # and we might hit a server where the file in not yet populated, resulting in file not found issue.
+    load_file_task = load_file(
+        input_file=File("s3://astro-sdk/sample.ndjson", conn_id="aws_conn"),
+        output_table=test_table,
+        use_native_support=True,
+        native_support_kwargs=native_support_kwargs,
+    )
+    load_file_task.operator.execute(context=create_context(load_file_task.operator))
 
-#     df = db.export_table_to_pandas_dataframe(test_table)
-#     assert df.shape == (2, 2)
+    df = db.export_table_to_pandas_dataframe(test_table)
+    assert df.shape == (2, 2)
 
 
 @pytest.mark.parametrize(
@@ -1327,13 +1332,14 @@ def test_load_file_nonexistent_conn_for_mssql(sample_dag, database_table_fixture
         {
             "database": Database.BIGQUERY,
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        # },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
     ids=[
         "bigquery",
+        "redshift",
     ],
 )
 def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(sample_dag, database_table_fixture):

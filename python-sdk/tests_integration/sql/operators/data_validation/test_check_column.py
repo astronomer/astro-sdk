@@ -32,13 +32,13 @@ CWD = pathlib.Path(__file__).parent
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        #     "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
-        # },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_column_check_operator_with_table_dataset(sample_dag, database_table_fixture):
     """
