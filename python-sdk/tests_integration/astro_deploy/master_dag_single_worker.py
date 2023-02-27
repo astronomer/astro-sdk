@@ -83,11 +83,11 @@ def prepare_dag_dependency(task_info, execution_time):
 
 
 with DAG(
-    dag_id="example_master_dag",
+    dag_id="example_master_dag_single_worker",
     schedule_interval="@daily",
     start_date=datetime(2023, 1, 1),
     catchup=False,
-    tags=["master_dag"],
+    tags=["master_dag_single_worker"],
 ) as dag:
     start = PythonOperator(
         task_id="start",
@@ -104,20 +104,14 @@ with DAG(
 
     dag_run_ids = []
 
-    load_file_task_info = [
-        {"example_google_bigquery_gcs_load_and_save": "example_google_bigquery_gcs_load_and_save"},
-        {"example_amazon_s3_postgres_load_and_save": "example_amazon_s3_postgres_load_and_save"},
-        {"example_amazon_s3_postgres": "example_amazon_s3_postgres"},
-        {"example_load_file": "example_load_file"},
-    ]
-
-    load_file_trigger_tasks, ids = prepare_dag_dependency(load_file_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*load_file_trigger_tasks)
-
     transform_task_info = [
-        {"example_amazon_s3_snowflake_transform": "example_amazon_s3_snowflake_transform"},
-        {"example_transform_mssql": "example_transform_mssql"},
+        {"example_transform": "example_transform"},
+        {"example_transform_file": "example_transform_file"},
+        {"calculate_popular_movies": "calculate_popular_movies"},
+        {"example_sqlite_load_transform": "example_sqlite_load_transform"},
+        {
+            "example_duckdb_load_transform_dataframe_and_save": "example_duckdb_load_transform_dataframe_and_save"
+        },
     ]
 
     transform_trigger_tasks, ids = prepare_dag_dependency(transform_task_info, "{{ ds }}")
@@ -125,58 +119,20 @@ with DAG(
     chain(*transform_trigger_tasks)
 
     dataframe_task_info = [
-        {"example_dataframe": "example_dataframe"},
+        {"calculate_top_2_movies_using_dataframe": "calculate_top_2_movies_using_dataframe"},
     ]
 
     dataframe_trigger_tasks, ids = prepare_dag_dependency(dataframe_task_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*dataframe_trigger_tasks)
 
-    append_task_info = [
-        {"example_append": "example_append"},
-        {"example_snowflake_partial_table_with_append": "example_snowflake_partial_table_with_append"},
-    ]
-
-    append_trigger_tasks, ids = prepare_dag_dependency(append_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*append_trigger_tasks)
-
-    merge_trigger_tasks = [{"example_merge_bigquery": "example_merge_bigquery"}]
-
-    merge_trigger_tasks, ids = prepare_dag_dependency(merge_trigger_tasks, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*merge_trigger_tasks)
-
-    dynamic_task_info = [
-        {"example_dynamic_map_task": "example_dynamic_map_task"},
-        {"example_dynamic_task_template": "example_dynamic_task_template"},
-    ]
-
-    dynamic_task_trigger_tasks, ids = prepare_dag_dependency(dynamic_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*dynamic_task_trigger_tasks)
-
     data_validation_dags_info = [
-        {"data_validation_check_column": "data_validation_check_column"},
+        {"data_validation_check_table": "data_validation_check_table"},
     ]
 
     data_validation_trigger_tasks, ids = prepare_dag_dependency(data_validation_dags_info, "{{ ds }}")
     dag_run_ids.extend(ids)
     chain(*data_validation_trigger_tasks)
-
-    dataset_dags_info = [
-        {"example_dataset_producer": "example_dataset_producer"},
-    ]
-
-    dataset_trigger_tasks, ids = prepare_dag_dependency(dataset_dags_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*dataset_trigger_tasks)
-
-    cleanup_snowflake_task_info = [{"example_snowflake_cleanup": "example_snowflake_cleanup"}]
-
-    cleanup_snowflake_trigger_tasks, ids = prepare_dag_dependency(cleanup_snowflake_task_info, "{{ ds }}")
-    dag_run_ids.extend(ids)
-    chain(*cleanup_snowflake_trigger_tasks)
 
     report = PythonOperator(
         task_id="get_report",
@@ -194,29 +150,17 @@ with DAG(
     start >> [  # skipcq PYL-W0104
         list_installed_pip_packages,
         get_airflow_version,
-        load_file_trigger_tasks[0],
         transform_trigger_tasks[0],
         dataframe_trigger_tasks[0],
-        append_trigger_tasks[0],
-        merge_trigger_tasks[0],
-        dynamic_task_trigger_tasks[0],
         data_validation_trigger_tasks[0],
-        dataset_trigger_tasks[0],
-        cleanup_snowflake_trigger_tasks[0],
     ]
 
     last_task = [
         list_installed_pip_packages,
         get_airflow_version,
-        load_file_trigger_tasks[-1],
         transform_trigger_tasks[-1],
         dataframe_trigger_tasks[-1],
-        append_trigger_tasks[-1],
-        merge_trigger_tasks[-1],
-        dynamic_task_trigger_tasks[-1],
         data_validation_trigger_tasks[-1],
-        dataset_trigger_tasks[-1],
-        cleanup_snowflake_trigger_tasks[-1],
     ]
 
     last_task >> end  # skipcq PYL-W0104

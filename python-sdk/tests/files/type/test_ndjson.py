@@ -5,7 +5,7 @@ from unittest import mock
 
 import pandas as pd
 
-from astro.dataframes.load_options import PandasLoadOptions
+from astro.dataframes.load_options import PandasLoadOptions, PandasNdjsonLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import NDJSONFileType
 from astro.settings import NEED_CUSTOM_SERIALIZATION
@@ -31,6 +31,16 @@ def test_read_ndjson_file_with_pandas_opts(mock_ndjson_flatten):
     """Test pandas option get pass to ndjson_flatten method"""
     path = str(sample_file.absolute())
     ndjson_type = NDJSONFileType(path, load_options=PandasLoadOptions(normalize_sep="_"))
+    with open(path) as file:
+        ndjson_type.export_to_dataframe(file)
+    mock_ndjson_flatten.assert_called_once_with(None, file, normalize_sep="_")
+
+
+@mock.patch("astro.files.types.ndjson.NDJSONFileType.flatten")
+def test_read_ndjson_file_with_pandas_opts_with_deprecated_load_options(mock_ndjson_flatten):
+    """Test pandas option get pass to ndjson_flatten method"""
+    path = str(sample_file.absolute())
+    ndjson_type = NDJSONFileType(path, load_options=PandasNdjsonLoadOptions(normalize_sep="_"))
     with open(path) as file:
         ndjson_type.export_to_dataframe(file)
     mock_ndjson_flatten.assert_called_once_with(None, file, normalize_sep="_")

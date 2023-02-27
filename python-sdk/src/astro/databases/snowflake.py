@@ -242,7 +242,7 @@ class SnowflakeDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
-    LOAD_OPTIONS_CLASS_NAME = "SnowflakeLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = ("SnowflakeLoadOptions",)
 
     NATIVE_LOAD_EXCEPTIONS: Any = (
         DatabaseCustomError,

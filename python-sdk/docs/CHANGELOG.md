@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.5.2
+
+### Improvements
+- Restore pandas load option classes - `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` [#1795](https://github.com/astronomer/astro-sdk/pull/1795)
+
+
+## 1.5.1
+
+### Improvements
+- Add Openlineage facets for Microsoft SQL server. [#1752](https://github.com/astronomer/astro-sdk/pull/1752)
+
+### Bug fixes
+- Use `use_native_support` param in load_file operator for table creation. [#1756](https://github.com/astronomer/astro-sdk/pull/1756)
+- Resolved `pandas-gbq` dependency issue. [#1768](https://github.com/astronomer/astro-sdk/pull/1768)
+- Fix Minio support for Snowflake. [#1767](https://github.com/astronomer/astro-sdk/pull/1767)
+- Add handler param in database.run_sql() method [1773](https://github.com/astronomer/astro-sdk/pull/1773)
+
+
 ## 1.5.0
 
 ### Feature:
@@ -13,7 +31,6 @@
 - Use cache to reduce redundant database calls [#1488](https://github.com/astronomer/astro-sdk/pull/1488)
 - Remove default `copy_options` as part of `SnowflakeLoadOptions`. All `copy_options` are now supported as part of `SnowflakeLoadOptions` as per [documentation](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions). [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
 - Remove `load_options` from `File` object. [#1721](https://github.com/astronomer/astro-sdk/pull/1721)
-- Consolidated `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` to single `PandasLoadOptions`. [#1722](https://github.com/astronomer/astro-sdk/pull/1722)
 - Render SQL code with parameters in BaseSQLDecoratedOperator. [#897](https://github.com/astronomer/astro-sdk/pull/897)
 
 ### Bug fixes
@@ -29,6 +46,9 @@
 ### Misc
 - Add cleanup DAG to clean snowflake tables created as part of CI when the runners fail as part of GitHub actions. [#1663](https://github.com/astronomer/astro-sdk/issues/1663)
 - Run example DAGs on astro-cloud and collect the results. [#1499](https://github.com/astronomer/astro-sdk/pull/1499)
+
+### Breaking Change
+- Consolidated `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` to single `PandasLoadOptions`. [#1722](https://github.com/astronomer/astro-sdk/pull/1722)
 
 
 ## 1.4.1

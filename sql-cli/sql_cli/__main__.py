@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import typer
+from airflow import DAG
+from airflow.models import DagRun
 from dotenv import load_dotenv
 
 import sql_cli
@@ -21,11 +22,9 @@ from sql_cli.constants import (
     LOGGER_NAME,
 )
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
+from sql_cli.project import Project
 from sql_cli.settings import STATE
 from sql_cli.utils.rich import RichHandler, rprint
-
-if TYPE_CHECKING:
-    from sql_cli.project import Project  # pragma: no cover
 
 load_dotenv()
 app = typer.Typer(
@@ -127,8 +126,6 @@ def generate(
         default=None, help="to export a SQL workflow to a specific directory", show_default=False
     ),
 ) -> None:
-    from sql_cli.project import Project
-
     set_verbose_mode(verbose)
     project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
@@ -165,7 +162,6 @@ def validate(
     verbose: bool = typer.Option(False, help="Whether to show verbose output", show_default=True),
 ) -> None:
     from sql_cli.connections import validate_connections
-    from sql_cli.project import Project
 
     set_verbose_mode(verbose)
     project_dir_absolute = resolve_project_dir(project_dir)
@@ -174,6 +170,42 @@ def validate(
 
     rprint(f"Validating connection(s) for environment '{env}'")
     validate_connections(connections=project.connections, connection_id=connection)
+
+
+def _check_run_arguments_meet_constraints(include_upstream: bool, task_id: str | None) -> None:
+    if include_upstream and not task_id:
+        rprint(
+            "\n[bold blue]include_upstream[/bold blue] is only meant for runs when [bold blue]task_id[/bold blue] is "
+            "supplied."
+        )
+        raise typer.Exit(code=1)
+
+
+def _trigger_dag_run(
+    dag: DAG, project: Project, env: str, verbose: bool, task_id: str | None, include_upstream: bool
+) -> DagRun:
+    from sql_cli.dag_runner import run_dag
+
+    try:
+        dr = run_dag(
+            dag,
+            run_conf=project.get_env_airflow_config(env),
+            connections={c.conn_id: c for c in project.connections},
+            verbose=verbose,
+            task_id=task_id,
+            include_upstream=include_upstream,
+        )
+    except ConnectionFailed as connection_failed:
+        log.exception(connection_failed.args[0])
+        rprint(
+            f"  [bold red]{connection_failed}[/bold red] using connection [bold]{connection_failed.conn_id}[/bold]"
+        )
+        raise typer.Exit(code=1)
+    except Exception as exception:
+        log.exception(exception.args[0])
+        rprint(f"  [bold red]{exception}[/bold red]")
+        raise typer.Exit(code=1)
+    return dr
 
 
 @app.command(
@@ -203,11 +235,21 @@ def run(
         show_default=True,
     ),
     verbose: bool = typer.Option(False, help="Whether to show verbose output", show_default=True),
+    task_id: str = typer.Option(
+        None,
+        help="Id of the single task to run. If given, only this task of the DAG will run. Otherwise, all tasks of the "
+        "DAG will be run.",
+    ),
+    include_upstream: bool = typer.Option(
+        False,
+        help="When running a single task, whether to run its upstream tasks too. When it is set, we only show "
+        "the relevant subset tasks of the DAG being processed in the output.",
+    ),
 ) -> None:
+    _check_run_arguments_meet_constraints(include_upstream, task_id)
+
     from airflow.utils.state import State
 
-    from sql_cli.dag_runner import run_dag
-    from sql_cli.project import Project
     from sql_cli.utils.airflow import get_dag
 
     set_verbose_mode(verbose)
@@ -218,28 +260,20 @@ def run(
     # TODO: Validate all DAG connections before running
 
     # Generate DAG before running
-    dag_file = _generate_dag(project=project, workflow_name=workflow_name, generate_tasks=generate_tasks)
+    tasks_to_execute = None
+    if task_id and not include_upstream:
+        tasks_to_execute = [task_id]
+    dag_file = _generate_dag(
+        project=project,
+        workflow_name=workflow_name,
+        generate_tasks=generate_tasks,
+        tasks_to_execute=tasks_to_execute,
+    )
 
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
 
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
-    try:
-        dr = run_dag(
-            dag,
-            run_conf=project.get_env_airflow_config(env),
-            connections={c.conn_id: c for c in project.connections},
-            verbose=verbose,
-        )
-    except ConnectionFailed as connection_failed:
-        log.exception(connection_failed.args[0])
-        rprint(
-            f"  [bold red]{connection_failed}[/bold red] using connection [bold]{connection_failed.conn_id}[/bold]"
-        )
-        raise typer.Exit(code=1)
-    except Exception as exception:
-        log.exception(exception.args[0])
-        rprint(f"  [bold red]{exception}[/bold red]")
-        raise typer.Exit(code=1)
+    dr = _trigger_dag_run(dag, project, env, verbose, task_id, include_upstream)
     final_state = dr.state
     if dr.state == State.SUCCESS:
         final_state = "[bold green]SUCCESS 🚀[/bold green]"
@@ -294,8 +328,6 @@ def init(
     ),
     verbose: bool = typer.Option(False, help="Whether to show verbose output", show_default=True),
 ) -> None:
-    from sql_cli.project import Project
-
     set_verbose_mode(verbose)
     project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder, data_dir)
@@ -329,7 +361,11 @@ def deploy(
 
 
 def _generate_dag(
-    project: Project, workflow_name: str, generate_tasks: bool, output_dir: Path | None = None
+    project: Project,
+    workflow_name: str,
+    generate_tasks: bool,
+    output_dir: Path | None = None,
+    tasks_to_execute: list[str] | None = None,
 ) -> Path:
     """
     Helper function for generating DAGs with proper exceptions. Moved here since this function is used by
@@ -340,6 +376,7 @@ def _generate_dag(
     :param generate_tasks: whether to render each task individually or use the render function
     :param output_dir: directory where the DAG will be exported to (used in conjunction with name).
        Defaults to airflow_dags_folder.
+    :param tasks_to_execute: list of specified tasks to execute. If not provided, then all the tasks will be executed.
     :return: the path to the generated dag_file
     """
     from sql_cli import dag_generator
@@ -350,6 +387,7 @@ def _generate_dag(
             directory=project.directory / project.workflows_directory / workflow_name,
             dags_directory=output_dir or project.airflow_dags_folder,
             generate_tasks=generate_tasks,
+            tasks_to_execute=tasks_to_execute,
         )
     except EmptyDag as empty_dag:
         log.exception(empty_dag.args[0])

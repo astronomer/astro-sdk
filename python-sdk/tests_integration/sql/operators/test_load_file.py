@@ -11,7 +11,7 @@ from pandas._testing import assert_frame_equal
 
 from astro import sql as aql
 from astro.constants import Database, FileType
-from astro.dataframes.load_options import PandasLoadOptions
+from astro.dataframes.load_options import PandasCsvLoadOptions, PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
@@ -1385,6 +1385,32 @@ def test_load_file_delimiter(sample_dag, database_table_fixture):
             output_table=test_table,
             use_native_support=False,
             load_options=[PandasLoadOptions(delimiter="$")],
+        )
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        },
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_delimiter_with_deprecated_load_options(sample_dag, database_table_fixture):
+    """Test passing of a single LoadOptions instance instead of list with deprecated PandasCsvLoadOptions"""
+    _, test_table = database_table_fixture
+
+    path = str(CWD) + "/../../data/delimiter_dollar.csv"
+
+    with sample_dag:
+        load_file(
+            input_file=File(path),
+            output_table=test_table,
+            use_native_support=False,
+            load_options=PandasCsvLoadOptions(delimiter="$"),
         )
     test_utils.run_dag(sample_dag)
 
