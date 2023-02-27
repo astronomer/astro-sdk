@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-import copy
 import logging
-import os
 import sys
-import time
 from datetime import datetime
 from typing import Any
 
-import pandas as pd
 from airflow.configuration import secrets_backend_list
 from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
@@ -19,75 +15,13 @@ from airflow.utils import timezone
 from airflow.utils.session import NEW_SESSION, provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
-from pandas.testing import assert_frame_equal
 from sqlalchemy.orm.session import Session
 
-from astro.sql.operators.cleanup import AstroCleanupException
-from astro.table import Metadata
-
 log = logging.getLogger(__name__)
-
-SQL_SERVER_HOOK_PARAMETERS = {
-    "snowflake": {
-        "snowflake_conn_id": "snowflake_conn",
-        "metadata": Metadata(
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-        ),
-    },
-    "postgres": {"postgres_conn_id": "postgres_conn"},
-    "bigquery": {"gcp_conn_id": "google_cloud_default", "use_legacy_sql": False},
-    "sqlite": {"sqlite_conn_id": "sqlite_conn"},
-    "mssql": {"mssql_conn_id": "mssql_conn"},
-}
-SQL_SERVER_CONNECTION_KEY = {
-    "snowflake": "snowflake_conn_id",
-    "postgres": "postgres_conn_id",
-    "bigquery": "gcp_conn_id",
-    "sqlite": "sqlite_conn_id",
-    "mssql": "mssql_conn_id",
-}
-
-
-def get_default_parameters(database_name):
-    # While hooks expect specific attributes for connection (e.g. `snowflake_conn_id`)
-    # the load_file operator expects a generic attribute name (`conn_id`)
-    sql_server_params = copy.deepcopy(SQL_SERVER_HOOK_PARAMETERS[database_name])
-    conn_id_value = sql_server_params.pop(SQL_SERVER_CONNECTION_KEY[database_name])
-    sql_server_params["conn_id"] = conn_id_value
-    return sql_server_params
-
-
-def get_table_name(prefix):
-    """get unique table name"""
-    return prefix + "_" + str(int(time.time()))
 
 
 def run_dag(dag: DAG) -> DagRun:
     return test_dag(dag=dag)
-
-
-def load_to_dataframe(filepath, file_type):
-    read = {
-        "parquet": pd.read_parquet,
-        "csv": pd.read_csv,
-        "json": pd.read_json,
-        "ndjson": pd.read_json,
-    }
-    read_params = {"ndjson": {"lines": True}}
-    mode = {"parquet": "rb"}
-    with open(filepath, mode.get(file_type, "r")) as fp:
-        return read[file_type](fp, **read_params.get(file_type, {}))
-
-
-def assert_dataframes_are_equal(df: pd.DataFrame, expected: pd.DataFrame) -> None:
-    """
-    Auxiliary function to compare similarity of dataframes to avoid repeating this logic in many tests.
-    """
-    df = df.rename(columns=str.lower)
-    df = df.astype({"id": "int64"})
-    expected = expected.astype({"id": "int64"})
-    assert_frame_equal(df, expected)
 
 
 @provide_session
@@ -190,12 +124,6 @@ def _run_task(ti: TaskInstance, session):
         log.info("%s ran successfully!", ti.task_id)
     except AirflowSkipException:
         log.info("Task Skipped, continuing")
-    except AstroCleanupException:
-        ti.set_state(state=None)
-        # Once the exception is raised the cleanup operator is set to FAILED state,
-        # because of which the cleanup operator was not executed at the end.
-        session.flush()
-        log.info("aql.cleanup async, continuing", exc_info=True)
     log.info("*****************************************************")
 
 
