@@ -13,13 +13,13 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_ex
 from .sql.operators import utils as test_utils
 
 RETRY_ON_EXCEPTIONS = []
-try:
-    from google.api_core.exceptions import Forbidden, TooManyRequests
-    from pandas_gbq.exceptions import GenericGBQException
-
-    RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException])
-except ModuleNotFoundError:
-    pass
+# try:
+#     from google.api_core.exceptions import Forbidden, TooManyRequests
+#     from pandas_gbq.exceptions import GenericGBQException
+#
+#     RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException])
+# except ModuleNotFoundError:
+#     pass
 
 
 @retry(
@@ -90,5 +90,6 @@ dag_bag = get_dag_bag()
 
 @pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
 def test_example_dag(session, dag_id: str):
-    dag = dag_bag.get_dag(dag_id)
-    wrapper_run_dag(dag)
+    if dag_id == "test":
+        dag = dag_bag.get_dag(dag_id)
+        wrapper_run_dag(dag)

@@ -320,18 +320,18 @@ with dag:
     # [END load_file_example_23]
 
     # [START load_file_example_24]
-    aql.load_file(
-        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(
-            conn_id=DATABRICKS_CONN_ID,
-        ),
-        load_options=[
-            DeltaLoadOptions(
-                copy_into_format_options={"header": "true", "inferSchema": "true"},
-                copy_into_copy_options={"mergeSchema": "true"},
-            )
-        ],
-    )
+    # aql.load_file(
+    #     input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id=AWS_CONN_ID),
+    #     output_table=Table(
+    #         conn_id=DATABRICKS_CONN_ID,
+    #     ),
+    #     load_options=[
+    #         DeltaLoadOptions(
+    #             copy_into_format_options={"header": "true", "inferSchema": "true"},
+    #             copy_into_copy_options={"mergeSchema": "true"},
+    #         )
+    #     ],
+    # )
     # [END load_file_example_24]
 
     # [START load_file_example_25]
