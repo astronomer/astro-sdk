@@ -20,9 +20,9 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id="example_load_file",
+    dag_id="example_load_file_redshift",
     start_date=datetime(2019, 1, 1),
-    max_active_runs=3,
+    max_active_runs=1,
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
