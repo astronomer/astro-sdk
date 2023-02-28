@@ -108,7 +108,10 @@ class BaseFilesystemProviders(DataProviders):
             return remote_obj_buffer
 
     def write(self, source_ref: FileStream):
-        """Write the data from local reference location to the dataset"""
+        """
+        Write the data from local reference location to the dataset
+        :param source_ref: Source FileStream object which will be used to read data
+        """
         return self.write_using_smart_open(source_ref=source_ref)
 
     def write_using_smart_open(self, source_ref: FileStream):

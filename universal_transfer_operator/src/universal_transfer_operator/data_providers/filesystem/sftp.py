@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import ParseResult, urlparse, urlunparse
 
 import attr
 import smart_open
@@ -47,7 +47,15 @@ class SFTPDataProvider(BaseFilesystemProviders):
 
     @property
     def paths(self) -> list[str]:
-        """Resolve SFTP file paths with prefix"""
+        """Resolve SFTP file paths with netloc of self.dataset.path as prefix. Paths are added if they start with prefix
+        Example - if there are multiple paths like
+            - sftp://upload/test.csv
+            - sftp://upload/test.json
+            - sftp://upload/home.parquet
+            - sftp://upload/sample.ndjson
+
+        if self.dataset.path is "sftp://upload/test" will return sftp://upload/test.csv and sftp://upload/test.json
+        """
         url = urlparse(self.dataset.path)
         uri = self.get_uri()
         full_paths = []
@@ -76,44 +84,25 @@ class SFTPDataProvider(BaseFilesystemProviders):
         return client.get_uri()
 
     @staticmethod
-    def get_url_netloc(complete_url, dst_url):
-        keys = ["username", "password", "hostname", "port"]
-        final_vals = {}
-        for key in keys:
-            val = dst_url.__getattribute__(key)
-            if val is None:
-                val = complete_url.__getattribute__(key)
-            final_vals[key] = val
-
-        hostname = final_vals["hostname"]
-        complete_url_hostname = complete_url.__getattribute__("hostname")
-        if complete_url_hostname:
-            hostname = complete_url_hostname
-
-        final_vals["hostname"] = hostname
-
-        return "{username}:{password}@{hostname}:{port}".format(**final_vals)
-
-    @staticmethod
-    def get_url_path(complete_url, dst_url, src_url):
-        path = dst_url.path if dst_url.__getattribute__("path") else src_url.path
-        complete_url_hostname = complete_url.__getattribute__("hostname")
-        if complete_url_hostname:
-            path = dst_url.hostname + path
-        return path
-
-    def get_complete_url(self, dst_url, src_url) -> str:
+    def _get_url_path(dst_url: ParseResult, src_url: ParseResult) -> str:
         """
-        Get complete url with host, port, credentials if they are not provided in the `dst_url`
+        Get correct file path, priority is given to destination file path.
+        :return: URL path
+        """
+        path = dst_url.path if dst_url.__getattribute__("path") else src_url.path
+        return dst_url.hostname + path
+
+    def get_complete_url(self, dst_url: str, src_url: str) -> str:
+        """
+        Get complete url with host, port, username, password if they are not provided in the `dst_url`
         """
         complete_url = urlparse(self.get_uri())
         _dst_url = urlparse(dst_url)
         _src_url = urlparse(src_url)
 
-        netloc = self.get_url_netloc(complete_url=complete_url, dst_url=_dst_url)
-        path = self.get_url_path(complete_url=complete_url, dst_url=_dst_url, src_url=_src_url)
+        path = self._get_url_path(dst_url=_dst_url, src_url=_src_url)
 
-        final_url = _dst_url._replace(netloc=netloc, path=path)
+        final_url = complete_url._replace(path=path)
 
         return urlunparse(final_url)
 
