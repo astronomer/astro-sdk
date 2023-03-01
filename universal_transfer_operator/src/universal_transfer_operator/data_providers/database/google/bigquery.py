@@ -7,10 +7,10 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from google.api_core.exceptions import (
     NotFound as GoogleNotFound,
 )
-
+from tempfile import NamedTemporaryFile
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-
+from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider, FileStream
 from universal_transfer_operator.datasets.table import Metadata, Table
@@ -76,8 +76,19 @@ class BigqueryDataProvider(DatabaseDataProvider):
         )  # type: ignore
 
     def read(self):
-        """ ""Read the dataset and write to local reference location"""
-        raise NotImplementedError
+        """ Read the dataset and write to local reference location"""
+
+        # if isinstance(self.dataset, Table):
+        #     input_data = self.populate_table_metadata(self.dataset)
+        #     df = self.export_table_to_pandas_dataframe(input_data)
+        with NamedTemporaryFile(mode="w",suffix=".parquet", delete=False) as tmp_file:
+            df = self.export_table_to_pandas_dataframe()
+            df.to_parquet(tmp_file.name)
+            local_temp_file = FileStream(
+                remote_obj_buffer=tmp_file.file,
+                actual_filename=tmp_file.name,
+                actual_file= File(path=tmp_file.name) )
+            yield local_temp_file
 
     def write(self, source_ref: FileStream):
         """

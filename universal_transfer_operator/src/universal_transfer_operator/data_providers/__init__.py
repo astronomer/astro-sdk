@@ -33,6 +33,14 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = (
         ],
         "universal_transfer_operator.data_providers.database.snowflake",
     )
+    |
+    dict.fromkeys(
+        [
+            (None, File),
+        ],
+        "universal_transfer_operator.data_providers.filesystem.local",
+    )
+
 )
 
 
@@ -41,7 +49,11 @@ def create_dataprovider(
     transfer_params: TransferParameters = None,
     transfer_mode: TransferMode = TransferMode.NONNATIVE,
 ) -> DataProviders:
-    conn_type = BaseHook.get_connection(dataset.conn_id).conn_type
+    print(dataset)
+    if dataset.conn_id != "":
+        conn_type = BaseHook.get_connection(dataset.conn_id).conn_type
+    else:
+        conn_type = None
     module_path = DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING[(conn_type, type(dataset))]
     module = importlib.import_module(module_path)
     class_name = get_class_name(module_ref=module, suffix="DataProvider")
