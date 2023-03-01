@@ -33,14 +33,12 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = (
         ],
         "universal_transfer_operator.data_providers.database.snowflake",
     )
-    |
-    dict.fromkeys(
+    | dict.fromkeys(
         [
             (None, File),
         ],
         "universal_transfer_operator.data_providers.filesystem.local",
     )
-
 )
 
 
