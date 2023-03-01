@@ -5,12 +5,11 @@ import os
 import pathlib
 from urllib.parse import urlparse
 
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, Path, TempFile
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 
 
 class LocalDataProvider(BaseFilesystemProviders):
     """Handler Local file path operations"""
-
 
     @property
     def paths(self) -> list[str]:

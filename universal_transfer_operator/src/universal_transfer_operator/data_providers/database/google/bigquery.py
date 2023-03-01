@@ -1,18 +1,19 @@
 from __future__ import annotations
 
+from tempfile import NamedTemporaryFile
 
-import attr 
+import attr
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from google.api_core.exceptions import (
     NotFound as GoogleNotFound,
 )
-from tempfile import NamedTemporaryFile
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from universal_transfer_operator.datasets.file.base import File
+
 from universal_transfer_operator.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider, FileStream
+from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import BIGQUERY_SCHEMA, BIGQUERY_SCHEMA_LOCATION
 from universal_transfer_operator.universal_transfer_operator import TransferParameters
@@ -56,7 +57,9 @@ class BigqueryDataProvider(DatabaseDataProvider):
     @property
     def hook(self) -> BigQueryHook:
         """Retrieve Airflow hook to interface with the Snowflake database."""
-        return BigQueryHook(gcp_conn_id=self.dataset.conn_id, use_legacy_sql=False, location=BIGQUERY_SCHEMA_LOCATION)
+        return BigQueryHook(
+            gcp_conn_id=self.dataset.conn_id, use_legacy_sql=False, location=BIGQUERY_SCHEMA_LOCATION
+        )
 
     @property
     def sqlalchemy_engine(self) -> Engine:
@@ -76,18 +79,19 @@ class BigqueryDataProvider(DatabaseDataProvider):
         )  # type: ignore
 
     def read(self):
-        """ Read the dataset and write to local reference location"""
+        """Read the dataset and write to local reference location"""
 
         # if isinstance(self.dataset, Table):
         #     input_data = self.populate_table_metadata(self.dataset)
         #     df = self.export_table_to_pandas_dataframe(input_data)
-        with NamedTemporaryFile(mode="w",suffix=".parquet", delete=False) as tmp_file:
+        with NamedTemporaryFile(mode="w", suffix=".parquet", delete=False) as tmp_file:
             df = self.export_table_to_pandas_dataframe()
             df.to_parquet(tmp_file.name)
             local_temp_file = FileStream(
                 remote_obj_buffer=tmp_file.file,
                 actual_filename=tmp_file.name,
-                actual_file= File(path=tmp_file.name) )
+                actual_file=File(path=tmp_file.name),
+            )
             yield local_temp_file
 
     def write(self, source_ref: FileStream):
@@ -161,7 +165,7 @@ class BigqueryDataProvider(DatabaseDataProvider):
             project_id=self.hook.project_id,
             credentials=creds,
         )
-    
+
     def create_schema_if_needed(self, schema: str | None) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
