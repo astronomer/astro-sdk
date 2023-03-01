@@ -81,9 +81,6 @@ class BigqueryDataProvider(DatabaseDataProvider):
     def read(self):
         """Read the dataset and write to local reference location"""
 
-        # if isinstance(self.dataset, Table):
-        #     input_data = self.populate_table_metadata(self.dataset)
-        #     df = self.export_table_to_pandas_dataframe(input_data)
         with NamedTemporaryFile(mode="w", suffix=".parquet", delete=False) as tmp_file:
             df = self.export_table_to_pandas_dataframe()
             df.to_parquet(tmp_file.name)
