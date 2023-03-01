@@ -114,6 +114,7 @@ class BigqueryDataProvider(DatabaseDataProvider):
         try:
             self.hook.get_dataset(dataset_id=schema)
         except GoogleNotFound:
+            # google.api_core.exceptions throws when a resource is not found
             return False
         return True
 
@@ -129,6 +130,7 @@ class BigqueryDataProvider(DatabaseDataProvider):
             dataset = self.hook.get_dataset(dataset_id=schema)
             return str(dataset.location)
         except GoogleNotFound:
+            # google.api_core.exceptions throws when a resource is not found
             return ""
 
     def load_pandas_dataframe_to_table(
