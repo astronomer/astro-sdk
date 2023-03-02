@@ -31,6 +31,7 @@ from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from universal_transfer_operator.universal_transfer_operator import TransferParameters
 from universal_transfer_operator.utils import get_dataset_connection_type
+from universal_transfer_operator.constants import TransferMode
 
 
 class DatabaseDataProvider(DataProviders):
