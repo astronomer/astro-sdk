@@ -73,7 +73,7 @@ class BaseFilesystemProviders(DataProviders):
 
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
-        raise NotImplementedError
+        return False
 
     def check_if_transfer_supported(self, source_dataset: Dataset) -> bool:
         """
@@ -110,8 +110,11 @@ class BaseFilesystemProviders(DataProviders):
             remote_obj_buffer.seek(0)
             return remote_obj_buffer
 
-    def write(self, source_ref):
-        """Write the data from local reference location to the dataset"""
+    def write(self, source_ref: FileStream):
+        """
+        Write the data from local reference location to the dataset
+        :param source_ref: Source FileStream object which will be used to read data
+        """
         return self.write_using_smart_open(source_ref=source_ref)
 
     def write_using_smart_open(self, source_ref: FileStream):
