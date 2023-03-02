@@ -51,7 +51,11 @@ def test_sftp_write():
     remote_filepath = f"sftp://upload/{file_name}"
 
     dataprovider = create_dataprovider(dataset=File(path=remote_filepath, conn_id="sftp_conn"))
-    fs = FileStream(remote_obj_buffer=open(local_filepath), actual_filename=local_filepath)
+    fs = FileStream(
+        remote_obj_buffer=open(local_filepath),
+        actual_filename=local_filepath,
+        actual_file=File(local_filepath),
+    )
     dataprovider.write(source_ref=fs)
 
     downloaded_file = f"/tmp/{file_name}"
