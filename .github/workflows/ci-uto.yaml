@@ -184,4 +184,5 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          flag: UTO
           files: ./universal_transfer_operator/coverage.xml
