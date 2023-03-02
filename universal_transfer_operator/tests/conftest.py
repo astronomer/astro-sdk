@@ -21,7 +21,6 @@ DATASET_NAME_TO_CONN_ID = {
     "SqliteDataProvider": "sqlite_default",
 }
 
-
 @pytest.fixture
 def sample_dag():
     dag_id = create_unique_str(UNIQUE_HASH_SIZE)
