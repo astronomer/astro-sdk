@@ -9,7 +9,6 @@ from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_class_name
 
-
 DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
     ("s3", File): "universal_transfer_operator.data_providers.filesystem.aws.s3",
     ("aws", File): "universal_transfer_operator.data_providers.filesystem.aws.s3",
@@ -18,8 +17,9 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
     ("sqlite", Table): "universal_transfer_operator.data_providers.database.sqlite",
     ("sftp", File): "universal_transfer_operator.data_providers.filesystem.sftp",
     ("sqlite", Table): "universal_transfer_operator.data_providers.database.sqlite",
-    ("snowflake", Table): "universal_transfer_operator.data_providers.database.snowflake"
+    ("snowflake", Table): "universal_transfer_operator.data_providers.database.snowflake",
 }
+
 
 def create_dataprovider(
     dataset: Dataset,
