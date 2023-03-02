@@ -2,15 +2,12 @@ import os
 import pathlib
 import shutil
 import uuid
+
 import pytest
 
-import pandas as pd
-from utils.test_utils import create_unique_str
-
-from universal_transfer_operator.data_providers import create_dataprovider
-from universal_transfer_operator.data_providers.filesystem.base import FileStream
-from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.data_providers.filesystem.local import LocalDataProvider
+from universal_transfer_operator.datasets.file.base import File
+
 CWD = pathlib.Path(__file__).parent
 DATA_DIR = str(CWD) + "/../../data/"
 
@@ -29,10 +26,12 @@ def local_dir():
     yield
     shutil.rmtree(LOCAL_DIR)
 
+
 def test_size():
     """Test get_size() of for local file."""
     dataset = File(path=LOCAL_DIR_FILE_1)
     assert LocalDataProvider(dataset).size == 65
+
 
 def test_get_paths_with_local_dir(local_dir):  # skipcq: PYL-W0612
     """with local filepath"""
