@@ -198,5 +198,5 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          flag: SQL-CLI
+          flags: SQL-CLI
           files: ./sql-cli/coverage.xml
