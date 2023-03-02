@@ -20,7 +20,7 @@ from universal_transfer_operator.constants import (
     ColumnCapitalization,
     LoadExistStrategy,
     Location,
-    TransferMode
+    TransferMode,
 )
 from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.data_providers.filesystem import resolve_file_path_pattern
@@ -218,7 +218,6 @@ class DatabaseDataProvider(DataProviders):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
-
 
     # ---------------------------------------------------------
     # Table metadata
