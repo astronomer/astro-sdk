@@ -33,6 +33,12 @@ class File(Dataset):
     extra: dict = field(init=True, factory=dict)
 
     @property
+    def location(self):
+        from universal_transfer_operator.data_providers import create_dataprovider
+
+        return create_dataprovider(dataset=self)
+
+    @property
     def size(self) -> int:
         """
         Return the size in bytes of the given file.

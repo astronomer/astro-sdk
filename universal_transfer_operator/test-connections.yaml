@@ -1,0 +1,142 @@
+connections:
+  - conn_id: postgres_conn
+    conn_type: postgres
+    host: localhost
+    schema:
+    login: postgres
+    password: postgres
+    port: 5432
+    extra:
+  - conn_id: postgres_conn_pagila
+    conn_type: postgres
+    host: localhost
+    schema: pagila
+    login: postgres
+    password: postgres
+    port: 5432
+    extra:
+  - conn_id: postgres_benchmark_conn
+    conn_type: postgres
+    host: postgres
+    schema:
+    login: postgres
+    password: postgres
+    port: 5432
+    extra:
+  - conn_id: snowflake_conn
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    port: 443
+    login: $SNOWFLAKE_ACCOUNT_NAME
+    password: $SNOWFLAKE_PASSWORD
+    schema: ASTROFLOW_CI
+    extra:
+      account: "gp21411"
+      region: "us-east-1"
+      role: "AIRFLOW_TEST_USER"
+      warehouse: ROBOTS
+      database: SANDBOX
+  - conn_id: snowflake_conn_1
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    port: 443
+    login: $SNOWFLAKE_ACCOUNT_NAME
+    password: $SNOWFLAKE_PASSWORD
+    extra:
+      account: "gp21411"
+      region: "us-east-1"
+      role: "AIRFLOW_TEST_USER"
+      warehouse: ROBOTS
+  - conn_id: bigquery
+    conn_type: bigquery
+    description: null
+    extra:
+      project: "astronomer-dag-authoring"
+    host: null
+    login: null
+    password: null
+    port: null
+    schema: null
+  - conn_id: sqlite_conn
+    conn_type: sqlite
+    host: /tmp/sqlite.db
+    schema:
+    login:
+    password:
+  - conn_id: gcp_conn
+    conn_type: google_cloud_platform
+    description: null
+    extra: null
+  - conn_id: gdrive_conn
+    conn_type: google_cloud_platform
+    description: connection to test google drive as file location
+    extra: '{"extra__google_cloud_platform__scope":"https://www.googleapis.com/auth/drive.readonly"}'
+  - conn_id: aws_conn
+    conn_type: aws
+    description: null
+    extra: null
+  - conn_id: redshift_conn
+    conn_type: redshift
+    schema: $REDSHIFT_DATABASE
+    host: $REDSHIFT_HOST
+    port: 5439
+    login: $REDSHIFT_USERNAME
+    password: $REDSHIFT_PASSWORD
+  - conn_id: s3_conn_benchmark
+    conn_type: aws
+    description: null
+    extra:
+      aws_access_key_id: $AWS_ACCESS_KEY_ID
+      aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+  - conn_id: databricks_conn
+    conn_type: delta
+    host: https://dbc-9c390870-65ef.cloud.databricks.com/
+    password: $DATABRICKS_TOKEN
+    extra:
+      http_path: /sql/1.0/warehouses/cf414a2206dfb397
+  - conn_id: wasb_default
+    conn_type: wasb
+    description: null
+    extra:
+      connection_string: $AZURE_WASB_CONN_STRING
+  - conn_id: gcp_conn_project
+    conn_type: google_cloud_platform
+    description: null
+    extra:
+      project: "astronomer-dag-authoring"
+      project_id: "astronomer-dag-authoring"
+  - conn_id: sftp_conn
+    conn_type: sftp
+    host: localhost
+    login: foo
+    password: pass
+    port: 2222
+  - conn_id: ftp_conn
+    conn_type: ftp
+    host: $SFTP_HOSTNAME
+    login: $SFTP_USERNAME
+    password: $SFTP_PASSWORD
+    port: 21
+    extra:
+  - conn_id: mssql_conn
+    conn_type: mssql
+    host: $MSSQL_HOST
+    login: $MSSQL_LOGIN
+    password: $MSSQL_PASSWORD
+    port: 1433
+    schema: $MSSQL_DB
+    extra:
+  - conn_id: duckdb_conn
+    conn_type: duckdb
+    host: /tmp/ciduckdb.duckdb
+    schema:
+    login:
+    password:
+  - conn_id: minio_conn
+    conn_type: aws
+    description: null
+    extra:
+      aws_access_key_id: "ROOTNAME"
+      aws_secret_access_key: "CHANGEME123"
+      endpoint_url: "http://127.0.0.1:9000"
+      minio: True
