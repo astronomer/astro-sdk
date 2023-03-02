@@ -5,6 +5,7 @@ on:
     paths:
       - 'python-sdk/**'
       - 'sql-cli/**'
+      - '.github/workflows/ci-sql-cli.yaml'
 
   pull_request:
     branches: [ 'main', 'release-**' ]
