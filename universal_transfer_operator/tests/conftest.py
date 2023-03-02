@@ -41,7 +41,7 @@ def create_database_connections():
                 session.delete(last_conn)
                 session.flush()
                 logging.info(
-                    f"Overriding existing conn_id {conn.conn_id} "
-                    f"with connection specified in test_connections.yaml"
+                    "Overriding existing conn_id %s with connection specified in test_connections.yaml",
+                    conn.conn_id,
                 )
             session.add(conn)
