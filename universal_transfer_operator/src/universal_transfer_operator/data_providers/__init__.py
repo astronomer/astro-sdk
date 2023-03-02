@@ -12,6 +12,7 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
     "aws": "universal_transfer_operator.data_providers.filesystem.aws.s3",
     "gs": "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
     "google_cloud_platform": "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
+    "sftp": "universal_transfer_operator.data_providers.filesystem.sftp",
 }
 
 
