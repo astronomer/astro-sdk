@@ -1,17 +1,15 @@
 import pathlib
-from unittest import mock
 
 import pytest
-from airflow.models.connection import Connection
 from pandas import DataFrame
 
 from astro.constants import FileType
 from astro.databases import create_database
-from universal_transfer_operator.datasets.table import Table
-from universal_transfer_operator.constants import TransferMode
-from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 from astro.files import File
 from astro.table import BaseTable, Table
+from universal_transfer_operator.constants import TransferMode
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
+from universal_transfer_operator.datasets.table import Table
 
 CWD = pathlib.Path(__file__).parent
 
@@ -24,10 +22,7 @@ def test_openlineage_database_dataset_namespace():
     """
     Test the open lineage dataset namespace for base class
     """
-    db = DatabaseDataProviderSubclass(
-        dataset=Table(name="test"),
-        transfer_mode=TransferMode.NONNATIVE
-    )
+    db = DatabaseDataProviderSubclass(dataset=Table(name="test"), transfer_mode=TransferMode.NONNATIVE)
     with pytest.raises(NotImplementedError):
         db.openlineage_dataset_namespace()
 
@@ -36,19 +31,13 @@ def test_openlineage_database_dataset_name():
     """
     Test the open lineage dataset names for the base class
     """
-    db = DatabaseDataProviderSubclass(
-        dataset=Table(name="test"),
-        transfer_mode=TransferMode.NONNATIVE
-    )
+    db = DatabaseDataProviderSubclass(dataset=Table(name="test"), transfer_mode=TransferMode.NONNATIVE)
     with pytest.raises(NotImplementedError):
         db.openlineage_dataset_name(table=BaseTable)
 
 
 def test_subclass_missing_not_implemented_methods_raise_exception():
-    db = DatabaseDataProviderSubclass(
-        dataset=Table(name="test"),
-        transfer_mode=TransferMode.NONNATIVE
-    )
+    db = DatabaseDataProviderSubclass(dataset=Table(name="test"), transfer_mode=TransferMode.NONNATIVE)
     with pytest.raises(NotImplementedError):
         db.hook
 
@@ -66,19 +55,13 @@ def test_subclass_missing_not_implemented_methods_raise_exception():
 
 
 def test_create_table_using_native_schema_autodetection_not_implemented():
-    db = DatabaseDataProviderSubclass(
-        dataset=Table(name="test"),
-        transfer_mode=TransferMode.NONNATIVE
-    )
+    db = DatabaseDataProviderSubclass(dataset=Table(name="test"), transfer_mode=TransferMode.NONNATIVE)
     with pytest.raises(NotImplementedError):
         db.create_table_using_native_schema_autodetection(table=Table(), file=File(path="s3://bucket/key"))
 
 
 def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():
-    db = DatabaseDataProviderSubclass(
-        dataset=Table(name="test"),
-        transfer_mode=TransferMode.NONNATIVE
-    )
+    db = DatabaseDataProviderSubclass(dataset=Table(name="test"), transfer_mode=TransferMode.NONNATIVE)
     table = Table()
     df = DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
     with pytest.raises(NotImplementedError):
@@ -86,10 +69,7 @@ def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():
 
 
 def test_create_table_using_columns_raises_exception():
-    db = DatabaseDataProviderSubclass(
-        dataset=Table(name="test"),
-        transfer_mode=TransferMode.NONNATIVE
-    )
+    db = DatabaseDataProviderSubclass(dataset=Table(name="test"), transfer_mode=TransferMode.NONNATIVE)
     table = Table()
     with pytest.raises(ValueError) as exc_info:
         db.create_table_using_columns(table)

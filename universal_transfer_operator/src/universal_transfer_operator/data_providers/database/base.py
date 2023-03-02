@@ -20,6 +20,7 @@ from universal_transfer_operator.constants import (
     ColumnCapitalization,
     LoadExistStrategy,
     Location,
+    TransferMode,
 )
 from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.data_providers.filesystem import resolve_file_path_pattern
@@ -30,7 +31,6 @@ from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from universal_transfer_operator.universal_transfer_operator import TransferParameters
 from universal_transfer_operator.utils import get_dataset_connection_type
-from universal_transfer_operator.constants import TransferMode
 
 
 class DatabaseDataProvider(DataProviders):
