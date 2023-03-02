@@ -17,9 +17,7 @@ from universal_transfer_operator.datasets.table import Table
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 UNIQUE_HASH_SIZE = 16
 
-DATASET_NAME_TO_CONN_ID = {
-    "SqliteDataProvider": "sqlite_default",
-}
+DATASET_NAME_TO_CONN_ID = {"SqliteDataProvider": "sqlite_default", "SnowflakeDataProvider": "snowflake_conn"}
 
 
 @pytest.fixture
