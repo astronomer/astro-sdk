@@ -91,6 +91,12 @@ with DAG(
         ),
     )
 
+    transfer_non_native_bigquery_to_sqlite = UniversalTransferOperator(
+        task_id="transfer_non_native_bigquery_to_sqlite",
+        source_dataset=Table(name="uto_s3_to_bigquery_table", conn_id="google_cloud_default",metadata=Metadata(schema="astro")),
+        destination_dataset=Table(name="uto_bigquery_to_sqlite_table", conn_id="sqlite_default"),
+    )
+
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_with_connector_id",
         source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
