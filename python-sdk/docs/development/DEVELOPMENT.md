@@ -191,6 +191,8 @@ You can configure the Docker-based testing environment to test your DAG
 * `make container target=restart` - To restart Scheduler & Triggerer containers
 * `make container target=restart-all` - To restart all the containers
 * `make container target=shell` - To run bash/shell within a container (Allows interactive session)
+* `make tilt-up` - To run Tilt (https://tilt.dev/) for local development
+* `make tilt-down` - To stop Tilt
 
 1. Following ports are accessible from the host machine:
 
