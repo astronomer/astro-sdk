@@ -4,6 +4,7 @@ coverage.xml
 **/.python-version
 python-sdk/integration-tests/test_data*
 python-sdk/test-connections.yaml
+universal_transfer_operator/test-connections.yaml
 .idea
 .env
 airflow_settings.yaml

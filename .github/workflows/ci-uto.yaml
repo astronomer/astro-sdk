@@ -39,6 +39,9 @@ env:
   SNOWFLAKE_ACCOUNT: gp21411
   SNOWFLAKE_REGION: us-east-1
   SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+  SFTP_HOSTNAME: ${{ secrets.SFTP_HOSTNAME }}
+  SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+  SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
 
 jobs:
   Type-Check:
@@ -105,6 +108,10 @@ jobs:
           --name postgres
         ports:
           - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -128,6 +135,8 @@ jobs:
             .local/
           key: universal_transfer_operator-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('universal_transfer_operator/pyproject.toml') }}
 
+      - name: Copy the Connections
+        run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - name: Set GOOGLE_APPLICATION_CREDENTIALS environment variable
         run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
 
