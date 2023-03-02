@@ -12,7 +12,7 @@ from universal_transfer_operator.datasets.file.base import File
     [
         {"dataset": File("s3://astro-sdk-test/uto/", conn_id="aws_default"), "expected": S3DataProvider},
         {"dataset": File("gs://uto-test/uto/", conn_id="google_cloud_default"), "expected": GCSDataProvider},
-        {"dataset": File("/tmp/test",conn_id=""), "expected": LocalDataProvider},
+        {"dataset": File("/tmp/test", conn_id=""), "expected": LocalDataProvider},
     ],
     ids=lambda d: d["dataset"].conn_id,
 )
