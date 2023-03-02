@@ -109,6 +109,7 @@ class SqliteDataProvider(DatabaseDataProvider):
         """
         return SqlaTable(table.name, SqlaMetaData(), autoload_with=self.sqlalchemy_engine)
 
+    @property
     def openlineage_dataset_name(self) -> str:
         """
         Returns the open lineage dataset name as per
@@ -118,6 +119,7 @@ class SqliteDataProvider(DatabaseDataProvider):
         conn = self.hook.get_connection(self.dataset.conn_id)
         return f"{conn.host}.{self.dataset.name}"
 
+    @property
     def openlineage_dataset_namespace(self) -> str:
         """
         Returns the open lineage dataset namespace as per
@@ -128,6 +130,7 @@ class SqliteDataProvider(DatabaseDataProvider):
         port = conn.port or 22
         return f"file://{socket.gethostbyname(socket.gethostname())}:{port}"
 
+    @property
     def openlineage_dataset_uri(self) -> str:
         """
         Returns the open lineage dataset uri as per
