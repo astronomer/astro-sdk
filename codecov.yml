@@ -17,4 +17,4 @@ flags:
   SQL-CLI:
     paths:
       - sql-cli/sql_cli
-    carryforward: false
+    carryforward: true
