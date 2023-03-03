@@ -46,7 +46,7 @@ def test_snowflake_run_sql():
     dp = SnowflakeDataProvider(
         dataset=Table(name="some_table", conn_id="snowflake_conn"), transfer_mode=TransferMode.NONNATIVE
     )
-    response = dp.run_sql(statement, handler=lambda x: x.first()())
+    response = dp.run_sql(statement, handler=lambda x: x.first())
     assert response[0] == 2
 
 
