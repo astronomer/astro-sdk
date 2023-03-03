@@ -56,7 +56,7 @@ def test_sqlite_run_sql():
     dp = SqliteDataProvider(
         dataset=Table("some_table", conn_id="sqlite_default"), transfer_mode=TransferMode.NONNATIVE
     )
-    response = dp.run_sql(statement,handler=lambda x: x.first())
+    response = dp.run_sql(statement, handler=lambda x: x.first())
     assert response[0] == 2
 
 
@@ -67,7 +67,7 @@ def test_sqlite_run_sql_with_parameters():
     dp = SqliteDataProvider(
         dataset=Table("some_table", conn_id="sqlite_default"), transfer_mode=TransferMode.NONNATIVE
     )
-    response = dp.run_sql(statement, parameters={"value": 1},handler=lambda x: x.first())
+    response = dp.run_sql(statement, parameters={"value": 1}, handler=lambda x: x.first())
     assert response[0] == 2
 
 
@@ -102,11 +102,11 @@ def test_sqlite_create_table_with_columns(dataset_table_fixture):
     dp, table = dataset_table_fixture
 
     statement = f"PRAGMA table_info({table.name});"
-    response = dp.run_sql(statement,handler=lambda x: x.fetchall())
+    response = dp.run_sql(statement, handler=lambda x: x.fetchall())
     assert len(response) == 0
 
     dp.create_table(table)
-    response = dp.run_sql(statement,handler=lambda x: x.fetchall())
+    response = dp.run_sql(statement, handler=lambda x: x.fetchall())
     rows = response
     assert len(rows) == 2
     assert rows[0] == (0, "id", "INTEGER", 1, None, 1)
