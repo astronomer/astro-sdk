@@ -34,7 +34,7 @@ env:
   REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
   SNOWFLAKE_SCHEMA: ASTROFLOW_CI
   SNOWFLAKE_DATABASE: SANDBOX
-  SNOWFLAKE_WAREHOUSE: DEMO
+  SNOWFLAKE_WAREHOUSE: ROBOTS
   SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
   SNOWFLAKE_ACCOUNT: gp21411
   SNOWFLAKE_REGION: us-east-1
