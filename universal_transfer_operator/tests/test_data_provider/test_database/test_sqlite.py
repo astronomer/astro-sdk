@@ -45,8 +45,8 @@ def test_sqlite_run_sql_with_sqlalchemy_text():
     dp = SqliteDataProvider(
         dataset=Table("some_table", conn_id="sqlite_default"), transfer_mode=TransferMode.NONNATIVE
     )
-    response = dp.run_sql(statement)
-    assert response.first()[0] == 2
+    response = dp.run_sql(statement, handler=lambda x: x.first())
+    assert response[0] == 2
 
 
 @pytest.mark.integration
@@ -56,8 +56,8 @@ def test_sqlite_run_sql():
     dp = SqliteDataProvider(
         dataset=Table("some_table", conn_id="sqlite_default"), transfer_mode=TransferMode.NONNATIVE
     )
-    response = dp.run_sql(statement)
-    assert response.first()[0] == 2
+    response = dp.run_sql(statement,handler=lambda x: x.first())
+    assert response[0] == 2
 
 
 @pytest.mark.integration
@@ -67,8 +67,8 @@ def test_sqlite_run_sql_with_parameters():
     dp = SqliteDataProvider(
         dataset=Table("some_table", conn_id="sqlite_default"), transfer_mode=TransferMode.NONNATIVE
     )
-    response = dp.run_sql(statement, parameters={"value": 1})
-    assert response.first()[0] == 2
+    response = dp.run_sql(statement, parameters={"value": 1},handler=lambda x: x.first())
+    assert response[0] == 2
 
 
 @pytest.mark.integration
@@ -102,12 +102,12 @@ def test_sqlite_create_table_with_columns(dataset_table_fixture):
     dp, table = dataset_table_fixture
 
     statement = f"PRAGMA table_info({table.name});"
-    response = dp.run_sql(statement)
-    assert len(response.fetchall()) == 0
+    response = dp.run_sql(statement,handler=lambda x: x.fetchall())
+    assert len(response) == 0
 
     dp.create_table(table)
-    response = dp.run_sql(statement)
-    rows = response.fetchall()
+    response = dp.run_sql(statement,handler=lambda x: x.fetchall())
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (0, "id", "INTEGER", 1, None, 1)
     assert rows[1] == (1, "name", "VARCHAR(60)", 1, None, 0)
@@ -129,8 +129,8 @@ def test_sqlite_create_table_autodetection_without_file(dataset_table_fixture):
     dp, table = dataset_table_fixture
 
     statement = f"PRAGMA table_info({table.name});"
-    response = dp.run_sql(statement, handler=lambda x: x.first())
-    assert response.fetchall() == []
+    response = dp.run_sql(statement, handler=lambda x: x.fetchall())
+    assert response == []
 
     with pytest.raises(ValueError) as exc_info:
         dp.create_table(table)
@@ -158,7 +158,7 @@ def test_load_pandas_dataframe_to_table(dataset_table_fixture):
     statement = f"SELECT * FROM {table.name};"
     response = database.run_sql(statement, handler=lambda x: x.fetchall())
 
-    rows = response.fetchall()
+    rows = response
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)

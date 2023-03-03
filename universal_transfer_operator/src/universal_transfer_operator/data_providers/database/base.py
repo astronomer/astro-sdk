@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
 import sqlalchemy
@@ -102,6 +102,7 @@ class DatabaseDataProvider(DataProviders):
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
+        handler: Callable | None = None,
         **kwargs,
     ) -> CursorResult:
         """
@@ -134,7 +135,9 @@ class DatabaseDataProvider(DataProviders):
             )
         else:
             result = self.connection.execute(sql, parameters)
-        return result
+        if handler:
+            return handler(result)
+        return None
 
     def columns_exist(self, table: Table, columns: list[str]) -> bool:
         """
@@ -483,8 +486,8 @@ class DatabaseDataProvider(DataProviders):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
         if row_limit > -1:
             statement = statement + f" LIMIT {row_limit}"  # skipcq: BAN-B608
-        response = self.run_sql(statement)
-        return response.fetchall()  # type: ignore
+        response = self.run_sql(statement, handler=lambda x: x.fetchall())
+        return response  # type: ignore
 
     def load_file_to_table(
         self,
@@ -630,8 +633,8 @@ class DatabaseDataProvider(DataProviders):
         :return: The number of rows in the table
         """
         result = self.run_sql(
-            f"select count(*) from {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
-        ).scalar()
+            f"select count(*) from {self.get_table_qualified_name(table)}", handler=lambda x: x.scalar()  # skipcq: BAN-B608
+        )
         return result
 
     # ---------------------------------------------------------
