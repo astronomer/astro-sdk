@@ -11,7 +11,7 @@ from universal_transfer_operator.constants import FileType, TransferMode
 from universal_transfer_operator.data_providers.database.snowflake import SnowflakeDataProvider
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
-from universal_transfer_operator.settings import SCHEMA
+from universal_transfer_operator.settings import SNOWFLAKE_SCHEMA
 
 DEFAULT_CONN_ID = "snowflake_default"
 CUSTOM_CONN_ID = "snowflake_conn"
@@ -57,7 +57,7 @@ def test_snowflake_run_sql():
         {
             "dataset": "SnowflakeDataProvider",
             "table": Table(
-                metadata=Metadata(schema=SCHEMA),
+                metadata=Metadata(schema=SNOWFLAKE_SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                     sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
@@ -115,7 +115,7 @@ def test_snowflake_create_table_with_columns(dataset_table_fixture):
     [
         {
             "dataset": "SnowflakeDataProvider",
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
@@ -143,7 +143,7 @@ def test_load_pandas_dataframe_to_table(dataset_table_fixture):
     [
         {
             "dataset": "SnowflakeDataProvider",
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
