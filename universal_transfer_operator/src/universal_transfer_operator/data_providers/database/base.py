@@ -633,7 +633,8 @@ class DatabaseDataProvider(DataProviders):
         :return: The number of rows in the table
         """
         result = self.run_sql(
-            f"select count(*) from {self.get_table_qualified_name(table)}", handler=lambda x: x.scalar()  # skipcq: BAN-B608
+            f"select count(*) from {self.get_table_qualified_name(table)}",
+            handler=lambda x: x.scalar(),  # skipcq: BAN-B608
         )
         return result
 
