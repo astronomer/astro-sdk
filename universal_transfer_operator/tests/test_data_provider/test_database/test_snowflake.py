@@ -136,32 +136,33 @@ def test_load_pandas_dataframe_to_table(dataset_table_fixture):
     assert rows[0] == (1,)
     assert rows[1] == (2,)
 
+# Since the LocalDatasetPtovider is not yet added in this PR
+# commenting this code once that it is added we can run this test case.
+# @pytest.mark.integration
+# @pytest.mark.parametrize(
+#     "dataset_table_fixture",
+#     [
+#         {
+#             "dataset": "SnowflakeDataProvider",
+#             "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
+#         },
+#     ],
+#     indirect=True,
+#     ids=["snowflake"],
+# )
+# def test_load_file_to_table(dataset_table_fixture):
+#     """Test loading on files to snowflake database"""
+#     database, target_table = dataset_table_fixture
+#     filepath = str(pathlib.Path(CWD.parent, "data/sub_folder/"))
+#     database.load_file_to_table(File(filepath, filetype=FileType.CSV), target_table, {})
 
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "dataset_table_fixture",
-    [
-        {
-            "dataset": "SnowflakeDataProvider",
-            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
-        },
-    ],
-    indirect=True,
-    ids=["snowflake"],
-)
-def test_load_file_to_table(dataset_table_fixture):
-    """Test loading on files to snowflake database"""
-    database, target_table = dataset_table_fixture
-    filepath = str(pathlib.Path(CWD.parent, "data/sub_folder/"))
-    database.load_file_to_table(File(filepath, filetype=FileType.CSV), target_table, {})
-
-    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
-    assert len(df) == 3
-    expected = pd.DataFrame(
-        [
-            {"id": 1, "name": "First"},
-            {"id": 2, "name": "Second"},
-            {"id": 3, "name": "Third with unicode पांचाल"},
-        ]
-    )
-    test_utils.assert_dataframes_are_equal(df, expected)
+#     df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
+#     assert len(df) == 3
+#     expected = pd.DataFrame(
+#         [
+#             {"id": 1, "name": "First"},
+#             {"id": 2, "name": "Second"},
+#             {"id": 3, "name": "Third with unicode पांचाल"},
+#         ]
+#     )
+#     test_utils.assert_dataframes_are_equal(df, expected)
