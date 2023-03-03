@@ -4,12 +4,10 @@ import pathlib
 import pandas as pd
 import pytest
 import sqlalchemy
-import utils.test_utils as test_utils
 from sqlalchemy.exc import ProgrammingError
 
-from universal_transfer_operator.constants import FileType, TransferMode
+from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers.database.snowflake import SnowflakeDataProvider
-from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import SNOWFLAKE_SCHEMA
 
@@ -135,6 +133,7 @@ def test_load_pandas_dataframe_to_table(dataset_table_fixture):
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)
+
 
 # Since the LocalDatasetPtovider is not yet added in this PR
 # commenting this code once that it is added we can run this test case.
