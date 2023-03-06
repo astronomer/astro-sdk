@@ -32,7 +32,8 @@ def test_snowflake_run_sql():
 def test_table_exists_raises_exception():
     """Test if table exists in snowflake database"""
     database = SnowflakeDataProvider(
-        Table(name="inexistent-table", metadata=Metadata(schema=SNOWFLAKE_SCHEMA), conn_id=CUSTOM_CONN_ID)
+        Table(name="inexistent-table", metadata=Metadata(schema=SNOWFLAKE_SCHEMA), conn_id=CUSTOM_CONN_ID),
+        transfer_mode=TransferMode.NONNATIVE,
     )
     table = Table(name="inexistent-table", metadata=Metadata(schema=SNOWFLAKE_SCHEMA))
     assert not database.table_exists(table)
