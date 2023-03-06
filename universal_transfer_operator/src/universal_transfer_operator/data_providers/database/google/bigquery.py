@@ -20,7 +20,7 @@ from universal_transfer_operator.universal_transfer_operator import TransferPara
 
 
 class BigqueryDataProvider(DatabaseDataProvider):
-    """SnowflakeDataProvider represent all the DataProviders interactions with Snowflake Databases."""
+    """BigqueryDataProvider represent all the DataProviders interactions with Bigquery Databases."""
 
     DEFAULT_SCHEMA = BIGQUERY_SCHEMA
 
@@ -108,7 +108,7 @@ class BigqueryDataProvider(DatabaseDataProvider):
 
     def schema_exists(self, schema: str) -> bool:
         """
-        Checks if a dataset exists in the BigQuery
+        Checks if a dataset exists in the bigquery
 
         :param schema: Bigquery namespace
         """
