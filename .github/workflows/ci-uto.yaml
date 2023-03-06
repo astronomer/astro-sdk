@@ -76,7 +76,7 @@ jobs:
       - name: Run type check
         run: nox -s type_check
 
-  Run-UTO-tests:
+  Run-UTO-tests-unit-tests:
     if: >-
       github.event_name == 'push' ||
       (
@@ -147,7 +147,7 @@ jobs:
           nox --version
 
       - name: Run tests
-        run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- --cov=src --cov-report=xml --cov-branch
+        run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- tests/ --cov=src --cov-report=xml --cov-branch
 
       - name: Upload coverage
         uses: actions/upload-artifact@v2
@@ -165,6 +165,94 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
 
+  Run-UTO-tests-integrations:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) ||
+      (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
+      )||
+      (
+        github.event_name == 'release'
+      )
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ 3.8, 3.9 ]
+        airflow: [ 2.2.5, 2.4, 2.5 ]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '${{ matrix.python }}'
+          architecture: 'x64'
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            universal_transfer_operator/.nox
+            .local/
+          key: universal_transfer_operator-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('universal_transfer_operator/pyproject.toml') }}
+
+      - name: Copy the Connections
+        run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS environment variable
+        run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+
+      - name: Install Nox
+        run: |
+          pipx install nox
+          nox --version
+
+      - name: Run tests
+        run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- tests_integration/ --cov=src --cov-report=xml --cov-branch
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-${{ matrix.python }}-${{ matrix.airflow }}
+          path: ./universal_transfer_operator/.coverage
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      GOOGLE_CLOUD_KEY_PATH: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
 
   Code-Coverage:
     if: github.event.action != 'labeled'
