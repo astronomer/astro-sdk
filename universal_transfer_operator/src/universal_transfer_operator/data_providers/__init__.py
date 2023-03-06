@@ -14,11 +14,14 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
     ("aws", File): "universal_transfer_operator.data_providers.filesystem.aws.s3",
     ("gs", File): "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
     ("google_cloud_platform", File): "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
+    ("google_cloud_platform", Table): "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
+    ("gs", Table): "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
     ("sqlite", Table): "universal_transfer_operator.data_providers.database.sqlite",
     ("sftp", File): "universal_transfer_operator.data_providers.filesystem.sftp",
     ("sqlite", Table): "universal_transfer_operator.data_providers.database.sqlite",
     ("snowflake", Table): "universal_transfer_operator.data_providers.database.snowflake",
     (None, File): "universal_transfer_operator.data_providers.filesystem.local",
+    
 }
 
 
