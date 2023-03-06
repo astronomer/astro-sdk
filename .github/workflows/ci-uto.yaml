@@ -257,7 +257,8 @@ jobs:
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
-      - Run-UTO-tests
+      - Run-UTO-tests-unit-tests
+      - Run-UTO-tests-integrations
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
