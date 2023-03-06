@@ -195,10 +195,7 @@ class DatabaseDataProvider(DataProviders):
 
         :param source_ref: Stream of data to be loaded into output table.
         """
-        return self.load_file_to_table(
-            input_file=source_ref.actual_file,
-            output_table=self.dataset,
-        )
+        return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
 
     def load_data_from_source_natively(self, source_dataset: Table, destination_dataset: Dataset) -> None:
         """

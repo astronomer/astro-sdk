@@ -92,7 +92,7 @@ def dataset_table_fixture(request):
     file = params.get("file")
 
     dp.populate_table_metadata(table)
-    dp.create_schema_if_needed(table.metadata.schema)
+    # dp.create_schema_if_needed(table.metadata.schema)
 
     if file:
         dp.load_file_to_table(file, table)

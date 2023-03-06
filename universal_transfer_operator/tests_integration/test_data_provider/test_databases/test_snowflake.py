@@ -1,5 +1,6 @@
 """Integration Tests specific to the Snowflake Database implementation."""
 import pathlib
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -8,6 +9,8 @@ from sqlalchemy.exc import ProgrammingError
 
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers.database.snowflake import SnowflakeDataProvider
+from universal_transfer_operator.data_providers.filesystem.base import FileStream
+from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import SNOWFLAKE_SCHEMA
 
@@ -124,3 +127,32 @@ def test_load_pandas_dataframe_to_table(dataset_table_fixture):
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "dataset_table_fixture",
+    [
+        {
+            "dataset": "SnowflakeDataProvider",
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_write_method(dataset_table_fixture):
+    """Test write() for snowflake"""
+    dp, table = dataset_table_fixture
+    file_path = f"{str(CWD)}/../../data/sample.csv"
+    fs = FileStream(
+        remote_obj_buffer=file_path,
+        actual_file=File(
+            path=file_path,
+        ),
+        actual_filename=Path(file_path),
+    )
+    dp.write(source_ref=fs)
+    rows = dp.fetch_all_rows(table=dp.dataset)
+    rows.sort(key=lambda x: x[0])
+    assert rows == [(1, "First"), (2, "Second"), (3, "Third with unicode पांचाल")]

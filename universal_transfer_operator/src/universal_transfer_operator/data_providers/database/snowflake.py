@@ -8,7 +8,7 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from snowflake.connector import pandas_tools
 
 from universal_transfer_operator.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
-from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider, FileStream
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
@@ -71,17 +71,6 @@ class SnowflakeDataProvider(DatabaseDataProvider):
     def read(self):
         """ ""Read the dataset and write to local reference location"""
         raise NotImplementedError
-
-    def write(self, source_ref: FileStream):
-        """
-        Write the data from local reference location to the dataset
-
-        :param source_ref: Stream of data to be loaded into snowflake table.
-        """
-        return self.load_file_to_table(
-            input_file=source_ref.actual_file,
-            output_table=self.dataset,
-        )
 
     # ---------------------------------------------------------
     # Table metadata
