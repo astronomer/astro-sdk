@@ -20,7 +20,6 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
     ("sqlite", Table): "universal_transfer_operator.data_providers.database.sqlite",
     ("snowflake", Table): "universal_transfer_operator.data_providers.database.snowflake",
     (None, File): "universal_transfer_operator.data_providers.filesystem.local",
-    
 }
 
 
