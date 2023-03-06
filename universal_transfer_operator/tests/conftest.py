@@ -17,9 +17,7 @@ from universal_transfer_operator.datasets.table import Table
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 UNIQUE_HASH_SIZE = 16
 
-DATASET_NAME_TO_CONN_ID = {
-    "SqliteDataProvider": "sqlite_default",
-}
+DATASET_NAME_TO_CONN_ID = {"SqliteDataProvider": "sqlite_default", "SnowflakeDataProvider": "snowflake_conn"}
 
 
 @pytest.fixture
@@ -94,7 +92,7 @@ def dataset_table_fixture(request):
     file = params.get("file")
 
     dp.populate_table_metadata(table)
-    dp.create_schema_if_needed(table.metadata.schema)
+    # dp.create_schema_if_needed(table.metadata.schema)
 
     if file:
         dp.load_file_to_table(file, table)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
 import sqlalchemy
@@ -14,6 +14,7 @@ import attr
 from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy.sql import ClauseElement
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from universal_transfer_operator.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -101,6 +102,7 @@ class DatabaseDataProvider(DataProviders):
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
+        handler: Callable | None = None,
         **kwargs,
     ) -> CursorResult:
         """
@@ -133,7 +135,9 @@ class DatabaseDataProvider(DataProviders):
             )
         else:
             result = self.connection.execute(sql, parameters)
-        return result
+        if handler:
+            return handler(result)
+        return None
 
     def columns_exist(self, table: Table, columns: list[str]) -> bool:
         """
@@ -149,6 +153,19 @@ class DatabaseDataProvider(DataProviders):
             any(sqla_column.name == column for sqla_column in sqla_table.columns) for column in columns
         )
 
+    def get_sqla_table(self, table: Table) -> SqlaTable:
+        """
+        Return SQLAlchemy table instance
+
+        :param table: Astro Table to be converted to SQLAlchemy table instance
+        """
+        return SqlaTable(
+            table.name,
+            table.sqlalchemy_metadata,
+            autoload_with=self.sqlalchemy_engine,
+            extend_existing=True,
+        )
+
     def table_exists(self, table: Table) -> bool:
         """
         Check if a table exists in the database.
@@ -162,6 +179,8 @@ class DatabaseDataProvider(DataProviders):
     def check_if_transfer_supported(self, source_dataset: Table) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
+
+        :param source_dataset: Table present in the source location
         """
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
@@ -171,11 +190,12 @@ class DatabaseDataProvider(DataProviders):
         raise NotImplementedError
 
     def write(self, source_ref: FileStream):
-        """Write the data from local reference location to the dataset"""
-        return self.load_file_to_table(
-            input_file=source_ref.actual_file,
-            output_table=self.dataset,
-        )
+        """
+        Write the data from local reference location to the dataset.
+
+        :param source_ref: Stream of data to be loaded into output table.
+        """
+        return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
 
     def load_data_from_source_natively(self, source_dataset: Table, destination_dataset: Dataset) -> None:
         """
@@ -463,8 +483,8 @@ class DatabaseDataProvider(DataProviders):
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
         if row_limit > -1:
             statement = statement + f" LIMIT {row_limit}"  # skipcq: BAN-B608
-        response = self.run_sql(statement)
-        return response.fetchall()  # type: ignore
+        response = self.run_sql(statement, handler=lambda x: x.fetchall())
+        return response  # type: ignore
 
     def load_file_to_table(
         self,
@@ -610,6 +630,32 @@ class DatabaseDataProvider(DataProviders):
         :return: The number of rows in the table
         """
         result = self.run_sql(
-            f"select count(*) from {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
-        ).scalar()
+            f"select count(*) from {self.get_table_qualified_name(table)}",
+            handler=lambda x: x.scalar(),  # skipcq: BAN-B608
+        )
         return result
+
+    # ---------------------------------------------------------
+    # Schema Management
+    # ---------------------------------------------------------
+
+    def create_schema_if_needed(self, schema: str | None) -> None:
+        """
+        This function checks if the expected schema exists in the database. If the schema does not exist,
+        it will attempt to create it.
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        # We check if the schema exists first because snowflake will fail on a create schema query even if it
+        # doesn't actually create a schema.
+        if schema and not self.schema_exists(schema):
+            statement = self._create_schema_statement.format(schema)
+            self.run_sql(statement)
+
+    def schema_exists(self, schema: str) -> bool:
+        """
+        Checks if a schema exists in the database
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        raise NotImplementedError

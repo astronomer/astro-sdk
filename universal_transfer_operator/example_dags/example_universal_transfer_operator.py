@@ -47,6 +47,22 @@ with DAG(
         destination_dataset=Table(name="uto_gs_table", conn_id="sqlite_default"),
     )
 
+    transfer_non_native_s3_to_snowflake = UniversalTransferOperator(
+        task_id="transfer_non_native_s3_to_snowflake",
+        source_dataset=File(
+            path="s3://astro-sdk-test/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV
+        ),
+        destination_dataset=Table(name="uto_s3_table", conn_id="snowflake_default"),
+    )
+
+    transfer_non_native_gs_to_snowflake = UniversalTransferOperator(
+        task_id="transfer_non_native_gs_to_snowflake",
+        source_dataset=File(
+            path="gs://uto-test/uto/csv_files/", conn_id="google_cloud_default", filetype=FileType.CSV
+        ),
+        destination_dataset=Table(name="uto_gs_table", conn_id="snowflake_default"),
+    )
+
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_with_connector_id",
         source_dataset=File(path=f"{s3_bucket}/uto/", conn_id="aws_default"),
