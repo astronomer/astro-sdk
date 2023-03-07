@@ -73,6 +73,7 @@ class BaseDatabase(ABC):
         self.conn_id = conn_id
         self.sql: str | ClauseElement = ""
         self.load_options = load_options
+        self.table = table
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
@@ -86,7 +87,7 @@ class BaseDatabase(ABC):
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
 
-    @property
+    @cached_property
     def connection(self) -> sqlalchemy.engine.base.Connection:
         """Return a Sqlalchemy connection object for the given database."""
         return self.sqlalchemy_engine.connect()
@@ -613,7 +614,7 @@ class BaseDatabase(ABC):
 
         source_dataframe.to_sql(
             self.get_table_qualified_name(target_table),
-            con=self.sqlalchemy_engine,
+            con=self.connection,
             if_exists=if_exists,
             chunksize=chunk_size,
             method="multi",
