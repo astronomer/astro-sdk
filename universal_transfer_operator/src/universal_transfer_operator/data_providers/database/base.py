@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
@@ -187,13 +188,20 @@ class DatabaseDataProvider(DataProviders):
         return Location(source_connection_type) in self.transfer_mapping
 
     def read(self):
-        """ ""Read the dataset and write to local reference location"""
-        raise NotImplementedError
+        """Read the dataset and write to local reference location"""
+        with NamedTemporaryFile(mode="w", suffix=".parquet", delete=False) as tmp_file:
+            df = self.export_table_to_pandas_dataframe()
+            df.to_parquet(tmp_file.name)
+            local_temp_file = FileStream(
+                remote_obj_buffer=tmp_file.file,
+                actual_filename=tmp_file.name,
+                actual_file=File(path=tmp_file.name),
+            )
+            yield local_temp_file
 
     def write(self, source_ref: FileStream):
         """
         Write the data from local reference location to the dataset.
-
         :param source_ref: Stream of data to be loaded into output table.
         """
         return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)

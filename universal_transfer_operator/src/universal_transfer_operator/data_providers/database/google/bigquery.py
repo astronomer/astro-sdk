@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from tempfile import NamedTemporaryFile
-
 import attr
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -12,8 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
 from universal_transfer_operator.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
-from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider, FileStream
-from universal_transfer_operator.datasets.file.base import File
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import BIGQUERY_SCHEMA, BIGQUERY_SCHEMA_LOCATION
 from universal_transfer_operator.universal_transfer_operator import TransferParameters
@@ -77,30 +74,6 @@ class BigqueryDataProvider(DatabaseDataProvider):
             schema=self.DEFAULT_SCHEMA,
             database=self.hook.project_id,
         )  # type: ignore
-
-    def read(self):
-        """Read the dataset and write to local reference location"""
-
-        with NamedTemporaryFile(mode="w", suffix=".parquet", delete=False) as tmp_file:
-            df = self.export_table_to_pandas_dataframe()
-            df.to_parquet(tmp_file.name)
-            local_temp_file = FileStream(
-                remote_obj_buffer=tmp_file.file,
-                actual_filename=tmp_file.name,
-                actual_file=File(path=tmp_file.name),
-            )
-            yield local_temp_file
-
-    def write(self, source_ref: FileStream):
-        """
-        Write the data from local reference location to the dataset
-
-        :param source_ref: Stream of data to be loaded into snowflake table.
-        """
-        return self.load_file_to_table(
-            input_file=source_ref.actual_file,
-            output_table=self.dataset,
-        )
 
     # ---------------------------------------------------------
     # Table metadata
