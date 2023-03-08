@@ -19,6 +19,13 @@ def dummy_method():
     return "SELECT 1+1"
 ```
 
+## 1.5.3
+
+### Bug Fixes
+
+- Support using SQL operators (`run_raw_sql`, `transform`, `dataframe`) to convert a Pandas dataframe into a table when using a DuckDB in-memory database. [#1831](https://github.com/astronomer/astro-sdk/pull/1833)
+
+
 ## 1.5.2
 
 ### Improvements
