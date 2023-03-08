@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import socket
 
+import sqlalchemy
 from duckdb_provider.hooks.duckdb_hook import DuckDBHook
 from sqlalchemy import MetaData as SqlaMetaData
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -31,6 +32,11 @@ class DuckdbDatabase(BaseDatabase):
     @property
     def sql_type(self) -> str:
         return "duckdb"
+
+    @cached_property
+    def connection(self) -> sqlalchemy.engine.base.Connection:
+        """Return a Sqlalchemy connection object for the given database."""
+        return self.sqlalchemy_engine.connect()
 
     @cached_property
     def hook(self) -> DuckDBHook:
