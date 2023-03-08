@@ -3,12 +3,9 @@ from unittest import mock
 import pandas as pd
 import pytest
 
+from astro.databases.sqlite import SqliteDatabase
 from astro.sql import RawSQLOperator
-from astro.sql.operators.base_decorator import (
-    BaseSQLDecoratedOperator,
-    load_op_arg_dataframes_into_sql,
-    load_op_kwarg_dataframes_into_sql,
-)
+from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.table import BaseTable, Table
 
 
@@ -34,7 +31,10 @@ def test_load_op_arg_dataframes_into_sql():
     df_1 = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
     df_2 = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
     op_args = (df_1, df_2, Table(conn_id="sqlite_default"), "str")
-    results = load_op_arg_dataframes_into_sql(
+    operator = BaseSQLDecoratedOperator(task_id="test", python_callable=lambda: 1)
+    operator.database_impl = SqliteDatabase()
+
+    results = operator.load_op_arg_dataframes_into_sql(
         conn_id="sqlite_default", op_args=op_args, output_table=Table(conn_id="sqlite_default")
     )
 
@@ -50,7 +50,10 @@ def test_load_op_kwarg_dataframes_into_sql():
     df_1 = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
     df_2 = pd.DataFrame({"col1": [1, 2], "col2": [3, 4]})
     op_kwargs = {"df_1": df_1, "df_2": df_2, "table": Table(conn_id="sqlite_default"), "some_str": "str"}
-    results = load_op_kwarg_dataframes_into_sql(
+
+    operator = BaseSQLDecoratedOperator(task_id="test", python_callable=lambda: 1)
+    operator.database_impl = SqliteDatabase()
+    results = operator.load_op_kwarg_dataframes_into_sql(
         conn_id="sqlite_default", op_kwargs=op_kwargs, output_table=Table(conn_id="sqlite_default")
     )
 
