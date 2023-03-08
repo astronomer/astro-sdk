@@ -68,10 +68,6 @@ class SnowflakeDataProvider(DatabaseDataProvider):
             database=connection.database,
         )
 
-    def read(self):
-        """ ""Read the dataset and write to local reference location"""
-        raise NotImplementedError
-
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------

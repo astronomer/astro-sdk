@@ -45,6 +45,13 @@ class SFTPDataProvider(BaseFilesystemProviders):
         """Return an instance of the SFTPHook Airflow hook."""
         return SFTPHook(ssh_conn_id=self.dataset.conn_id)
 
+    def delete(self):
+        self.hook.delete_file(path=self.dataset.path.replace("sftp://", "/"))
+
+    def check_if_exists(self):
+        """Return true if the dataset exists"""
+        return self.hook.path_exists(self.dataset.path.replace("sftp://", "/"))
+
     @property
     def paths(self) -> list[str]:
         """Resolve SFTP file paths with netloc of self.dataset.path as prefix. Paths are added if they start with prefix

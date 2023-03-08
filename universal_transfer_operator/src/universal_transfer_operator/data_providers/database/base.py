@@ -189,7 +189,7 @@ class DatabaseDataProvider(DataProviders):
 
     def read(self):
         """Read the dataset and write to local reference location"""
-        with NamedTemporaryFile(mode="w", suffix=".parquet", delete=False) as tmp_file:
+        with NamedTemporaryFile(mode="wb+", suffix=".parquet", delete=False) as tmp_file:
             df = self.export_table_to_pandas_dataframe()
             df.to_parquet(tmp_file.name)
             local_temp_file = FileStream(
@@ -278,7 +278,7 @@ class DatabaseDataProvider(DataProviders):
         """
         raise NotImplementedError
 
-    def populate_table_metadata(self, table: Table) -> Table:
+    def populate_metadata(self):
         """
         Given a table, check if the table has metadata.
         If the metadata is missing, and the database has metadata, assign it to the table.
@@ -288,11 +288,11 @@ class DatabaseDataProvider(DataProviders):
         :param table: Table to potentially have their metadata changed
         :return table: Return the modified table
         """
-        if table.metadata and table.metadata.is_empty() and self.default_metadata:
-            table.metadata = self.default_metadata
-        if not table.metadata.schema:
-            table.metadata.schema = self.DEFAULT_SCHEMA
-        return table
+
+        if self.dataset.metadata and self.dataset.metadata.is_empty() and self.default_metadata:
+            self.dataset.metadata = self.default_metadata
+        if not self.dataset.metadata.schema:
+            self.dataset.metadata.schema = self.DEFAULT_SCHEMA
 
     # ---------------------------------------------------------
     # Table creation & deletion methods
@@ -678,8 +678,8 @@ class DatabaseDataProvider(DataProviders):
         Copy the content of a table to an in-memory Pandas dataframe.
         """
 
-        if self.table_exists(self.dataset):
-            ValueError(f"The table {self.dataset.name} does not exist")
+        if not self.table_exists(self.dataset):
+            raise ValueError(f"The table {self.dataset.name} does not exist")
 
         sqla_table = self.get_sqla_table(self.dataset)
         df = pd.read_sql(sql=sqla_table.select(), con=self.sqlalchemy_engine)

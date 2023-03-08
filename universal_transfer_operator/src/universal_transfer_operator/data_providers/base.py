@@ -105,3 +105,9 @@ class DataProviders(ABC):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
+
+    def populate_metadata(self):
+        """
+        Given a dataset, check if the dataset has metadata.
+        """
+        raise NotImplementedError
