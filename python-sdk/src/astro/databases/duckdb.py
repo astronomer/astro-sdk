@@ -33,8 +33,11 @@ class DuckdbDatabase(BaseDatabase):
     def sql_type(self) -> str:
         return "duckdb"
 
+    # We are caching this property to persist the DuckDB in-memory connection, to avoid
+    # the problem described in
+    # https://github.com/astronomer/astro-sdk/issues/1831
     @cached_property
-    def connection(self) -> sqlalchemy.engine.base.Connection:
+    def connection(self) -> sqlalchemy.engine.base.Connection:  # skipcq PYL-W0236
         """Return a Sqlalchemy connection object for the given database."""
         return self.sqlalchemy_engine.connect()
 
