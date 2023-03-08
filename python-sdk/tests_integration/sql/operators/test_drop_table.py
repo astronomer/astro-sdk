@@ -133,7 +133,7 @@ def test_drop_table_with_table_metadata_mssql(database_table_fixture, sample_dag
         },
         {
             "database": Database.DUCKDB,
-            "table": Table(conn_id="redshift_conn"),
+            "table": Table(conn_id="duckdb_conn"),
             "file": File(DEFAULT_FILEPATH),
         },
     ],
@@ -144,13 +144,11 @@ def test_drop_table_without_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
     database, test_table = database_table_fixture
     assert database.table_exists(test_table)
-
     with sample_dag:
         aql.drop_table(
             table=test_table,
         )
     test_utils.run_dag(sample_dag)
-
     assert not database.table_exists(test_table)
 
 

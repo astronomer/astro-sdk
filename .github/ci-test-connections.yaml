@@ -132,6 +132,12 @@ connections:
     schema:
     login:
     password:
+  - conn_id: duckdb_memory
+    conn_type: duckdb
+    host:
+    schema:
+    login:
+    password:
   - conn_id: minio_conn
     conn_type: aws
     description: null
