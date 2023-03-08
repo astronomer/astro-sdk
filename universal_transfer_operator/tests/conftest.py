@@ -112,7 +112,7 @@ def dataset_table_fixture(request):
         table.name = create_unique_str(UNIQUE_HASH_SIZE)
     file = params.get("file")
 
-    dp.populate_table_metadata(table)
+    dp.populate_metadata(table)
     # dp.create_schema_if_needed(table.metadata.schema)
 
     if file:
