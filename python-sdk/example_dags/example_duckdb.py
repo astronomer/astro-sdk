@@ -38,7 +38,7 @@ def pipeline_2():
         python_1,
     )
 
-    sql_duck << python_1
+    sql_duck << python_1  # skipcq: PYL-W0104
 
 
 dag_obj = pipeline_2()
