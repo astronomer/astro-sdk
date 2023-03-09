@@ -134,7 +134,7 @@ class S3DataProvider(BaseFilesystemProviders):
 
     @property
     def transfer_config_args(self) -> dict | None:
-        return self.dataset.extra.get("transfer_config_args", None)
+        return self.dataset.extra.get("transfer_config_args", {})
 
     @property
     def s3_extra_args(self) -> dict | None:
