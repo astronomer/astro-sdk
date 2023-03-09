@@ -7,6 +7,7 @@ from os.path import exists
 from urllib.parse import urlparse
 
 import smart_open
+from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, FileStream
 
@@ -69,3 +70,8 @@ class LocalDataProvider(BaseFilesystemProviders):
         with smart_open.open(self.dataset.path, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())
         return self.dataset.path
+
+    @property
+    def hook(self) -> BaseHook:
+        """Return an instance of the Airflow hook."""
+        raise NotImplementedError
