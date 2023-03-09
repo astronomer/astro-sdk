@@ -50,6 +50,9 @@ class S3DataProvider(BaseFilesystemProviders):
         )
 
     def delete(self):
+        """
+        Delete a file/object if they exists
+        """
         url = urlparse(self.dataset.path)
         self.hook.delete_objects(bucket=url.netloc, keys=url.path.lstrip("/"))
 

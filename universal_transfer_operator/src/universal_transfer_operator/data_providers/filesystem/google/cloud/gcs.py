@@ -50,6 +50,9 @@ class GCSDataProvider(BaseFilesystemProviders):
         )
 
     def delete(self):
+        """
+        Delete a file/object if they exists
+        """
         url = urlparse(self.dataset.path)
         self.hook.delete(bucket_name=url.netloc, object_name=url.path.lstrip("/"))
 

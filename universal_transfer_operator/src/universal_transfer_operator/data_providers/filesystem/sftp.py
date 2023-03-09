@@ -46,6 +46,9 @@ class SFTPDataProvider(BaseFilesystemProviders):
         return SFTPHook(ssh_conn_id=self.dataset.conn_id)
 
     def delete(self):
+        """
+        Delete a file/object if they exists
+        """
         self.hook.delete_file(path=self.dataset.path.replace("sftp://", "/"))
 
     def check_if_exists(self):
