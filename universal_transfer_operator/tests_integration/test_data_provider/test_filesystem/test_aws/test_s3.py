@@ -21,7 +21,7 @@ CWD = pathlib.Path(__file__).parent
     ids=lambda dp: dp["name"],
 )
 def test_delete_s3_object(src_dataset_fixture):
-    dp, dataset = src_dataset_fixture
+    dp, _ = src_dataset_fixture
     assert dp.check_if_exists()
     dp.delete()
     assert not dp.check_if_exists()

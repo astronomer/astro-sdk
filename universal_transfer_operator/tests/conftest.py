@@ -248,8 +248,6 @@ def dataset_fixture(request):
     transfer_mode = params.get("transfer_mode", TransferMode.NONNATIVE)
     local_file_path = params.get("local_file_path")
 
-    DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
-
     dataset_object = set_missing_values(dataset_object=dataset_object, dp_name=dp_name)
 
     dp = create_dataprovider(dataset=dataset_object, transfer_mode=transfer_mode)
