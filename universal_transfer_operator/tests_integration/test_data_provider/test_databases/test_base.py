@@ -4,6 +4,7 @@ from urllib.parse import urlparse, urlunparse
 import pandas as pd
 import pytest
 import smart_open
+from pyarrow.lib import ArrowInvalid
 from utils.test_utils import create_unique_str
 
 from universal_transfer_operator.datasets.file.base import File
@@ -71,7 +72,7 @@ CWD = pathlib.Path(__file__).parent
     indirect=True,
     ids=lambda dp: dp["name"],
 )
-def test_read_write_methods_of_datasets(src_dataset_fixture, dst_dataset_fixture, sample_dag):
+def test_read_write_methods_of_datasets(src_dataset_fixture, dst_dataset_fixture):
     """
     Test datasets read and write methods of all datasets
     """
@@ -104,7 +105,7 @@ def export_to_dataframe(data_provider) -> pd.DataFrame:
             # database -> database, filesystem -> database and filesystem -> filesystem it works as expected.
             with smart_open.open(path, mode="rb", transport_params=data_provider.transport_params) as stream:
                 return pd.read_parquet(stream)
-        except Exception:
+        except ArrowInvalid:
             with smart_open.open(path, mode="r", transport_params=data_provider.transport_params) as stream:
                 return pd.read_csv(stream)
     elif isinstance(data_provider.dataset, Table):

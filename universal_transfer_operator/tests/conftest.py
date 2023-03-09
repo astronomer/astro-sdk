@@ -10,10 +10,11 @@ from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session
+from google.api_core.exceptions import NotFound
 from utils.test_utils import create_unique_str
 
 from universal_transfer_operator.constants import TransferMode
-from universal_transfer_operator.data_providers import create_dataprovider
+from universal_transfer_operator.data_providers import DataProviders, create_dataprovider
 from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Table
@@ -148,7 +149,7 @@ def set_file_missing_values(file: File, dataset_name: str):
     return file
 
 
-def populate_file(src_file_path: str, dataset_provider: BaseFilesystemProviders, dataset_name: str):
+def populate_file(src_file_path: str, dataset_provider: BaseFilesystemProviders, dp_name: str):
     """
     Populate file with local file data
     """
@@ -158,7 +159,7 @@ def populate_file(src_file_path: str, dataset_provider: BaseFilesystemProviders,
     # Currently, we are passing the credentials to sftp server via URL - sftp://username:password@localhost, we are
     # populating the credentials in the URL if the server destination is SFTP.
     path = dataset_provider.dataset.path
-    if dataset_name == "SFTPDataProvider":
+    if dp_name == "SFTPDataProvider":
         original_url = urlparse(path)
         cred_url = urlparse(dataset_provider.get_uri())
         url_netloc = f"{cred_url.netloc}/{original_url.netloc}"
@@ -171,43 +172,96 @@ def populate_file(src_file_path: str, dataset_provider: BaseFilesystemProviders,
         stream.flush()
 
 
-def dataset_fixture(request):
-    # We deepcopy the request param dictionary as we modify the table item directly.
-    params = deepcopy(request.param)
-
-    dataset_name = params["name"]
-    dataset_object = params.get("object", None)
-    transfer_mode = params.get("transfer_mode", TransferMode.NONNATIVE)
-    local_file_path = params.get("local_file_path")
-
-    dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dataset_name]
-
+def set_missing_values(dataset_object: [File, Table], dp_name: str) -> [File, Table]:
+    """Set missing values for datasets"""
+    dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
     if dataset_type == "database":
-        dataset_object = set_table_missing_values(table=dataset_object, dataset_name=dataset_name)
+        dataset_object = set_table_missing_values(table=dataset_object, dataset_name=dp_name)
     elif dataset_type == "file":
-        dataset_object = set_file_missing_values(file=dataset_object, dataset_name=dataset_name)
+        dataset_object = set_file_missing_values(file=dataset_object, dataset_name=dp_name)
+    return dataset_object
 
-    dp = create_dataprovider(dataset=dataset_object, transfer_mode=transfer_mode)
-    dp.populate_metadata()
 
+def load_data_in_datasets(
+    dataset_object: [File, Table], dp: DataProviders, dp_name: str, local_file_path: str
+):
+    """
+    Load data in datasets
+    :param dataset_object: user passed Dataset object
+    :param dp: DataProviders object created using dataset_object
+    :param dp_name: name of data_provider class
+    :param local_file_path: data that needs to be loaded in dataset
+    """
+    dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
     if dataset_type == "database":
         dp.create_schema_if_needed(dataset_object.metadata.schema)
         if local_file_path:
             dp.load_file_to_table(File(local_file_path), dataset_object)
     elif dataset_type == "file":
         if local_file_path:
-            populate_file(src_file_path=local_file_path, dataset_provider=dp, dataset_name=dataset_name)
+            populate_file(src_file_path=local_file_path, dataset_provider=dp, dp_name=dp_name)
 
-    yield dp, dataset_object
 
+def delete_dataset(dataset_object: [File, Table], dp: DataProviders, dp_name: str, local_file_path: str):
+    """
+    Delete dataset
+    :param dataset_object: user passed Dataset object
+    :param dp: DataProviders object created using dataset_object
+    :param dp_name: name of data_provider class
+    :param local_file_path: data that needs to be loaded in dataset
+    """
+    dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
     if dataset_type == "database":
         dp.drop_table(dataset_object)
     elif dataset_type == "file" and local_file_path:
-        # ignore if the file is already deleted
         try:
             dp.delete()
-        except Exception:
+        except (FileNotFoundError, NotFound):
             pass
+
+
+def dataset_fixture(request):
+    """
+    Fixture to populate data in datasets and fill in missing values. For file dataset we need to pass an "object"
+     parameter with absolute path of the file.
+    Example:
+        @pytest.mark.parametrize(
+        "src_dataset_fixture",
+            [
+                {"name": "SqliteDataProvider", "local_file_path": f"{str(CWD)}/../../data/sample.csv"},
+                {
+                    "name": "S3DataProvider",
+                    "object": File(path=f"s3://tmp9/{create_unique_str(10)}.csv"),
+                    "local_file_path": f"{str(CWD)}/../../data/sample.csv",
+                }
+            ],
+            indirect=True,
+            ids=lambda dp: dp["name"],
+        )
+
+    """
+    # We deepcopy the request param dictionary as we modify the table item directly.
+    params = deepcopy(request.param)
+
+    dp_name = params["name"]
+    dataset_object = params.get("object", None)
+    transfer_mode = params.get("transfer_mode", TransferMode.NONNATIVE)
+    local_file_path = params.get("local_file_path")
+
+    DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
+
+    dataset_object = set_missing_values(dataset_object=dataset_object, dp_name=dp_name)
+
+    dp = create_dataprovider(dataset=dataset_object, transfer_mode=transfer_mode)
+    dp.populate_metadata()
+
+    load_data_in_datasets(
+        dataset_object=dataset_object, dp=dp, dp_name=dp_name, local_file_path=local_file_path
+    )
+
+    yield dp, dataset_object
+
+    delete_dataset(dataset_object=dataset_object, dp=dp, dp_name=dp_name, local_file_path=local_file_path)
 
 
 @pytest.fixture

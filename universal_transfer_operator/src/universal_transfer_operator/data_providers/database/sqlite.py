@@ -71,7 +71,7 @@ class SqliteDataProvider(DatabaseDataProvider):
         """
         return str(table.name)
 
-    def populate_metadata(self):
+    def populate_metadata(self):  # skipcq: PTC-W0049
         """
         Since SQLite does not have a concept of databases or schemas, we just return the table as is,
         without any modifications.
@@ -124,4 +124,4 @@ class SqliteDataProvider(DatabaseDataProvider):
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name()}"
+        return f"{self.openlineage_dataset_namespace}{self.openlineage_dataset_name}"

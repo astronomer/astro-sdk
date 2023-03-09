@@ -202,7 +202,7 @@ class BaseFilesystemProviders(DataProviders):
         """
         raise NotImplementedError
 
-    def populate_metadata(self):
+    def populate_metadata(self):  # skipcq: PTC-W0049
         """
         Given a dataset, check if the dataset has metadata.
         """

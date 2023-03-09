@@ -184,4 +184,4 @@ class BigqueryDataProvider(DatabaseDataProvider):
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name()}"
+        return f"{self.openlineage_dataset_namespace}{self.openlineage_dataset_name}"
