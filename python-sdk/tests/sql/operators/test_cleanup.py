@@ -49,6 +49,7 @@ def test_is_dag_running():
     task_instances[0].state = State.RUNNING
     assert cleanup_op._is_dag_running(task_instances=task_instances)
 
+
 def test_is_task_failed():
     cleanup_op = CleanupOperator(task_id="cleanup")
 
@@ -60,6 +61,7 @@ def test_is_task_failed():
     assert not cleanup_op._is_task_failed(task_instances=task_instances)
     task_instances[0].state = State.FAILED
     assert cleanup_op._is_task_failed(task_instances=task_instances)
+
 
 @pytest.mark.parametrize("single_worker_mode", [True, False])
 @mock.patch("astro.sql.operators.cleanup.CleanupOperator._is_single_worker_mode")

@@ -131,8 +131,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         failed_tasks = [
             (ti.task_id, ti.state)
             for ti in task_instances
-            if ti.task_id != self.task_id
-            and ti.state == State.FAILED
+            if ti.task_id != self.task_id and ti.state == State.FAILED
         ]
         if failed_tasks:
             self.log.info(
@@ -142,7 +141,6 @@ class CleanupOperator(AstroSQLBaseOperator):
             return True
         else:
             return False
-
 
     def _is_dag_running(self, task_instances: list[TaskInstance]) -> bool:
         """
