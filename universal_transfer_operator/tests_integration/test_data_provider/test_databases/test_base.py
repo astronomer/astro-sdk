@@ -78,10 +78,7 @@ def test_read_write_methods_of_datasets(src_dataset_fixture, dst_dataset_fixture
     """
     src_dp, src_dataset = src_dataset_fixture
     dst_dp, dst_dataset = dst_dataset_fixture
-    print("src_dp", src_dp, " src_dataset: ", src_dataset)
-    print("dst_dp", dst_dp, " dst_dataset: ", dst_dataset)
     for source_data in src_dp.read():
-        print("source_data: ", source_data)
         dst_dp.write(source_data)
     output_df = export_to_dataframe(dst_dp)
     input_df = pd.read_csv(f"{str(CWD)}/../../data/sample.csv")
