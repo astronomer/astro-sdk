@@ -24,6 +24,7 @@ from universal_transfer_operator.constants import (
     Location,
     TransferMode,
 )
+from universal_transfer_operator.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.data_providers.filesystem import resolve_file_path_pattern
 from universal_transfer_operator.data_providers.filesystem.base import FileStream
@@ -529,13 +530,72 @@ class DatabaseDataProvider(DataProviders):
             if_exists=if_exists,
             normalize_config=normalize_config,
         )
-        self.load_file_to_table_using_pandas(
-            input_file=input_file,
-            output_table=output_table,
-            normalize_config=normalize_config,
-            if_exists="append",
-            chunk_size=chunk_size,
-        )
+        if self.transfer_mode == TransferMode.NATIVE and self.is_native_load_file_available(source_file=input_file, target_file=output_table):
+            self.load_file_to_table_natively_with_fallback(
+                    source_file=input_file,
+                    target_table=output_table,
+                    if_exists="append",
+                    normalize_config=normalize_config,
+                    native_support_kwargs=self.transfer_mapping,
+                    enable_native_fallback=False,
+                    chunk_size=chunk_size,
+                )
+        else: 
+            self.load_file_to_table_using_pandas(
+                input_file=input_file,
+                output_table=output_table,
+                normalize_config=normalize_config,
+                if_exists="append",
+                chunk_size=chunk_size,
+            )
+    
+    def load_file_to_table_natively_with_fallback(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        normalize_config: dict | None = None,
+        native_support_kwargs: dict | None = None,
+        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        **kwargs,
+    ):
+        """
+        Load content of a file in output_table.
+
+        :param source_file: File path and conn_id for object stores
+        :param target_table: Table to create
+        :param if_exists: Overwrite file if exists
+        :param chunk_size: Specify the number of records in each batch to be written at a time
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+        :param normalize_config: pandas json_normalize params config
+        """
+        try:
+            logging.info("Loading file(s) with Native Support...")
+            self.load_file_to_table_natively(
+                source_file=source_file,
+                target_table=target_table,
+                if_exists=if_exists,
+                native_support_kwargs=native_support_kwargs,
+                **kwargs,
+            )
+        except self.NATIVE_LOAD_EXCEPTIONS as load_exception:  # skipcq: PYL-W0703
+            logging.warning(
+                "Loading file(s) failed with Native Support.",
+                exc_info=True,
+            )
+            if enable_native_fallback:
+                logging.warning("Falling back to Pandas-based load...")
+                self.load_file_to_table_using_pandas(
+                    input_file=source_file,
+                    output_table=target_table,
+                    normalize_config=normalize_config,
+                    if_exists=if_exists,
+                    chunk_size=chunk_size,
+                )
+            else:
+                raise load_exception
 
     def load_file_to_table_using_pandas(
         self,
@@ -643,6 +703,18 @@ class DatabaseDataProvider(DataProviders):
             handler=lambda x: x.scalar(),  # skipcq: BAN-B608
         )
         return result
+
+    
+    def is_native_load_file_available(  # skipcq: PYL-R0201
+        self, source_file: File, target_table: Table  # skipcq: PYL-W0613
+    ) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        return False
 
     # ---------------------------------------------------------
     # Schema Management
