@@ -38,6 +38,7 @@ class S3DataProvider(BaseFilesystemProviders):
             Location.S3,
             Location.GS,
         }
+        self.location_type = Location.S3
 
     @cached_property
     def hook(self) -> S3Hook:

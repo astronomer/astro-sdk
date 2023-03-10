@@ -38,7 +38,7 @@ MSSQL_SCHEMA = conf.get(SECTION_KEY, "mssql_default_schema", fallback=SCHEMA)
 BIGQUERY_SCHEMA_LOCATION = conf.get(
     SECTION_KEY, "bigquery_dataset_location", fallback=DEFAULT_BIGQUERY_SCHEMA_LOCATION
 )
-
+LOAD_FILE_ENABLE_NATIVE_FALLBACK = conf.get(SECTION_KEY, "load_file_enable_native_fallback", fallback=False)
 LOAD_TABLE_AUTODETECT_ROWS_COUNT = conf.getint(
     section=SECTION_KEY, key="load_table_autodetect_rows_count", fallback=1000
 )

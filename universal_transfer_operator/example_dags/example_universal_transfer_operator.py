@@ -92,6 +92,34 @@ with DAG(
         ),
     )
 
+    transfer_native_gs_to_bigquery = UniversalTransferOperator(
+        task_id="transfer_native_gs_to_bigquery",
+        source_dataset=File(path="gs://uto-test/uto/homes_append.csv", conn_id="google_cloud_default"),
+        destination_dataset=Table(
+            name="uto_gs_to_bigquery_table_native", conn_id="google_cloud_default", metadata=Metadata(schema="rajath")
+        ),
+        transfer_mode=TransferMode.NATIVE,
+        transfer_params={
+            "ignore_unknown_values": True,
+            "allow_jagged_rows": True,
+            "skip_leading_rows": "1",
+        },
+    )
+
+    transfer_native_s3_to_bigquery = UniversalTransferOperator(
+        task_id="transfer_native_s3_to_bigquery",
+        source_dataset=File(
+            path="s3://astro-sdk-test/uto/sample.csv", conn_id="aws_default", filetype=FileType.CSV
+        ),
+        destination_dataset=Table(name="uto_s3_to_bigquery_table_native", conn_id="google_cloud_default",metadata=Metadata(schema="rajath")),
+        transfer_mode=TransferMode.NATIVE,
+        transfer_params={
+            "ignore_unknown_values": True,
+            "allow_jagged_rows": True,
+            "skip_leading_rows": "1",
+        },
+    )
+
     transfer_non_native_bigquery_to_sqlite = UniversalTransferOperator(
         task_id="transfer_non_native_bigquery_to_sqlite",
         source_dataset=Table(

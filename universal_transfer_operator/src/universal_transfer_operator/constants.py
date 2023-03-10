@@ -24,6 +24,7 @@ class Location(Enum):
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
     REDSHIFT = "redshift"
+    SFTP = "sftp"
 
     def __repr__(self):
         return f"{self}"

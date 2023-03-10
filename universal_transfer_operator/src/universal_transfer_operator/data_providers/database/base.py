@@ -3,6 +3,7 @@ from __future__ import annotations
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Callable
 
+import logging
 import pandas as pd
 import sqlalchemy
 
@@ -32,6 +33,7 @@ from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.dataframe.pandas import PandasDataframe
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
+from universal_transfer_operator.exceptions import DatabaseCustomError
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from universal_transfer_operator.universal_transfer_operator import TransferParameters
 from universal_transfer_operator.utils import get_dataset_connection_type
@@ -55,6 +57,7 @@ class DatabaseDataProvider(DataProviders):
     IGNORE_HANDLER_IN_RUN_RAW_SQL: bool = False
     NATIVE_PATHS: dict[Any, Any] = {}
     DEFAULT_SCHEMA = SCHEMA
+    NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
 
     def __init__(
         self,
@@ -205,6 +208,7 @@ class DatabaseDataProvider(DataProviders):
         Write the data from local reference location to the dataset.
         :param source_ref: Stream of data to be loaded into output table.
         """
+        print("hey i am in write")
         return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
 
     def load_data_from_source_natively(self, source_dataset: Table, destination_dataset: Dataset) -> None:
@@ -530,13 +534,14 @@ class DatabaseDataProvider(DataProviders):
             if_exists=if_exists,
             normalize_config=normalize_config,
         )
-        if self.transfer_mode == TransferMode.NATIVE and self.is_native_load_file_available(source_file=input_file, target_file=output_table):
+        print("i am here")
+        if self.transfer_mode == TransferMode.NATIVE and self.is_native_load_file_available(source_file=input_file, target_table=output_table):
             self.load_file_to_table_natively_with_fallback(
                     source_file=input_file,
                     target_table=output_table,
                     if_exists="append",
                     normalize_config=normalize_config,
-                    native_support_kwargs=self.transfer_mapping,
+                    native_support_kwargs=self.transfer_params,
                     enable_native_fallback=False,
                     chunk_size=chunk_size,
                 )
@@ -596,6 +601,25 @@ class DatabaseDataProvider(DataProviders):
                 )
             else:
                 raise load_exception
+
+    def load_file_to_table_natively(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: dict | None = None,
+        **kwargs,
+    ):
+        """
+        Checks if optimised path for transfer between File location to database exists
+        and if it does, it transfers it and returns true else false
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        :param if_exists: Overwrite file if exists. Default False
+        :param native_support_kwargs: kwargs to be used by native loading command
+        """
+        raise NotImplementedError
 
     def load_file_to_table_using_pandas(
         self,
