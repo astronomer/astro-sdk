@@ -17,5 +17,11 @@ local: ## Set up local dev env
 run-local-lineage-server: ## Run flask based local Lineage server
 	FLASK_APP=dev/local_flask_lineage_server.py flask run --host 0.0.0.0 --port 5050
 
+tilt-up: ## Set up local dev env with Tilt
+	tilt up
+
+tilt-down: ## Tear down local dev env with Tilt
+	tilt down
+
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'
