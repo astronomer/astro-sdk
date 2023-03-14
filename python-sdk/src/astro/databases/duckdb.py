@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import socket
 
+import sqlalchemy
 from duckdb_provider.hooks.duckdb_hook import DuckDBHook
 from sqlalchemy import MetaData as SqlaMetaData
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -31,6 +32,14 @@ class DuckdbDatabase(BaseDatabase):
     @property
     def sql_type(self) -> str:
         return "duckdb"
+
+    # We are caching this property to persist the DuckDB in-memory connection, to avoid
+    # the problem described in
+    # https://github.com/astronomer/astro-sdk/issues/1831
+    @cached_property
+    def connection(self) -> sqlalchemy.engine.base.Connection:  # skipcq PYL-W0236
+        """Return a Sqlalchemy connection object for the given database."""
+        return self.sqlalchemy_engine.connect()
 
     @cached_property
     def hook(self) -> DuckDBHook:

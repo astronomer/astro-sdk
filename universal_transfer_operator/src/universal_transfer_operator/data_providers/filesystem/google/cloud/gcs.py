@@ -59,9 +59,10 @@ class GCSDataProvider(BaseFilesystemProviders):
     def paths(self) -> list[str]:
         """Resolve GS file paths with prefix"""
         url = urlparse(self.dataset.path)
+        prefix = url.path[1:]
         prefixes = self.hook.list(
             bucket_name=self.bucket_name,  # type: ignore
-            prefix=self.prefix,
+            prefix=prefix,
             delimiter=self.delimiter,
         )
         paths = [urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes]
@@ -176,6 +177,14 @@ class GCSDataProvider(BaseFilesystemProviders):
     def openlineage_dataset_name(self) -> str:
         """
         Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError
+
+    @property
+    def openlineage_dataset_uri(self) -> str:
+        """
+        Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError

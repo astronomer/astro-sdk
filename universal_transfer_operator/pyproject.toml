@@ -61,7 +61,10 @@ google = [
 snowflake = [
     "apache-airflow-providers-snowflake",
     "snowflake-sqlalchemy>=1.2.0",
-    "snowflake-connector-python[pandas]",
+    "snowflake-connector-python[pandas]<3.0.0",
+    # pinning snowflake-connector-python[pandas]<3.0.0 due to a conflict in snowflake-connector-python/pyarrow/google
+    # packages and pandas-gbq/google packages which is forcing pandas-gbq of version 0.13.2 installed, which is not
+    # compatible with pandas 1.5.3
 ]
 
 amazon = [
@@ -79,7 +82,10 @@ all = [
     "apache-airflow-providers-google>=6.4.0",
     "apache-airflow-providers-snowflake",
     "smart-open[all]>=5.2.1",
-    "snowflake-connector-python[pandas]",
+    "snowflake-connector-python[pandas]<3.0.0",
+    # pinning snowflake-connector-python[pandas]<3.0.0 due to a conflict in snowflake-connector-python/pyarrow/google
+    # packages and pandas-gbq/google packages which is forcing pandas-gbq of version 0.13.2 installed, which is not
+    # compatible with pandas 1.5.3
     "snowflake-sqlalchemy>=1.2.0",
     "sqlalchemy-bigquery>=1.3.0",
     "s3fs",

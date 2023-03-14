@@ -97,3 +97,11 @@ class DataProviders(ABC):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
+
+    @property
+    def openlineage_dataset_uri(self) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError

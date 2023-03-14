@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse
+import random
+import string
+from typing import Any
 
 from attr import define, field, fields_dict
-from sqlalchemy import Column
+from sqlalchemy import Column, MetaData
 
 from universal_transfer_operator.datasets.base import Dataset
+
+MAX_TABLE_NAME_LENGTH = 62
+TEMP_PREFIX = "_tmp"
 
 
 @define
@@ -50,42 +55,125 @@ class Table(Dataset):
     uri: str = field(init=False)
     extra: dict = field(init=True, factory=dict)
 
-    @property
-    def sql_type(self):
-        raise NotImplementedError
-
     def exists(self):
         """Check if the table exists or not"""
         raise NotImplementedError
 
-    def __str__(self) -> str:
-        return self.path
-
-    def __hash__(self) -> int:
-        return hash((self.path, self.conn_id))
-
-    def dataset_scheme(self):
+    def _create_unique_table_name(self, prefix: str = "") -> str:
         """
-        Return the scheme based on path
+        If a table is instantiated without a name, create a unique table for it.
+        This new name should be compatible with all supported databases.
         """
-        parsed = urlparse(self.path)
-        return parsed.scheme
+        schema_length = len((self.metadata and self.metadata.schema) or "") + 1
+        prefix_length = len(prefix)
 
-    def dataset_namespace(self):
-        """
-        The namespace of a dataset can be combined to form a URI (scheme:[//authority]path)
+        unique_id = random.choice(string.ascii_lowercase) + "".join(
+            random.choice(string.ascii_lowercase + string.digits)
+            for _ in range(MAX_TABLE_NAME_LENGTH - schema_length - prefix_length)
+        )
+        if prefix:
+            unique_id = f"{prefix}{unique_id}"
 
-        Namespace = scheme:[//authority] (the dataset)
-        """
-        parsed = urlparse(self.path)
-        namespace = f"{self.dataset_scheme()}://{parsed.netloc}"
-        return namespace
+        return unique_id
 
-    def dataset_name(self):
+    def create_similar_table(self) -> Table:
         """
-        The name of a dataset can be combined to form a URI (scheme:[//authority]path)
+        Create a new table with a unique name but with the same metadata.
+        """
+        return Table(  # type: ignore
+            name=self._create_unique_table_name(),
+            conn_id=self.conn_id,
+            metadata=self.metadata,
+        )
 
-        Name = path (the datasets)
+    @property
+    def sqlalchemy_metadata(self) -> MetaData:
+        """Return the Sqlalchemy metadata for the given table."""
+        if self.metadata and self.metadata.schema:
+            alchemy_metadata = MetaData(schema=self.metadata.schema)
+        else:
+            alchemy_metadata = MetaData()
+        return alchemy_metadata
+
+    @property
+    def row_count(self) -> Any:
         """
-        parsed = urlparse(self.path)
-        return parsed.path if self.path else self.name
+        Return the row count of table.
+        """
+        from universal_transfer_operator.data_providers import create_dataprovider
+
+        database_provider = create_dataprovider(dataset=self)
+        return database_provider.row_count(self)
+
+    @property
+    def sql_type(self) -> Any:
+        from universal_transfer_operator.data_providers import create_dataprovider
+
+        if self.conn_id:
+            return create_dataprovider(dataset=self).sql_type
+
+    def to_json(self):
+        return {
+            "class": "Table",
+            "name": self.name,
+            "metadata": {
+                "schema": self.metadata.schema,
+                "database": self.metadata.database,
+            },
+            "temp": self.temp,
+            "conn_id": self.conn_id,
+        }
+
+    @classmethod
+    def from_json(cls, obj: dict):
+        return Table(
+            name=obj["name"],
+            metadata=Metadata(**obj["metadata"]),
+            temp=obj["temp"],
+            conn_id=obj["conn_id"],
+        )
+
+    def openlineage_dataset_name(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        from universal_transfer_operator.data_providers import create_dataprovider
+
+        database_provider = create_dataprovider(dataset=self)
+        return database_provider.openlineage_dataset_name(table=self)
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        from universal_transfer_operator.data_providers import create_dataprovider
+
+        database_provider = create_dataprovider(dataset=self)
+        return database_provider.openlineage_dataset_namespace()
+
+    def openlineage_dataset_uri(self) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        from universal_transfer_operator.data_providers import create_dataprovider
+
+        database_provider = create_dataprovider(dataset=self)
+        return f"{database_provider.openlineage_dataset_uri(table=self)}"
+
+    @uri.default
+    def _path_to_dataset_uri(self) -> str:
+        """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
+        from urllib.parse import urlencode, urlparse
+
+        path = f"astro://{self.conn_id}@"
+        db_extra = {"table": self.name}
+        if self.metadata.schema:
+            db_extra["schema"] = self.metadata.schema
+        if self.metadata.database:
+            db_extra["database"] = self.metadata.database
+        parsed_url = urlparse(url=path)
+        new_parsed_url = parsed_url._replace(query=urlencode(db_extra))
+        return new_parsed_url.geturl()

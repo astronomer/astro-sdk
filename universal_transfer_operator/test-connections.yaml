@@ -107,9 +107,9 @@ connections:
       project_id: "astronomer-dag-authoring"
   - conn_id: sftp_conn
     conn_type: sftp
-    host: $SFTP_HOSTNAME
-    login: $SFTP_USERNAME
-    password: $SFTP_PASSWORD
+    host: localhost
+    login: foo
+    password: pass
     port: 2222
   - conn_id: ftp_conn
     conn_type: ftp
@@ -132,12 +132,6 @@ connections:
     schema:
     login:
     password:
-  - conn_id: duckdb_memory
-    conn_type: duckdb
-    host:
-    schema:
-    login:
-    password:
   - conn_id: minio_conn
     conn_type: aws
     description: null
@@ -145,3 +139,4 @@ connections:
       aws_access_key_id: "ROOTNAME"
       aws_secret_access_key: "CHANGEME123"
       endpoint_url: "http://127.0.0.1:9000"
+      minio: True

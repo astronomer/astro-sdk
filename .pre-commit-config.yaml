@@ -71,14 +71,14 @@ repos:
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.249'
+    rev: 'v0.0.255'
     hooks:
       - id: ruff
         args:
         - --config=./ruff.toml
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.2
+    rev: v2.2.4
     hooks:
       - id: codespell
         name: Run codespell to check for common misspellings in files
@@ -86,7 +86,7 @@ repos:
         types: [text]
         exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/modified_constraint_file.txt$|^python-sdk/tests/benchmark/Makefile$|^sql-cli/poetry.lock$|^universal_transfer_operator/tests/modified_constraint_file.txt$
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v1.0.1'
+      rev: 'v1.1.1'
       hooks:
       - id: mypy
         name: mypy-python-sdk
