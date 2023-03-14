@@ -53,7 +53,7 @@ class BigqueryDataProvider(DatabaseDataProvider):
 
     @property
     def hook(self) -> BigQueryHook:
-        """Retrieve Airflow hook to interface with the Snowflake database."""
+        """Retrieve Airflow hook to interface with Bigquery."""
         return BigQueryHook(
             gcp_conn_id=self.dataset.conn_id, use_legacy_sql=False, location=BIGQUERY_SCHEMA_LOCATION
         )
