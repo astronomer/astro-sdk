@@ -35,7 +35,7 @@ branch from main (please use `git cherry-pick -x <commit id>` to retain
 git commit hashes and messages). Depending on the fix there might be some git conflicts to resolve. If you run into conflicts, please
 resolve said conflicts, run `git add .`, and then `git cherry-pick --continue` to continue the merge.
 
-After cherry-picking all needed fixes, follow the instructions to [create a release from the release branch](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/docs/development/RELEASE.md#Creating a release from the release branch)
+After cherry-picking all needed fixes, follow the instructions to [create a release from the release branch](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/docs/development/RELEASE.md#creating-a-release-from-the-release-branch).
 
 ## Handling minor releases
 ### When should I create a minor release?
