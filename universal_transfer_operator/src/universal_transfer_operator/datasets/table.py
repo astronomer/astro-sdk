@@ -79,9 +79,6 @@ class Table(Dataset):
     def __attrs_post_init__(self) -> None:
         if not self.name:
             self.name = self._create_unique_table_name(TEMP_PREFIX + "_")
-            self.temp = True
-        if self.name.startswith(TEMP_PREFIX):
-            self.temp = True
 
     def create_similar_table(self) -> Table:
         """
