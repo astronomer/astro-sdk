@@ -205,6 +205,7 @@ def load_data_in_datasets(
 def delete_dataset(dataset_object: [File, Table], dp: DataProviders, dp_name: str, local_file_path: str):
     """
     Delete dataset
+    
     :param dataset_object: user passed Dataset object
     :param dp: DataProviders object created using dataset_object
     :param dp_name: name of data_provider class
