@@ -37,7 +37,6 @@ def convert_dataframe_to_file(df: pd.DataFrame) -> File:
         path=settings.DATAFRAME_STORAGE_URL + "/" + unique_id + ".parquet",
         conn_id=settings.DATAFRAME_STORAGE_CONN_ID,
         filetype=FileType.PARQUET,
-        is_dataframe=True,
     )
     file.create_from_dataframe(df)
     return file

@@ -7,6 +7,7 @@ from typing import Any
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 from universal_transfer_operator.datasets.base import Dataset
 
 MAX_TABLE_NAME_LENGTH = 62
@@ -103,14 +104,15 @@ class Table(Dataset):
         from universal_transfer_operator.data_providers import create_dataprovider
 
         database_provider = create_dataprovider(dataset=self)
-        return database_provider.row_count(self)
+        return database_provider.dataset.row_count(self)
 
     @property
     def sql_type(self) -> Any:
         from universal_transfer_operator.data_providers import create_dataprovider
 
         if self.conn_id:
-            return create_dataprovider(dataset=self).sql_type
+            provider: DatabaseDataProvider = create_dataprovider(dataset=self)
+            return provider.sql_type
 
     def to_json(self):
         return {

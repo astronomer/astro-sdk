@@ -2,6 +2,7 @@ from typing import Any
 
 import attr
 from airflow.hooks.base import BaseHook
+from airflow.models.connection import Connection
 
 from universal_transfer_operator.datasets.base import Dataset
 
@@ -30,7 +31,9 @@ def get_dataset_connection_type(dataset: Dataset) -> str:
     """
     Given dataset fetch the connection type based on airflow connection
     """
-    return BaseHook.get_connection(dataset.conn_id).conn_type
+    conn: Connection = BaseHook.get_connection(dataset.conn_id)
+    conn_type: str = conn.conn_type
+    return conn_type
 
 
 def get_class_name(module_ref: Any, suffix: str = "Location") -> str:

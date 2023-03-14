@@ -22,6 +22,12 @@ class Group:
     name: str
     group_id: str | None = None
 
+    def to_dict(self) -> dict:
+        """
+        Convert options class to dict
+        """
+        return attr.asdict(self)
+
 
 @attr.define
 class Destination:
@@ -42,6 +48,12 @@ class Destination:
     time_zone_offset: str | None = "-5"
     region: str | None = "GCP_US_EAST4"
     run_setup_tests: bool | None = True
+
+    def to_dict(self) -> dict:
+        """
+        Convert options class to dict
+        """
+        return attr.asdict(self)
 
 
 @attr.define
@@ -81,10 +93,16 @@ class Connector:
     trust_fingerprints: bool = False
     run_setup_tests: bool = True
 
+    def to_dict(self) -> dict:
+        """
+        Convert options class to dict
+        """
+        return attr.asdict(self)
+
 
 @attr.define
 class FiveTranOptions(TransferIntegrationOptions):
-    conn_id: str | None = field(default="fivetran_default")
+    conn_id: str | None = field(default="fivetran_default")  # type: ignore
     connector_id: str | None = field(default="")
     retry_limit: int = 3
     retry_delay: int = 1
@@ -93,6 +111,12 @@ class FiveTranOptions(TransferIntegrationOptions):
     connector: Connector | None = attr.field(default=None)
     group: Group | None = attr.field(default=None)
     destination: Destination | None = attr.field(default=None)
+
+    def to_dict(self) -> dict:
+        """
+        Convert options class to dict
+        """
+        return attr.asdict(self)
 
 
 class FivetranIntegration(TransferIntegration):
@@ -127,7 +151,7 @@ class FivetranIntegration(TransferIntegration):
             retry_delay=self.transfer_params.retry_delay,
         )
 
-    def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
+    def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> str:
         """
         Loads data from source dataset to the destination using ingestion config
         """
@@ -140,14 +164,22 @@ class FivetranIntegration(TransferIntegration):
                 connector_id=connector_id, schedule_type=self.transfer_params.schedule_type
             )
             # TODO: wait until the job is done
-            return fivetran_hook.start_fivetran_sync(connector_id=connector_id)
+            return str(fivetran_hook.start_fivetran_sync(connector_id=connector_id))
 
-        group_id = self.transfer_params.group.group_id
+        group_id = (
+            self.transfer_params.group.group_id
+            if self.transfer_params.group and self.transfer_params.group.group_id
+            else ""
+        )
         if not self.check_group_details(fivetran_hook=fivetran_hook, group_id=group_id):
             # create group if not group_id is not passed.
             group_id = self.create_group(fivetran_hook=fivetran_hook)
 
-        destination_id = self.transfer_params.destination.destination_id
+        destination_id = (
+            self.transfer_params.destination.destination_id
+            if self.transfer_params.destination and self.transfer_params.destination.destination_id
+            else ""
+        )
         if not self.check_destination_details(fivetran_hook=fivetran_hook, destination_id=destination_id):
             # Check for destination based on destination_id else create destination
             self.create_destination(fivetran_hook=fivetran_hook, group_id=group_id)
@@ -160,7 +192,7 @@ class FivetranIntegration(TransferIntegration):
 
         # Sync connector data
         fivetran_hook.prep_connector(connector_id=connector_id, schedule_type=self.schedule_type)
-        return fivetran_hook.start_fivetran_sync(connector_id=connector_id)
+        return str(fivetran_hook.start_fivetran_sync(connector_id=connector_id))
 
     def check_for_connector_id(self, fivetran_hook: FivetranHook) -> bool:
         """
@@ -171,7 +203,7 @@ class FivetranIntegration(TransferIntegration):
             logging.warning("No value specified for connector_id")
             return False
 
-        return fivetran_hook.check_connector(connector_id=connector_id)
+        return bool(fivetran_hook.check_connector(connector_id=connector_id))
 
     def check_group_details(self, fivetran_hook: FivetranHook, group_id: str | None) -> bool:
         """
@@ -197,17 +229,17 @@ class FivetranIntegration(TransferIntegration):
         Creates the group based on group name passed
         """
         endpoint = self.api_path_groups
-        group_dict = self.transfer_params.group
-        if group_dict is None:
+        group_object = self.transfer_params.group
+        if group_object is None:
             raise ValueError("Group is none. Pass a valid group")
-        group = Group(**group_dict)
+        group = Group(**group_object.to_dict())
         payload = {"name": group.name}
         api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)  # skipcq: PYL-W0212
         if api_response["code"] == "Success":
             logging.info(api_response)
         else:
             raise ValueError(api_response)
-        return api_response["data"]["id"]
+        return str(api_response["data"]["id"])
 
     def check_destination_details(self, fivetran_hook: FivetranHook, destination_id: str | None) -> bool:
         """
@@ -235,7 +267,7 @@ class FivetranIntegration(TransferIntegration):
         destination_dict = self.transfer_params.destination
         if destination_dict is None:
             raise ValueError("destination is none. Pass a valid destination")
-        destination = Destination(**destination_dict)
+        destination = Destination(**destination_dict.to_dict())
         payload = {
             "group_id": group_id,
             "service": destination.service,
@@ -244,7 +276,7 @@ class FivetranIntegration(TransferIntegration):
             "config": destination.config,
             "run_setup_tests": destination.run_setup_tests,
         }
-        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)  # skipcq: PYL-W0212
+        api_response: dict = fivetran_hook._do_api_call(("POST", endpoint), json=payload)  # skipcq: PYL-W0212
         if api_response["code"] == "Success":
             logging.info(api_response)
             # TODO: parse all setup tests status for passed status
@@ -261,7 +293,7 @@ class FivetranIntegration(TransferIntegration):
         if connector_dict is None:
             raise ValueError("connector is none. Pass a valid connector")
 
-        connector = Connector(**connector_dict)
+        connector = Connector(**connector_dict.to_dict())
         payload = {
             "group_id": group_id,
             "service": connector.service,
@@ -282,7 +314,7 @@ class FivetranIntegration(TransferIntegration):
             # TODO: parse all setup tests status for passed status
         else:
             raise ValueError(api_response)
-        return api_response["data"]["id"]
+        return str(api_response["data"]["id"])
 
     def run_connector_setup_tests(self, fivetran_hook: FivetranHook, connector_id: str):
         """
@@ -293,7 +325,7 @@ class FivetranIntegration(TransferIntegration):
         if connector_dict is None:
             raise ValueError("connector is none. Pass a valid connector")
 
-        connector = Connector(**connector_dict)
+        connector = Connector(**connector_dict.to_dict())
         payload = {
             "trust_certificates": connector.trust_certificates,
             "trust_fingerprints": connector.trust_fingerprints,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from typing import Any
 
 import attr
 from airflow.hooks.base import BaseHook
@@ -61,7 +62,7 @@ class DataProviders(ABC):
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
 
-    def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
+    def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> Any:
         """
         Loads data from source dataset to the destination using data provider
         """
@@ -70,7 +71,7 @@ class DataProviders(ABC):
 
         source_connection_type = get_dataset_connection_type(source_dataset)
         destination_connection_type = get_dataset_connection_type(destination_dataset)
-        method_name = self.LOAD_DATA_FROM_SOURCE.get(source_connection_type)
+        method_name = self.LOAD_DATA_NATIVELY_FROM_SOURCE.get(source_connection_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
             return transfer_method(
