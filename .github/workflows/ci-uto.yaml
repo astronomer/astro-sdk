@@ -236,7 +236,7 @@ jobs:
           nox --version
 
       - name: Run tests
-        run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- tests_integration/ --cov=src --cov-report=xml --cov-branch
+        run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')" -- tests_integration/ -k "not test_example_dags.py" --cov=src --cov-report=xml --cov-branch
 
       - name: Upload coverage
         uses: actions/upload-artifact@v2

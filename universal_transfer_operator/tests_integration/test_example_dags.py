@@ -14,9 +14,10 @@ from utils.test_dag_runner import run_dag
 RETRY_ON_EXCEPTIONS = []
 try:
     from google.api_core.exceptions import Forbidden, TooManyRequests
+    from google.resumable_media.common import InvalidResponse
     from pandas_gbq.exceptions import GenericGBQException
 
-    RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException])
+    RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException, InvalidResponse])
 except ModuleNotFoundError:
     pass
 
