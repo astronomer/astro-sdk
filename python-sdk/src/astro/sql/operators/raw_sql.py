@@ -197,10 +197,10 @@ def run_raw_sql(
         passed into the python_callable function. (required if there are no table arguments)
     :param parameters: parameters to pass into the SQL query
     :param database: Database within the SQL instance you want to access. If left blank we will default to the
-        table.metatadata.database in the first Table passed to the function
+        table.metadata.database in the first Table passed to the function
         (required if there are no table arguments)
     :param schema: Schema within the SQL instance you want to access. If left blank we will default to the
-        table.metatadata.schema in the first Table passed to the function
+        table.metadata.schema in the first Table passed to the function
         (required if there are no table arguments)
     :param handler: Handler function to process the result of the SQL query. For more information please consult
         https://docs.sqlalchemy.org/en/14/core/connections.html#sqlalchemy.engine.Result
