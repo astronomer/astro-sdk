@@ -5,6 +5,7 @@ on:
     paths:
       - 'python-sdk/**'
       - 'sql-cli/**'
+      - '.github/workflows/ci-sql-cli.yaml'
 
   pull_request:
     branches: [ 'main', 'release-**' ]
@@ -198,4 +199,5 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: SQL-CLI
           files: ./sql-cli/coverage.xml

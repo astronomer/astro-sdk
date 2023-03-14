@@ -4,6 +4,7 @@ on:
     branches: [ 'main', 'release-**' ]
     paths:
       - 'universal_transfer_operator/**'
+      - '.github/workflows/ci-uto.yaml'
 
   pull_request:
     branches: [ 'main', 'release-**' ]
@@ -373,4 +374,5 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: UTO
           files: ./universal_transfer_operator/coverage.xml
