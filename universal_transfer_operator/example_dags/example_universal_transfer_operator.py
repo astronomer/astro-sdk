@@ -35,7 +35,7 @@ with DAG(
     transfer_non_native_s3_to_sqlite = UniversalTransferOperator(
         task_id="transfer_non_native_s3_to_sqlite",
         source_dataset=File(path=f"{s3_bucket}/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV),
-        destination_dataset=Table(name="uto_s3_table", conn_id="sqlite_default"),
+        destination_dataset=Table(name="uto_s3_table_1", conn_id="sqlite_default"),
     )
 
     transfer_non_native_gs_to_sqlite = UniversalTransferOperator(
@@ -43,7 +43,7 @@ with DAG(
         source_dataset=File(
             path=f"{gcs_bucket}/uto/csv_files/", conn_id="google_cloud_default", filetype=FileType.CSV
         ),
-        destination_dataset=Table(name="uto_gs_table", conn_id="sqlite_default"),
+        destination_dataset=Table(name="uto_gs_table_1", conn_id="sqlite_default"),
     )
 
     transfer_non_native_s3_to_snowflake = UniversalTransferOperator(
@@ -51,7 +51,7 @@ with DAG(
         source_dataset=File(
             path="s3://astro-sdk-test/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV
         ),
-        destination_dataset=Table(name="uto_s3_table", conn_id="snowflake_conn"),
+        destination_dataset=Table(name="uto_s3_table_2", conn_id="snowflake_conn"),
     )
 
     transfer_non_native_gs_to_snowflake = UniversalTransferOperator(
@@ -59,14 +59,16 @@ with DAG(
         source_dataset=File(
             path="gs://uto-test/uto/csv_files/", conn_id="google_cloud_default", filetype=FileType.CSV
         ),
-        destination_dataset=Table(name="uto_gs_table", conn_id="snowflake_conn"),
+        destination_dataset=Table(name="uto_gs_table_2", conn_id="snowflake_conn"),
     )
 
     transfer_non_native_gs_to_bigquery = UniversalTransferOperator(
         task_id="transfer_non_native_gs_to_bigquery",
         source_dataset=File(path="gs://uto-test/uto/homes_main.csv", conn_id="google_cloud_default"),
         destination_dataset=Table(
-            name="uto_gs_to_bigquery_table", conn_id="google_cloud_default", metadata=Metadata(schema="astro")
+            name="uto_gs_to_bigquery_table_1",
+            conn_id="google_cloud_default",
+            metadata=Metadata(schema="astro"),
         ),
     )
 
@@ -76,17 +78,21 @@ with DAG(
             path="s3://astro-sdk-test/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV
         ),
         destination_dataset=Table(
-            name="uto_s3_to_bigquery_table", conn_id="google_cloud_default", metadata=Metadata(schema="astro")
+            name="uto_s3_to_bigquery_table_1",
+            conn_id="google_cloud_default",
+            metadata=Metadata(schema="astro"),
         ),
     )
 
     transfer_non_native_bigquery_to_snowflake = UniversalTransferOperator(
         task_id="transfer_non_native_bigquery_to_snowflake",
         source_dataset=Table(
-            name="uto_s3_to_bigquery_table", conn_id="google_cloud_default", metadata=Metadata(schema="astro")
+            name="uto_s3_to_bigquery_table_2",
+            conn_id="google_cloud_default",
+            metadata=Metadata(schema="astro"),
         ),
         destination_dataset=Table(
-            name="uto_bigquery_to_snowflake_table",
+            name="uto_bigquery_to_snowflake_table_1",
             conn_id="snowflake_conn",
         ),
     )
@@ -96,5 +102,5 @@ with DAG(
         source_dataset=Table(
             name="uto_s3_to_bigquery_table", conn_id="google_cloud_default", metadata=Metadata(schema="astro")
         ),
-        destination_dataset=Table(name="uto_bigquery_to_sqlite_table", conn_id="sqlite_default"),
+        destination_dataset=Table(name="uto_bigquery_to_sqlite_table_1", conn_id="sqlite_default"),
     )
