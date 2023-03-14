@@ -51,7 +51,7 @@ with DAG(
         source_dataset=File(
             path="s3://astro-sdk-test/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV
         ),
-        destination_dataset=Table(name="uto_s3_table", conn_id="snowflake_default"),
+        destination_dataset=Table(name="uto_s3_table", conn_id="snowflake_conn"),
     )
 
     transfer_non_native_gs_to_snowflake = UniversalTransferOperator(
@@ -59,7 +59,7 @@ with DAG(
         source_dataset=File(
             path="gs://uto-test/uto/csv_files/", conn_id="google_cloud_default", filetype=FileType.CSV
         ),
-        destination_dataset=Table(name="uto_gs_table", conn_id="snowflake_default"),
+        destination_dataset=Table(name="uto_gs_table", conn_id="snowflake_conn"),
     )
 
     transfer_non_native_gs_to_bigquery = UniversalTransferOperator(
@@ -87,7 +87,7 @@ with DAG(
         ),
         destination_dataset=Table(
             name="uto_bigquery_to_snowflake_table",
-            conn_id="snowflake_default",
+            conn_id="snowflake_conn",
         ),
     )
 
