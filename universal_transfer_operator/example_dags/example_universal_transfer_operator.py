@@ -5,7 +5,7 @@ from airflow import DAG
 
 from universal_transfer_operator.constants import FileType
 from universal_transfer_operator.datasets.file.base import File
-from universal_transfer_operator.datasets.table import Metadata, Table
+from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.universal_transfer_operator import UniversalTransferOperator
 
 s3_bucket = os.getenv("S3_BUCKET", "s3://astro-sdk-test")
@@ -60,47 +60,4 @@ with DAG(
             path="gs://uto-test/uto/csv_files/", conn_id="google_cloud_default", filetype=FileType.CSV
         ),
         destination_dataset=Table(name="uto_gs_table_2", conn_id="snowflake_conn"),
-    )
-
-    transfer_non_native_gs_to_bigquery = UniversalTransferOperator(
-        task_id="transfer_non_native_gs_to_bigquery",
-        source_dataset=File(path="gs://uto-test/uto/homes_main.csv", conn_id="google_cloud_default"),
-        destination_dataset=Table(
-            name="uto_gs_to_bigquery_table_1",
-            conn_id="google_cloud_default",
-            metadata=Metadata(schema="astro"),
-        ),
-    )
-
-    transfer_non_native_s3_to_bigquery = UniversalTransferOperator(
-        task_id="transfer_non_native_s3_to_bigquery",
-        source_dataset=File(
-            path="s3://astro-sdk-test/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV
-        ),
-        destination_dataset=Table(
-            name="uto_s3_to_bigquery_table_1",
-            conn_id="google_cloud_default",
-            metadata=Metadata(schema="astro"),
-        ),
-    )
-
-    transfer_non_native_bigquery_to_snowflake = UniversalTransferOperator(
-        task_id="transfer_non_native_bigquery_to_snowflake",
-        source_dataset=Table(
-            name="uto_s3_to_bigquery_table",
-            conn_id="google_cloud_default",
-            metadata=Metadata(schema="astro"),
-        ),
-        destination_dataset=Table(
-            name="uto_bigquery_to_snowflake_table_1",
-            conn_id="snowflake_conn",
-        ),
-    )
-
-    transfer_non_native_bigquery_to_sqlite = UniversalTransferOperator(
-        task_id="transfer_non_native_bigquery_to_sqlite",
-        source_dataset=Table(
-            name="uto_s3_to_bigquery_table", conn_id="google_cloud_default", metadata=Metadata(schema="astro")
-        ),
-        destination_dataset=Table(name="uto_bigquery_to_sqlite_table_1", conn_id="sqlite_default"),
     )
