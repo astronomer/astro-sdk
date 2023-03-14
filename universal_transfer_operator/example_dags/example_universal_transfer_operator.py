@@ -87,7 +87,7 @@ with DAG(
     transfer_non_native_bigquery_to_snowflake = UniversalTransferOperator(
         task_id="transfer_non_native_bigquery_to_snowflake",
         source_dataset=Table(
-            name="uto_s3_to_bigquery_table_2",
+            name="uto_s3_to_bigquery_table",
             conn_id="google_cloud_default",
             metadata=Metadata(schema="astro"),
         ),
