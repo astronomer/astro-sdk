@@ -12,7 +12,7 @@ from universal_transfer_operator.data_providers.database.base import DatabaseDat
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
-from universal_transfer_operator.universal_transfer_operator import TransferParameters
+from universal_transfer_operator.utils import TransferParameters
 
 
 class SnowflakeDataProvider(DatabaseDataProvider):

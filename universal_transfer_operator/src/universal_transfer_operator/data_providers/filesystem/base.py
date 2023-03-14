@@ -15,8 +15,7 @@ from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.file.types import create_file_type
-from universal_transfer_operator.universal_transfer_operator import TransferParameters
-from universal_transfer_operator.utils import get_dataset_connection_type
+from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
 
 @attr.define

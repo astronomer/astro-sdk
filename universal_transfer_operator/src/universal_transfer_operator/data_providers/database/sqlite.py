@@ -10,7 +10,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider, FileStream
 from universal_transfer_operator.datasets.table import Metadata, Table
-from universal_transfer_operator.universal_transfer_operator import TransferParameters
+from universal_transfer_operator.utils import TransferParameters
 
 
 class SqliteDataProvider(DatabaseDataProvider):
