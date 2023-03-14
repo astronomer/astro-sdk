@@ -107,9 +107,9 @@ def transform(
         (required if there are no table arguments)
     :param parameters: parameters to pass into the SQL query
     :param database: Database within the SQL instance you want to access. If left blank we will default to the
-        table.metatadata.database in the first Table passed to the function (required if there are no table arguments)
+        table.metadata.database in the first Table passed to the function (required if there are no table arguments)
     :param schema: Schema within the SQL instance you want to access. If left blank we will default to the
-        table.metatadata.schema in the first Table passed to the function (required if there are no table arguments)
+        table.metadata.schema in the first Table passed to the function (required if there are no table arguments)
     :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
     :return: Transform functions return a ``Table`` object that can be passed to future tasks.
         This table will be either an auto-generated temporary table,
@@ -152,9 +152,9 @@ def transform_file(
         (required if there are no table arguments)
     :param parameters: parameters to pass into the SQL query
     :param database: Database within the SQL instance you want to access. If left blank we will default to the
-        table.metatadata.database in the first Table passed to the function (required if there are no table arguments)
+        table.metadata.database in the first Table passed to the function (required if there are no table arguments)
     :param schema: Schema within the SQL instance you want to access. If left blank we will default to the
-        table.metatadata.schema in the first Table passed to the function (required if there are no table arguments)
+        table.metadata.schema in the first Table passed to the function (required if there are no table arguments)
     :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
     :return: Transform functions return a ``Table`` object that can be passed to future tasks.
         This table will be either an auto-generated temporary table,
