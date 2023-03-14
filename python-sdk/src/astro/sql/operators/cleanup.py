@@ -106,7 +106,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             self.tables_to_cleanup = self.get_all_task_outputs(context=context)
         if self.skip_on_failure:
             task_instances = context["dag_run"].get_task_instances()
-            if self._is_task_failed(task_instances=task_instances):
+            if self._has_task_failed(task_instances=task_instances):
                 return None
         temp_tables = filter_for_temp_tables(self.tables_to_cleanup)
         self.log.info(
@@ -121,7 +121,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         self.log.info("Dropping table %s", table.name)
         db.drop_table(table)
 
-    def _is_task_failed(self, task_instances: list[TaskInstance]) -> bool:
+    def _has_task_failed(self, task_instances: list[TaskInstance]) -> bool:
         """
         Given a list of task instances, return True if at least one task has failed.
 

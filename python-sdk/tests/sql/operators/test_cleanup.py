@@ -50,7 +50,7 @@ def test_is_dag_running():
     assert cleanup_op._is_dag_running(task_instances=task_instances)
 
 
-def test_is_task_failed():
+def test_has_task_failed():
     cleanup_op = CleanupOperator(task_id="cleanup")
 
     task_instances = []
@@ -58,9 +58,9 @@ def test_is_task_failed():
         op = BashOperator(task_id=f"foo_task_{i}", bash_command="")
         ti = TaskInstance(task=op, state=State.SUCCESS)
         task_instances.append(ti)
-    assert not cleanup_op._is_task_failed(task_instances=task_instances)
+    assert not cleanup_op._has_task_failed(task_instances=task_instances)
     task_instances[0].state = State.FAILED
-    assert cleanup_op._is_task_failed(task_instances=task_instances)
+    assert cleanup_op._has_task_failed(task_instances=task_instances)
 
 
 @pytest.mark.parametrize("single_worker_mode", [True, False])
