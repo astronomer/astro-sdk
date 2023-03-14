@@ -138,7 +138,7 @@ class FivetranIntegration(TransferIntegration):
             converter=lambda val: FiveTranOptions(**val) if isinstance(val, dict) else val,
         ),
     ):
-        self.transfer_params = transfer_params
+        self.transfer_params: FiveTranOptions = transfer_params
         self.transfer_mapping = None
         super().__init__(transfer_params=self.transfer_params)
 
@@ -151,7 +151,7 @@ class FivetranIntegration(TransferIntegration):
             retry_delay=self.transfer_params.retry_delay,
         )
 
-    def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> str:
+    def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> str | None:
         """
         Loads data from source dataset to the destination using ingestion config
         """
@@ -191,7 +191,9 @@ class FivetranIntegration(TransferIntegration):
         self.run_connector_setup_tests(fivetran_hook=fivetran_hook, connector_id=connector_id)
 
         # Sync connector data
-        fivetran_hook.prep_connector(connector_id=connector_id, schedule_type=self.schedule_type)
+        fivetran_hook.prep_connector(
+            connector_id=connector_id, schedule_type=self.transfer_params.schedule_type
+        )
         return str(fivetran_hook.start_fivetran_sync(connector_id=connector_id))
 
     def check_for_connector_id(self, fivetran_hook: FivetranHook) -> bool:

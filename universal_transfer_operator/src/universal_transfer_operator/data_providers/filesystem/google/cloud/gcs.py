@@ -4,7 +4,7 @@ import logging
 from contextlib import contextmanager
 from functools import cached_property
 from tempfile import NamedTemporaryFile
-from typing import Sequence
+from typing import Iterator, Sequence, cast
 from urllib.parse import urlparse, urlunparse
 
 import attr
@@ -70,10 +70,10 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
-        return self.hook.exists(bucket_name=self.bucket_name, object_name=self.blob_name)
+        return cast(bool, self.hook.exists(bucket_name=self.bucket_name, object_name=self.blob_name))
 
     @contextmanager
-    def read_using_hook(self) -> list[TempFile]:
+    def read_using_hook(self) -> Iterator[list[TempFile]]:
         """Read the file from dataset and write to local file location"""
         if not self.check_if_exists():
             raise ValueError(f"{self.dataset.path} doesn't exits")
@@ -119,7 +119,7 @@ class GCSDataProvider(BaseFilesystemProviders):
         self.hook.upload(
             bucket_name=self.bucket_name,
             object_name=dest_gcs_object,
-            filename=file.tmp_file.as_posix(),
+            filename=file.tmp_file.as_posix() if file.tmp_file else None,
             gzip=self.gzip,
         )
         return dest_gcs_object
@@ -137,33 +137,40 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     @property
     def delegate_to(self) -> str | None:
-        return self.dataset.extra.get("delegate_to", None)
+        delegate_to: str | None = self.dataset.extra.get("delegate_to", None)
+        return delegate_to
 
     @property
     def google_impersonation_chain(self) -> str | Sequence[str] | None:
-        return self.dataset.extra.get("google_impersonation_chain", None)
+        google_impersonation_chain: str | Sequence[str] | None = self.dataset.extra.get(
+            "google_impersonation_chain", None
+        )
+        return google_impersonation_chain
 
     @property
     def delimiter(self) -> str | None:
-        return self.dataset.extra.get("delimiter", None)
+        delimiter: str | None = self.dataset.extra.get("delimiter", None)
+        return delimiter
 
     @property
     def bucket_name(self) -> str:
         bucket_name, _ = _parse_gcs_url(gsurl=self.dataset.path)
-        return bucket_name
+        return str(bucket_name)
 
     @property
     def prefix(self) -> str | None:
-        return self.dataset.extra.get("prefix", None)
+        prefix: str | None = self.dataset.extra.get("prefix", None)
+        return prefix
 
     @property
     def gzip(self) -> bool | None:
-        return self.dataset.extra.get("gzip", False)
+        gzip: bool | None = self.dataset.extra.get("gzip", False)
+        return gzip
 
     @property
     def blob_name(self) -> str:
         _, blob = _parse_gcs_url(gsurl=self.dataset.path)
-        return blob
+        return str(blob)
 
     @property
     def openlineage_dataset_namespace(self) -> str:

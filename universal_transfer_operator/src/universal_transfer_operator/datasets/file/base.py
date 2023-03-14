@@ -7,9 +7,10 @@ import pandas as pd
 import smart_open
 from attr import define, field
 
-from universal_transfer_operator.constants import FileType
+from universal_transfer_operator.constants import FileType as FileTypeConstant
 from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.types import create_file_type
+from universal_transfer_operator.datasets.file.types.base import FileType
 
 
 @define
@@ -26,7 +27,7 @@ class File(Dataset):
 
     path: str = field(default="")
     conn_id: str = field(default="")
-    filetype: FileType | None = None
+    filetype: FileTypeConstant | None = None
     normalize_config: dict | None = None
     is_bytes: bool = False
     uri: str = field(init=False)
@@ -62,7 +63,7 @@ class File(Dataset):
 
         :return: True or False
         """
-        read_as_non_binary = {FileType.CSV, FileType.JSON, FileType.NDJSON}
+        read_as_non_binary = {FileTypeConstant.CSV, FileTypeConstant.JSON, FileTypeConstant.NDJSON}
         if self.type in read_as_non_binary:
             return False
         return True
@@ -127,7 +128,7 @@ class File(Dataset):
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented
-        return self.location == other.location and self.type == other.type
+        return bool(self.location == other.location and self.type == other.type)
 
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id, self.filetype))

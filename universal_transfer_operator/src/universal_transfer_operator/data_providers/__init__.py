@@ -1,4 +1,5 @@
 import importlib
+from typing import Optional
 
 from airflow.hooks.base import BaseHook
 
@@ -24,7 +25,7 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
 
 def create_dataprovider(
     dataset: Dataset,
-    transfer_params: TransferParameters = None,
+    transfer_params: Optional[TransferParameters] = None,
     transfer_mode: TransferMode = TransferMode.NONNATIVE,
 ) -> DataProviders:
     conn_type = None

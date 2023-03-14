@@ -38,7 +38,7 @@ class TransferIntegration(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
+    def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> str | None:
         """
         Loads data from source dataset to the destination using ingestion config
         """

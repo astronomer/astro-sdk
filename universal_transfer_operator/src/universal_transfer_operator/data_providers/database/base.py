@@ -65,7 +65,7 @@ class DatabaseDataProvider(DataProviders):
         self.dataset = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
-        self.transfer_mapping = {}
+        self.transfer_mapping = set()
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
         super().__init__(
             dataset=self.dataset, transfer_mode=self.transfer_mode, transfer_params=self.transfer_params
@@ -197,7 +197,7 @@ class DatabaseDataProvider(DataProviders):
         """
         return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
 
-    def load_data_from_source_natively(self, source_dataset: Table, destination_dataset: Dataset) -> None:
+    def load_data_from_source_natively(self, source_dataset: Table, destination_dataset: Dataset) -> Any:
         """
         Loads data from source dataset to the destination using data provider
         """

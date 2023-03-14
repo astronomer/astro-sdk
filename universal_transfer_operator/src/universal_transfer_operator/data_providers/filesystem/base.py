@@ -4,6 +4,7 @@ import io
 import os
 from abc import abstractmethod
 from pathlib import Path
+from typing import Any
 
 import attr
 import smart_open
@@ -46,7 +47,7 @@ class BaseFilesystemProviders(DataProviders):
         self.dataset = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
-        self.transfer_mapping = {}
+        self.transfer_mapping = set()
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
         super().__init__(
             dataset=self.dataset, transfer_mode=self.transfer_mode, transfer_params=self.transfer_params
@@ -119,7 +120,7 @@ class BaseFilesystemProviders(DataProviders):
 
     def write_using_smart_open(self, source_ref: FileStream):
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
-        mode = "wb" if self.read_as_binary(source_ref.actual_filename) else "w"
+        mode = "wb" if self.read_as_binary(str(source_ref.actual_filename)) else "w"
         destination_file = os.path.join(self.dataset.path, os.path.basename(source_ref.actual_filename))
         with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())
@@ -151,10 +152,10 @@ class BaseFilesystemProviders(DataProviders):
     def cleanup(file_list: list[TempFile]) -> None:
         """Cleans up the temporary files created"""
         for file in file_list:
-            if os.path.exists(file.tmp_file.name):
-                os.remove(file.tmp_file.name)
+            if os.path.exists(file.actual_filename):
+                os.remove(file.actual_filename)
 
-    def load_data_from_source_natively(self, source_dataset: File, destination_dataset: Dataset) -> None:
+    def load_data_from_source_natively(self, source_dataset: File, destination_dataset: Dataset) -> Any:
         """
         Loads data from source dataset to the destination using data provider
         """
