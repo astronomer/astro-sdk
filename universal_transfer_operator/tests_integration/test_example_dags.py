@@ -9,15 +9,15 @@ from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
 from packaging.version import Version
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
-
-from .sql.operators import utils as test_utils
+from utils.test_dag_runner import run_dag
 
 RETRY_ON_EXCEPTIONS = []
 try:
     from google.api_core.exceptions import Forbidden, TooManyRequests
+    from google.resumable_media.common import InvalidResponse
     from pandas_gbq.exceptions import GenericGBQException
 
-    RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException])
+    RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException, InvalidResponse])
 except ModuleNotFoundError:
     pass
 
@@ -28,11 +28,11 @@ except ModuleNotFoundError:
     wait=wait_exponential(multiplier=10, min=10, max=60),  # values in seconds
 )
 def wrapper_run_dag(dag):
-    test_utils.run_dag(dag)
+    run_dag(dag)
 
 
 @provide_session
-def get_session(session=None):  # skipcq: PYL-W0621
+def get_session(session=None):
     create_default_connections(session)
     return session
 
@@ -59,7 +59,10 @@ def get_dag_bag() -> DagBag:
     example_dags_dir = Path(__file__).parent.parent / "example_dags"
     airflow_ignore_file = example_dags_dir / ".airflowignore"
 
-    with open(airflow_ignore_file, "w+") as file:
+    with open(airflow_ignore_file, "a+") as file:
+        # Note - excluding fivetran dags till we add the `fivetran_default` in the CI connections.
+        # Ticket - https://github.com/astronomer/astro-sdk/issues/1843
+        file.writelines("example_dag_fivetran.py\n")
         for min_version, files in MIN_VER_DAG_FILE_VER.items():
             if Version(airflow.__version__) < min_version:
                 print(f"Adding {files} to .airflowignore")
@@ -67,10 +70,10 @@ def get_dag_bag() -> DagBag:
 
     print(".airflowignore contents: ")
     print(airflow_ignore_file.read_text())
-    db = DagBag(example_dags_dir, include_examples=False)
-    assert db.dags
-    assert not db.import_errors
-    return db
+    dag_bag = DagBag(example_dags_dir, include_examples=False)
+    assert dag_bag.dags
+    assert not dag_bag.import_errors
+    return dag_bag
 
 
 PRE_DEFINED_ORDER = [
@@ -89,6 +92,6 @@ dag_bag = get_dag_bag()
 
 
 @pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
-def test_example_dag(session, dag_id: str):  # skipcq: PYL-W0613, PYL-W0621
+def test_example_dag(session, dag_id: str):
     dag = dag_bag.get_dag(dag_id)
     wrapper_run_dag(dag)

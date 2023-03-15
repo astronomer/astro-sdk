@@ -76,6 +76,10 @@ class Table(Dataset):
 
         return unique_id
 
+    def __attrs_post_init__(self) -> None:
+        if not self.name:
+            self.name = self._create_unique_table_name(TEMP_PREFIX + "_")
+
     def create_similar_table(self) -> Table:
         """
         Create a new table with a unique name but with the same metadata.
