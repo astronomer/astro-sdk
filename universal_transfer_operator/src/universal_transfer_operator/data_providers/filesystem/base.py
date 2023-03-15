@@ -119,7 +119,7 @@ class BaseFilesystemProviders(DataProviders):
 
     def write_using_smart_open(self, source_ref: FileStream):
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
-        mode = "wb" if self.read_as_binary(str(source_ref.actual_filename)) else "w"
+        mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
         destination_file = os.path.join(self.dataset.path, os.path.basename(source_ref.actual_filename))
         with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())

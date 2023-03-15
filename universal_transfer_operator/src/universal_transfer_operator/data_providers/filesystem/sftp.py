@@ -111,8 +111,8 @@ class SFTPDataProvider(BaseFilesystemProviders):
         :param source_ref: FileStream object of source dataset
         :return: File path that is the used for write pattern
         """
-        mode = "wb" if self.read_as_binary(str(source_ref.actual_filename)) else "w"
-        complete_url = self.get_complete_url(self.dataset.path, str(source_ref.actual_filename))
+        mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
+        complete_url = self.get_complete_url(self.dataset.path, source_ref.actual_file.path)
         with smart_open.open(complete_url, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())
         return complete_url

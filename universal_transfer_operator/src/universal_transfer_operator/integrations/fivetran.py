@@ -164,7 +164,8 @@ class FivetranIntegration(TransferIntegration):
                 connector_id=connector_id, schedule_type=self.transfer_params.schedule_type
             )
             # TODO: wait until the job is done
-            return str(fivetran_hook.start_fivetran_sync(connector_id=connector_id))
+            exiting_last_sync: str = fivetran_hook.start_fivetran_sync(connector_id=connector_id)
+            return exiting_last_sync
 
         group_id = (
             self.transfer_params.group.group_id
@@ -194,7 +195,8 @@ class FivetranIntegration(TransferIntegration):
         fivetran_hook.prep_connector(
             connector_id=connector_id, schedule_type=self.transfer_params.schedule_type
         )
-        return str(fivetran_hook.start_fivetran_sync(connector_id=connector_id))
+        last_sync: str = fivetran_hook.start_fivetran_sync(connector_id=connector_id)
+        return last_sync
 
     def check_for_connector_id(self, fivetran_hook: FivetranHook) -> bool:
         """
@@ -205,7 +207,8 @@ class FivetranIntegration(TransferIntegration):
             logging.warning("No value specified for connector_id")
             return False
 
-        return bool(fivetran_hook.check_connector(connector_id=connector_id))
+        is_connector_working: bool = fivetran_hook.check_connector(connector_id=connector_id)
+        return is_connector_working
 
     def check_group_details(self, fivetran_hook: FivetranHook, group_id: str | None) -> bool:
         """
@@ -241,7 +244,8 @@ class FivetranIntegration(TransferIntegration):
             logging.info(api_response)
         else:
             raise ValueError(api_response)
-        return str(api_response["data"]["id"])
+        group_id: str = api_response["data"]["id"]
+        return group_id
 
     def check_destination_details(self, fivetran_hook: FivetranHook, destination_id: str | None) -> bool:
         """
@@ -316,7 +320,8 @@ class FivetranIntegration(TransferIntegration):
             # TODO: parse all setup tests status for passed status
         else:
             raise ValueError(api_response)
-        return str(api_response["data"]["id"])
+        connector_id: str = api_response["data"]["id"]
+        return connector_id
 
     def run_connector_setup_tests(self, fivetran_hook: FivetranHook, connector_id: str):
         """

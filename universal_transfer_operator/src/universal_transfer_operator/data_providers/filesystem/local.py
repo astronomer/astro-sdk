@@ -39,7 +39,8 @@ class LocalDataProvider(BaseFilesystemProviders):
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return str(os.path.basename(self.dataset.path))
+        basename: str = os.path.basename(self.dataset.path)
+        return basename
 
     @property
     def openlineage_dataset_name(self) -> str:
@@ -47,4 +48,5 @@ class LocalDataProvider(BaseFilesystemProviders):
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return str(urlparse(self.dataset.path).path)
+        path: str = urlparse(self.dataset.path).path
+        return path

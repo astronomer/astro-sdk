@@ -4,7 +4,7 @@ import logging
 from contextlib import contextmanager
 from functools import cached_property
 from tempfile import NamedTemporaryFile
-from typing import Iterator, Sequence, cast
+from typing import Iterator, Sequence
 from urllib.parse import urlparse, urlunparse
 
 import attr
@@ -70,7 +70,8 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
-        return cast(bool, self.hook.exists(bucket_name=self.bucket_name, object_name=self.blob_name))
+        exists: bool = self.hook.exists(bucket_name=self.bucket_name, object_name=self.blob_name)
+        return exists
 
     @contextmanager
     def read_using_hook(self) -> Iterator[list[TempFile]]:
@@ -154,8 +155,8 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     @property
     def bucket_name(self) -> str:
-        bucket_name, _ = _parse_gcs_url(gsurl=self.dataset.path)
-        return str(bucket_name)
+        url: tuple[str, str] = _parse_gcs_url(gsurl=self.dataset.path)
+        return url[0]
 
     @property
     def prefix(self) -> str | None:
@@ -169,8 +170,8 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     @property
     def blob_name(self) -> str:
-        _, blob = _parse_gcs_url(gsurl=self.dataset.path)
-        return str(blob)
+        url: tuple[str, str] = _parse_gcs_url(gsurl=self.dataset.path)
+        return url[1]
 
     @property
     def openlineage_dataset_namespace(self) -> str:

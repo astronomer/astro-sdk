@@ -71,7 +71,8 @@ class S3DataProvider(BaseFilesystemProviders):
 
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
-        return bool(self.hook.check_for_key(key=self.dataset.path))
+        is_present: bool = self.hook.check_for_key(key=self.dataset.path)
+        return is_present
 
     @contextmanager
     def read_using_hook(self) -> Iterator[list[TempFile]]:
@@ -139,13 +140,13 @@ class S3DataProvider(BaseFilesystemProviders):
 
     @property
     def bucket_name(self) -> str:
-        bucket_name, _ = self.hook.parse_s3_url(self.dataset.path)
-        return str(bucket_name)
+        url: tuple[str, str] = self.hook.parse_s3_url(self.dataset.path)
+        return url[0]
 
     @property
     def s3_key(self) -> str:
-        _, key = self.hook.parse_s3_url(self.dataset.path)
-        return str(key)
+        url: tuple[str, str] = self.hook.parse_s3_url(self.dataset.path)
+        return url[1]
 
     @property
     def s3_acl_policy(self) -> str | None:
