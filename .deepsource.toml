@@ -5,7 +5,8 @@ test_patterns = [
   "python-sdk/tests_integration/**",
   "python-sdk/test-docker/**",
   "sql-cli/tests/**",
-  "universal_transfer_operator/tests/**"
+  "universal_transfer_operator/tests/**",
+  "universal_transfer_operator/tests_integration/**"
 ]
 
 [[analyzers]]
