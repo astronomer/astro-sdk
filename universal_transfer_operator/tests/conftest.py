@@ -152,6 +152,10 @@ def set_file_missing_values(file: File, dataset_name: str):
 def populate_file(src_file_path: str, dataset_provider: BaseFilesystemProviders, dp_name: str):
     """
     Populate file with local file data
+    :param src_file_path: source path of the content that will be populated
+    :param dataset_provider: dataset provider object, that will be populated with content in src_file_path
+    :param dp_name: name of data provider
+    :return:
     """
     src_file_object = dataset_provider._convert_remote_file_to_byte_stream(src_file_path)
     mode = "wb" if dataset_provider.read_as_binary(src_file_path) else "w"
