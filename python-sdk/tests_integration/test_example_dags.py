@@ -32,7 +32,7 @@ def wrapper_run_dag(dag):
 
 
 @provide_session
-def get_session(session=None):
+def get_session(session=None):  # skipcq: PYL-W0621
     create_default_connections(session)
     return session
 
@@ -67,10 +67,10 @@ def get_dag_bag() -> DagBag:
 
     print(".airflowignore contents: ")
     print(airflow_ignore_file.read_text())
-    dag_bag = DagBag(example_dags_dir, include_examples=False)
-    assert dag_bag.dags
-    assert not dag_bag.import_errors
-    return dag_bag
+    db = DagBag(example_dags_dir, include_examples=False)
+    assert db.dags
+    assert not db.import_errors
+    return db
 
 
 PRE_DEFINED_ORDER = [
@@ -89,6 +89,6 @@ dag_bag = get_dag_bag()
 
 
 @pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
-def test_example_dag(session, dag_id: str):
+def test_example_dag(session, dag_id: str):  # skipcq: PYL-W0613, PYL-W0621
     dag = dag_bag.get_dag(dag_id)
     wrapper_run_dag(dag)
