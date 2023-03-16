@@ -71,9 +71,13 @@ def s3fs_creds():
             "database": Database.DUCKDB,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.MYSQL,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, remote_files_fixture):
     _, test_table = database_table_fixture
@@ -124,12 +128,16 @@ def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, r
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
         {
+            "database": Database.MYSQL,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
             "database": Database.DUCKDB,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
@@ -172,12 +180,16 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, dat
             "file": File(path=str(CWD) + "/../../data/homes.csv"),
         },
         {
+            "database": Database.MYSQL,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
+        {
             "database": Database.DUCKDB,
             "file": File(path=str(CWD) + "/../../data/homes.csv"),
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -227,9 +239,13 @@ def test_save_table_remote_file_exists_overwrite_false(
             "database": Database.DUCKDB,
             "file": File(path=str(CWD) + "/../../data/sample.csv"),
         },
+        {
+            "database": Database.MYSQL,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "duckdb", "mysql"],
 )
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 def test_export_file(sample_dag, database_table_fixture, file_type):

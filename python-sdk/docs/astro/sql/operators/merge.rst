@@ -30,6 +30,8 @@ The ``merge`` operator runs different SQL queries behind the scenes based on the
      - Yes
    * - MS SQL
      - No
+   * - MySQL
+     - Yes
 
 You can create and add constraints on a table by providing them in the ``columns`` parameter of :ref:`load_file`. Refer to the :ref:`custom_schema` section for details.
 
