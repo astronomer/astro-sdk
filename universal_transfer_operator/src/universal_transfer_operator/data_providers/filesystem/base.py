@@ -15,6 +15,7 @@ from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.file.types import create_file_type
+from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
 
@@ -75,7 +76,7 @@ class BaseFilesystemProviders(DataProviders):
         """Return true if the dataset exists"""
         return False
 
-    def check_if_transfer_supported(self, source_dataset: Dataset) -> bool:
+    def check_if_transfer_supported(self, source_dataset: Table | File) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
         """

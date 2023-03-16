@@ -33,6 +33,12 @@ def convert_dataframe_to_file(df: pd.DataFrame) -> File:
         random.choice(string.ascii_lowercase + string.digits) for _ in range(64)
     )
 
+    if settings.DATAFRAME_STORAGE_CONN_ID is None:
+        raise ValueError(
+            "Missing conn_id. Please specify it in airflow's config"
+            " `universal_transfer_operator.xcom_storage_conn_id`"
+        )
+
     file = File(
         path=settings.DATAFRAME_STORAGE_URL + "/" + unique_id + ".parquet",
         conn_id=settings.DATAFRAME_STORAGE_CONN_ID,

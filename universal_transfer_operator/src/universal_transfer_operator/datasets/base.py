@@ -7,5 +7,5 @@ try:
     DATASET_SUPPORT = True
 except ImportError:
     # Airflow < 2.4
-    Dataset = object
+    Dataset = object  # type: ignore
     DATASET_SUPPORT = False

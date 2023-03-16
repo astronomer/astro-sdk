@@ -7,7 +7,8 @@ import attr
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import Location
-from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.datasets.file.base import File
+from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
 
@@ -22,7 +23,7 @@ class DataProviders(ABC):
 
     def __init__(
         self,
-        dataset: Dataset,
+        dataset: Table | File,
         transfer_mode,
         transfer_params: TransferParameters = attr.field(
             factory=TransferParameters,
@@ -47,7 +48,7 @@ class DataProviders(ABC):
         """Return true if the dataset exists"""
         raise NotImplementedError
 
-    def check_if_transfer_supported(self, source_dataset: Dataset) -> bool:
+    def check_if_transfer_supported(self, source_dataset: Table | File) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
         """
@@ -62,7 +63,9 @@ class DataProviders(ABC):
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
 
-    def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> Any:
+    def load_data_from_source_natively(
+        self, source_dataset: Table | File, destination_dataset: Table | File
+    ) -> Any:
         """
         Loads data from source dataset to the destination using data provider
         """

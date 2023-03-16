@@ -105,9 +105,10 @@ class Table(Dataset):
         Return the row count of table.
         """
         from universal_transfer_operator.data_providers import create_dataprovider
+        from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 
-        database_provider = create_dataprovider(dataset=self)
-        return database_provider.dataset.row_count(self)
+        database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
+        return database_provider.row_count(table=self)
 
     @property
     def sql_type(self) -> Any:
@@ -115,8 +116,8 @@ class Table(Dataset):
         from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 
         if self.conn_id:
-            provider: DatabaseDataProvider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
-            return provider.sql_type
+            database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
+            return database_provider.sql_type
 
     def to_json(self):
         return {
@@ -144,8 +145,9 @@ class Table(Dataset):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         from universal_transfer_operator.data_providers import create_dataprovider
+        from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 
-        database_provider = create_dataprovider(dataset=self)
+        database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
         return database_provider.openlineage_dataset_name
 
     def openlineage_dataset_namespace(self) -> str:
@@ -168,7 +170,7 @@ class Table(Dataset):
         database_provider = create_dataprovider(dataset=self)
         return database_provider.openlineage_dataset_uri
 
-    @uri.default
+    @uri.default  # type: ignore
     def _path_to_dataset_uri(self) -> str:
         """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
         from urllib.parse import urlencode, urlparse

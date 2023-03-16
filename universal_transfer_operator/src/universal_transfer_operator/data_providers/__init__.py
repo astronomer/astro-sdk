@@ -5,7 +5,6 @@ from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers.base import DataProviders
-from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_class_name
@@ -24,7 +23,7 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
 
 
 def create_dataprovider(
-    dataset: Dataset,
+    dataset: Table | File,
     transfer_params: Optional[TransferParameters] = None,
     transfer_mode: TransferMode = TransferMode.NONNATIVE,
 ) -> DataProviders:

@@ -71,8 +71,7 @@ class S3DataProvider(BaseFilesystemProviders):
 
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
-        is_present: bool = self.hook.check_for_key(key=self.dataset.path)
-        return is_present
+        return self.hook.check_for_key(key=self.dataset.path)
 
     @contextmanager
     def read_using_hook(self) -> Iterator[list[TempFile]]:
@@ -121,52 +120,43 @@ class S3DataProvider(BaseFilesystemProviders):
         _, _, file_name = file.rpartition("/")
         with NamedTemporaryFile(suffix=file_name, delete=False) as tmp_file:
             file_object.download_fileobj(tmp_file)
-            return TempFile(tmp_file=Path(tmp_file.name), actual_filename=Path(file_name))
+            return TempFile(tmp_file=Path(tmp_file.name), actual_filename=Path(file_name))  # type: ignore
 
     @property
     def verify(self) -> str | bool | None:
-        verify: str | bool | None = self.dataset.extra.get("verify", None)
-        return verify
+        return self.dataset.extra.get("verify", None)
 
     @property
     def transfer_config_args(self) -> dict | None:
-        transfer_config_args: dict | None = self.dataset.extra.get("transfer_config_args", {})
-        return transfer_config_args
+        return self.dataset.extra.get("transfer_config_args", {})
 
     @property
     def s3_extra_args(self) -> dict | None:
-        s3_extra_args: dict | None = self.dataset.extra.get("s3_extra_args", {})
-        return s3_extra_args
+        return self.dataset.extra.get("s3_extra_args", {})
 
     @property
     def bucket_name(self) -> str:
-        url: tuple[str, str] = self.hook.parse_s3_url(self.dataset.path)
-        return url[0]
+        return self.hook.parse_s3_url(self.dataset.path)[0]
 
     @property
     def s3_key(self) -> str:
-        url: tuple[str, str] = self.hook.parse_s3_url(self.dataset.path)
-        return url[1]
+        return self.hook.parse_s3_url(self.dataset.path)[1]
 
     @property
     def s3_acl_policy(self) -> str | None:
-        s3_acl_policy: str | None = self.dataset.extra.get("s3_acl_policy", None)
-        return s3_acl_policy
+        return self.dataset.extra.get("s3_acl_policy", None)
 
     @property
     def prefix(self) -> str | None:
-        prefix: str | None = self.dataset.extra.get("prefix", None)
-        return prefix
+        return self.dataset.extra.get("prefix", None)
 
     @property
     def keep_directory_structure(self) -> bool:
-        keep_directory_structure: bool = self.dataset.extra.get("keep_directory_structure", False)
-        return keep_directory_structure
+        return self.dataset.extra.get("keep_directory_structure", False)
 
     @property
     def delimiter(self) -> str | None:
-        delimiter: str | None = self.dataset.extra.get("delimiter", None)
-        return delimiter
+        return self.dataset.extra.get("delimiter", None)
 
     @property
     def openlineage_dataset_namespace(self) -> str:
