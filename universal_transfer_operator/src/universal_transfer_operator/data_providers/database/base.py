@@ -30,7 +30,7 @@ from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
-from universal_transfer_operator.universal_transfer_operator import TransferParameters
+from universal_transfer_operator.universal_transfer_operator import TransferIntegrationOptions
 from universal_transfer_operator.utils import get_dataset_connection_type
 
 
@@ -57,15 +57,15 @@ class DatabaseDataProvider(DataProviders):
         self,
         dataset: Table,
         transfer_mode: TransferMode,
-        transfer_params: TransferParameters = attr.field(
-            factory=TransferParameters,
-            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        transfer_params: TransferIntegrationOptions = attr.field(
+            factory=TransferIntegrationOptions,
+            converter=lambda val: TransferIntegrationOptions(**val) if isinstance(val, dict) else val,
         ),
     ):
         self.dataset = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
-        self.transfer_mapping = {}
+        self.transfer_mapping = set()
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
         super().__init__(
             dataset=self.dataset, transfer_mode=self.transfer_mode, transfer_params=self.transfer_params
@@ -197,7 +197,7 @@ class DatabaseDataProvider(DataProviders):
         """
         return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
 
-    def load_data_from_source_natively(self, source_dataset: Table, destination_dataset: Dataset) -> None:
+    def load_data_from_source_natively(self, source_dataset: Table, destination_dataset: Dataset) -> Any:
         """
         Loads data from source dataset to the destination using data provider
         """

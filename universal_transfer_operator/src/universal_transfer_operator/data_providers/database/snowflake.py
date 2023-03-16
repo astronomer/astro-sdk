@@ -12,7 +12,7 @@ from universal_transfer_operator.data_providers.database.base import DatabaseDat
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
-from universal_transfer_operator.universal_transfer_operator import TransferParameters
+from universal_transfer_operator.universal_transfer_operator import TransferIntegrationOptions
 
 
 class SnowflakeDataProvider(DatabaseDataProvider):
@@ -24,15 +24,15 @@ class SnowflakeDataProvider(DatabaseDataProvider):
         self,
         dataset: Table,
         transfer_mode,
-        transfer_params: TransferParameters = attr.field(
-            factory=TransferParameters,
-            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        transfer_params: TransferIntegrationOptions = attr.field(
+            factory=TransferIntegrationOptions,
+            converter=lambda val: TransferIntegrationOptions(**val) if isinstance(val, dict) else val,
         ),
     ):
         self.dataset = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
-        self.transfer_mapping = {}
+        self.transfer_mapping = set()
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
         super().__init__(
             dataset=self.dataset, transfer_mode=self.transfer_mode, transfer_params=self.transfer_params
@@ -111,6 +111,8 @@ class SnowflakeDataProvider(DatabaseDataProvider):
                 "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
                 parameters={"schema_name": schema.lower()},
             )
+        if schemas is None:
+            raise ValueError("Query didn't returned list of schema")
         try:
             # Handle case for apache-airflow-providers-snowflake<4.0.1
             created_schemas = [x["SCHEMA_NAME"] for x in schemas]
@@ -256,4 +258,4 @@ class SnowflakeDataProvider(DatabaseDataProvider):
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name()}"
+        return f"{self.openlineage_dataset_namespace}{self.openlineage_dataset_name}"

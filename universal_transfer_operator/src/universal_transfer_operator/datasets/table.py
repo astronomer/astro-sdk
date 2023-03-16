@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import random
 import string
-from typing import Any
+from typing import Any, cast
 
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 from universal_transfer_operator.datasets.base import Dataset
 
 MAX_TABLE_NAME_LENGTH = 62
@@ -102,7 +103,7 @@ class Table(Dataset):
         """
         from universal_transfer_operator.data_providers import create_dataprovider
 
-        database_provider = create_dataprovider(dataset=self)
+        database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
         return database_provider.row_count(self)
 
     @property
@@ -110,7 +111,8 @@ class Table(Dataset):
         from universal_transfer_operator.data_providers import create_dataprovider
 
         if self.conn_id:
-            return create_dataprovider(dataset=self).sql_type
+            database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
+            return database_provider.sql_type
 
     def to_json(self):
         return {
@@ -129,7 +131,6 @@ class Table(Dataset):
         return Table(
             name=obj["name"],
             metadata=Metadata(**obj["metadata"]),
-            temp=obj["temp"],
             conn_id=obj["conn_id"],
         )
 
@@ -140,8 +141,8 @@ class Table(Dataset):
         """
         from universal_transfer_operator.data_providers import create_dataprovider
 
-        database_provider = create_dataprovider(dataset=self)
-        return database_provider.openlineage_dataset_name(table=self)
+        database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
+        return database_provider.openlineage_dataset_name
 
     def openlineage_dataset_namespace(self) -> str:
         """
@@ -150,8 +151,8 @@ class Table(Dataset):
         """
         from universal_transfer_operator.data_providers import create_dataprovider
 
-        database_provider = create_dataprovider(dataset=self)
-        return database_provider.openlineage_dataset_namespace()
+        database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
+        return database_provider.openlineage_dataset_namespace
 
     def openlineage_dataset_uri(self) -> str:
         """
@@ -160,8 +161,8 @@ class Table(Dataset):
         """
         from universal_transfer_operator.data_providers import create_dataprovider
 
-        database_provider = create_dataprovider(dataset=self)
-        return f"{database_provider.openlineage_dataset_uri(table=self)}"
+        database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
+        return database_provider.openlineage_dataset_uri
 
     @uri.default
     def _path_to_dataset_uri(self) -> str:

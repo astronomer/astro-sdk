@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import io
 import pathlib
+from typing import cast
 
 import pandas as pd
 import smart_open
 from attr import define, field
 
-from universal_transfer_operator.constants import FileType
+from universal_transfer_operator.constants import FileType as FileTypeConstant
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.types import create_file_type
+from universal_transfer_operator.datasets.file.types.base import FileType
 
 
 @define
@@ -26,17 +29,18 @@ class File(Dataset):
 
     path: str = field(default="")
     conn_id: str = field(default="")
-    filetype: FileType | None = None
+    filetype: FileTypeConstant | None = None
     normalize_config: dict | None = None
     is_bytes: bool = False
     uri: str = field(init=False)
     extra: dict = field(init=True, factory=dict)
+    is_dataframe: bool = False
 
     @property
-    def location(self):
+    def location(self) -> BaseFilesystemProviders:
         from universal_transfer_operator.data_providers import create_dataprovider
 
-        return create_dataprovider(dataset=self)
+        return cast(BaseFilesystemProviders, create_dataprovider(dataset=self))
 
     @property
     def size(self) -> int:
@@ -62,7 +66,7 @@ class File(Dataset):
 
         :return: True or False
         """
-        read_as_non_binary = {FileType.CSV, FileType.JSON, FileType.NDJSON}
+        read_as_non_binary = {FileTypeConstant.CSV, FileTypeConstant.JSON, FileTypeConstant.NDJSON}
         if self.type in read_as_non_binary:
             return False
         return True
@@ -75,11 +79,15 @@ class File(Dataset):
         """
         return not pathlib.PosixPath(self.path).suffix
 
-    def create_from_dataframe(self, df: pd.DataFrame) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True) -> None:
         """Create a file in the desired location using the values of a dataframe.
 
         :param df: pandas dataframe
+        :param store_as_dataframe: Whether the data should later be deserialized as a dataframe or as a file containing
+            delimited data (e.g. csv, parquet, etc.).
         """
+        self.is_dataframe = store_as_dataframe
+
         with smart_open.open(self.path, mode="wb", transport_params=self.location.transport_params) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
@@ -131,3 +139,16 @@ class File(Dataset):
 
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id, self.filetype))
+
+    @classmethod
+    def from_json(cls, serialized_object: dict):
+        filetype = (
+            FileTypeConstant(serialized_object["filetype"]) if serialized_object.get("filetype") else None
+        )
+        return File(
+            conn_id=serialized_object["conn_id"],
+            path=serialized_object["path"],
+            filetype=filetype,
+            normalize_config=serialized_object["normalize_config"],
+            is_dataframe=serialized_object["is_dataframe"],
+        )

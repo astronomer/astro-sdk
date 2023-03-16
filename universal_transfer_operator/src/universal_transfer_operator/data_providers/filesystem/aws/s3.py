@@ -4,6 +4,7 @@ import os
 from contextlib import contextmanager
 from functools import cached_property
 from tempfile import NamedTemporaryFile
+from typing import Any, Iterator
 from urllib.parse import urlparse, urlunparse
 
 import attr
@@ -12,7 +13,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, Path, TempFile
 from universal_transfer_operator.datasets.file.base import File
-from universal_transfer_operator.utils import TransferParameters
+from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
 class S3DataProvider(BaseFilesystemProviders):
@@ -23,9 +24,9 @@ class S3DataProvider(BaseFilesystemProviders):
     def __init__(
         self,
         dataset: File,
-        transfer_params: TransferParameters = attr.field(
-            factory=TransferParameters,
-            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        transfer_params: TransferIntegrationOptions = attr.field(
+            factory=TransferIntegrationOptions,
+            converter=lambda val: TransferIntegrationOptions(**val) if isinstance(val, dict) else val,
         ),
         transfer_mode: TransferMode = TransferMode.NONNATIVE,
     ):
@@ -73,7 +74,7 @@ class S3DataProvider(BaseFilesystemProviders):
         return self.hook.check_for_key(key=self.dataset.path)
 
     @contextmanager
-    def read_using_hook(self) -> list[TempFile]:
+    def read_using_hook(self) -> Iterator[list[TempFile]]:
         """Read the file from dataset and write to local file location"""
         if not self.check_if_exists():
             raise ValueError(f"{self.dataset.path} doesn't exits")
@@ -101,12 +102,12 @@ class S3DataProvider(BaseFilesystemProviders):
 
         destination_keys = []
         for file in source_ref:
-            if file.tmp_file.exists():
+            if file.tmp_file and file.tmp_file.exists():
                 dest_key = os.path.join(dest_s3_key, os.path.basename(file.actual_filename.name))
                 self.hook.load_file(
                     filename=file.tmp_file.as_posix(),
                     key=dest_key,
-                    replace="replace",
+                    replace=True,
                     acl_policy=self.s3_acl_policy,
                 )
                 destination_keys.append(dest_key)
@@ -122,15 +123,15 @@ class S3DataProvider(BaseFilesystemProviders):
             return TempFile(tmp_file=Path(tmp_file.name), actual_filename=Path(file_name))
 
     @property
-    def verify(self) -> str | bool | None:
-        return self.dataset.extra.get("verify", None)
+    def verify(self) -> Any:
+        return self.dataset.extra.get("verify")
 
     @property
-    def transfer_config_args(self) -> dict | None:
-        return self.dataset.extra.get("transfer_config_args", None)
+    def transfer_config_args(self) -> Any:
+        return self.dataset.extra.get("transfer_config_args", {})
 
     @property
-    def s3_extra_args(self) -> dict | None:
+    def s3_extra_args(self) -> Any:
         return self.dataset.extra.get("s3_extra_args", {})
 
     @property
@@ -144,19 +145,19 @@ class S3DataProvider(BaseFilesystemProviders):
         return key
 
     @property
-    def s3_acl_policy(self) -> str | None:
+    def s3_acl_policy(self) -> Any:
         return self.dataset.extra.get("s3_acl_policy", None)
 
     @property
-    def prefix(self) -> str | None:
+    def prefix(self) -> Any:
         return self.dataset.extra.get("prefix", None)
 
     @property
-    def keep_directory_structure(self) -> bool:
+    def keep_directory_structure(self) -> Any:
         return self.dataset.extra.get("keep_directory_structure", False)
 
     @property
-    def delimiter(self) -> str | None:
+    def delimiter(self) -> Any:
         return self.dataset.extra.get("delimiter", None)
 
     @property

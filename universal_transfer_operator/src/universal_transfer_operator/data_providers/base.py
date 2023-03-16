@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 from abc import ABC
+from typing import Any, Generic, TypeVar
 
 import attr
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import Location
-from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.datasets.file.base import File
+from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
+T = TypeVar("T", File, Table)
 
-class DataProviders(ABC):
+
+class DataProviders(ABC, Generic[T]):
     """
     Base class to represent all the DataProviders interactions with Dataset.
 
@@ -21,14 +25,14 @@ class DataProviders(ABC):
 
     def __init__(
         self,
-        dataset: Dataset,
+        dataset: T,
         transfer_mode,
         transfer_params: TransferParameters = attr.field(
             factory=TransferParameters,
             converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
         ),
     ):
-        self.dataset = dataset
+        self.dataset: T = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
         self.transfer_mapping: set[Location] = set()
@@ -46,7 +50,7 @@ class DataProviders(ABC):
         """Return true if the dataset exists"""
         raise NotImplementedError
 
-    def check_if_transfer_supported(self, source_dataset: Dataset) -> bool:
+    def check_if_transfer_supported(self, source_dataset: T) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
         """
@@ -61,7 +65,7 @@ class DataProviders(ABC):
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
 
-    def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
+    def load_data_from_source_natively(self, source_dataset: T, destination_dataset: T) -> Any:
         """
         Loads data from source dataset to the destination using data provider
         """
@@ -70,7 +74,7 @@ class DataProviders(ABC):
 
         source_connection_type = get_dataset_connection_type(source_dataset)
         destination_connection_type = get_dataset_connection_type(destination_dataset)
-        method_name = self.LOAD_DATA_FROM_SOURCE.get(source_connection_type)
+        method_name = self.LOAD_DATA_NATIVELY_FROM_SOURCE.get(source_connection_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
             return transfer_method(
