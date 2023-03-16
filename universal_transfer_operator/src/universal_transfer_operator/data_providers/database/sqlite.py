@@ -8,9 +8,7 @@ from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-
 from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
-
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.universal_transfer_operator import TransferIntegrationOptions
 
