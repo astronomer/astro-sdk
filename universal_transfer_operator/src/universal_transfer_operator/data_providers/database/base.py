@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
@@ -27,6 +28,7 @@ from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.data_providers.filesystem import resolve_file_path_pattern
 from universal_transfer_operator.data_providers.filesystem.base import FileStream
 from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.datasets.dataframe.pandas import PandasDataframe
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
@@ -186,13 +188,20 @@ class DatabaseDataProvider(DataProviders):
         return Location(source_connection_type) in self.transfer_mapping
 
     def read(self):
-        """ ""Read the dataset and write to local reference location"""
-        raise NotImplementedError
+        """Read the dataset and write to local reference location"""
+        with NamedTemporaryFile(mode="wb+", suffix=".parquet", delete=False) as tmp_file:
+            df = self.export_table_to_pandas_dataframe()
+            df.to_parquet(tmp_file.name)
+            local_temp_file = FileStream(
+                remote_obj_buffer=tmp_file.file,
+                actual_filename=tmp_file.name,
+                actual_file=File(path=tmp_file.name),
+            )
+            yield local_temp_file
 
     def write(self, source_ref: FileStream):
         """
         Write the data from local reference location to the dataset.
-
         :param source_ref: Stream of data to be loaded into output table.
         """
         return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
@@ -269,7 +278,7 @@ class DatabaseDataProvider(DataProviders):
         """
         raise NotImplementedError
 
-    def populate_table_metadata(self, table: Table) -> Table:
+    def populate_metadata(self):
         """
         Given a table, check if the table has metadata.
         If the metadata is missing, and the database has metadata, assign it to the table.
@@ -279,11 +288,11 @@ class DatabaseDataProvider(DataProviders):
         :param table: Table to potentially have their metadata changed
         :return table: Return the modified table
         """
-        if table.metadata and table.metadata.is_empty() and self.default_metadata:
-            table.metadata = self.default_metadata
-        if not table.metadata.schema:
-            table.metadata.schema = self.DEFAULT_SCHEMA
-        return table
+
+        if self.dataset.metadata and self.dataset.metadata.is_empty() and self.default_metadata:
+            self.dataset.metadata = self.default_metadata
+        if not self.dataset.metadata.schema:
+            self.dataset.metadata.schema = self.DEFAULT_SCHEMA
 
     # ---------------------------------------------------------
     # Table creation & deletion methods
@@ -659,3 +668,19 @@ class DatabaseDataProvider(DataProviders):
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
         raise NotImplementedError
+
+    # ---------------------------------------------------------
+    # Extract methods
+    # ---------------------------------------------------------
+
+    def export_table_to_pandas_dataframe(self) -> pd.DataFrame:
+        """
+        Copy the content of a table to an in-memory Pandas dataframe.
+        """
+
+        if not self.table_exists(self.dataset):
+            raise ValueError(f"The table {self.dataset.name} does not exist")
+
+        sqla_table = self.get_sqla_table(self.dataset)
+        df = pd.read_sql(sql=sqla_table.select(), con=self.sqlalchemy_engine)
+        return PandasDataframe.from_pandas_df(df)

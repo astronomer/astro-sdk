@@ -152,3 +152,24 @@ class File(Dataset):
             normalize_config=serialized_object["normalize_config"],
             is_dataframe=serialized_object["is_dataframe"],
         )
+
+    @uri.default
+    def _path_to_dataset_uri(self) -> str:
+        """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
+        from urllib.parse import urlencode, urlparse
+
+        parsed_url = urlparse(url=self.path)
+        netloc = parsed_url.netloc
+        # Local filepaths do not have scheme
+        parsed_scheme = parsed_url.scheme or "file"
+        scheme = f"astro+{parsed_scheme}"
+        extra = {}
+        if self.filetype:
+            extra["filetype"] = str(self.filetype)
+
+        new_parsed_url = parsed_url._replace(
+            netloc=f"{self.conn_id}@{netloc}" if self.conn_id else netloc,
+            scheme=scheme,
+            query=urlencode(extra),
+        )
+        return new_parsed_url.geturl()

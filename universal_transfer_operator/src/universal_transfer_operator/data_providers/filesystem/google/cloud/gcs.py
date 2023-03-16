@@ -49,6 +49,13 @@ class GCSDataProvider(BaseFilesystemProviders):
             impersonation_chain=self.google_impersonation_chain,
         )
 
+    def delete(self):
+        """
+        Delete a file/object if they exists
+        """
+        url = urlparse(self.dataset.path)
+        self.hook.delete(bucket_name=url.netloc, object_name=url.path.lstrip("/"))
+
     @property
     def transport_params(self) -> dict:
         """get GCS credentials for storage"""

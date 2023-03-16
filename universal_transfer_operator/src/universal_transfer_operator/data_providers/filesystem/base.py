@@ -67,6 +67,12 @@ class BaseFilesystemProviders(DataProviders):
         """Resolve patterns in path"""
         raise NotImplementedError
 
+    def delete(self):
+        """
+        Delete a file/object if they exists
+        """
+        raise NotImplementedError
+
     @property
     def transport_params(self) -> dict | None:  # skipcq: PYL-R0201
         """Get credentials required by smart open to access files"""
@@ -124,7 +130,7 @@ class BaseFilesystemProviders(DataProviders):
     def write_using_smart_open(self, source_ref: FileStream):
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
         mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
-        destination_file = os.path.join(self.dataset.path, os.path.basename(source_ref.actual_filename))
+        destination_file = self.dataset.path
         with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())
         return destination_file
@@ -205,3 +211,9 @@ class BaseFilesystemProviders(DataProviders):
     def size(self) -> int:
         """Return the size in bytes of the given file"""
         raise NotImplementedError
+
+    def populate_metadata(self):  # skipcq: PTC-W0049
+        """
+        Given a dataset, check if the dataset has metadata.
+        """
+        pass

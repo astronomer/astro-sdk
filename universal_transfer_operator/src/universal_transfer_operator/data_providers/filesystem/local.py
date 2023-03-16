@@ -3,9 +3,13 @@ from __future__ import annotations
 import glob
 import os
 import pathlib
+from os.path import exists
 from urllib.parse import urlparse
 
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
+import smart_open
+from airflow.hooks.base import BaseHook
+
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, FileStream
 
 
 class LocalDataProvider(BaseFilesystemProviders):
@@ -48,3 +52,26 @@ class LocalDataProvider(BaseFilesystemProviders):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         return str(urlparse(self.dataset.path).path)
+
+    def delete(self):
+        """
+        Delete a file/object if they exists
+        """
+        os.remove(self.dataset.path)
+
+    def check_if_exists(self) -> bool:
+        """Return true if the dataset exists"""
+        return exists(self.dataset.path)
+
+    def write_using_smart_open(self, source_ref: FileStream):
+        """Write the source data from remote object i/o buffer to the dataset using smart open"""
+        mode = "wb" if self.read_as_binary(source_ref.actual_filename) else "w"
+        # destination_file = os.path.join(, os.path.basename(source_ref.actual_filename))
+        with smart_open.open(self.dataset.path, mode=mode, transport_params=self.transport_params) as stream:
+            stream.write(source_ref.remote_obj_buffer.read())
+        return self.dataset.path
+
+    @property
+    def hook(self) -> BaseHook:
+        """Return an instance of the Airflow hook."""
+        raise NotImplementedError
