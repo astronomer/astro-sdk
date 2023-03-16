@@ -76,8 +76,8 @@ def test_read_write_methods_of_datasets(src_dataset_fixture, dst_dataset_fixture
     """
     Test datasets read and write methods of all datasets
     """
-    src_dp, src_dataset = src_dataset_fixture
-    dst_dp, dst_dataset = dst_dataset_fixture
+    src_dp, _ = src_dataset_fixture
+    dst_dp, _ = dst_dataset_fixture
     for source_data in src_dp.read():
         dst_dp.write(source_data)
     output_df = export_to_dataframe(dst_dp)
