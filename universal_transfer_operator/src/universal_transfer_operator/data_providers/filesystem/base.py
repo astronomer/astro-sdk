@@ -11,7 +11,7 @@ import smart_open
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import FileType, Location
-from universal_transfer_operator.data_providers.base import DataProviders, T
+from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.file.types import create_file_type
@@ -32,7 +32,7 @@ class FileStream:
     actual_file: File
 
 
-class BaseFilesystemProviders(DataProviders[T]):
+class BaseFilesystemProviders(DataProviders[File]):
     """BaseFilesystemProviders represent all the DataProviders interactions with File system."""
 
     def __init__(

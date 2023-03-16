@@ -24,7 +24,7 @@ from universal_transfer_operator.constants import (
     Location,
     TransferMode,
 )
-from universal_transfer_operator.data_providers.base import DataProviders, T
+from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.data_providers.filesystem import resolve_file_path_pattern
 from universal_transfer_operator.data_providers.filesystem.base import FileStream
 from universal_transfer_operator.datasets.base import Dataset
@@ -36,7 +36,7 @@ from universal_transfer_operator.universal_transfer_operator import TransferInte
 from universal_transfer_operator.utils import get_dataset_connection_type
 
 
-class DatabaseDataProvider(DataProviders[T]):
+class DatabaseDataProvider(DataProviders[Table]):
     """DatabaseProviders represent all the DataProviders interactions with Databases."""
 
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {}"

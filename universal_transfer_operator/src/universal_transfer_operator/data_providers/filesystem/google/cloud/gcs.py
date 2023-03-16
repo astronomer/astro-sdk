@@ -14,14 +14,13 @@ from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,
     Path,
-    T,
     TempFile,
 )
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
-class GCSDataProvider(BaseFilesystemProviders[T]):
+class GCSDataProvider(BaseFilesystemProviders):
     """
     DataProviders interactions with GS Dataset.
     """

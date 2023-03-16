@@ -8,12 +8,12 @@ import smart_open
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, FileStream, T
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, FileStream
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
-class SFTPDataProvider(BaseFilesystemProviders[T]):
+class SFTPDataProvider(BaseFilesystemProviders):
     """
     DataProviders interactions with GS Dataset.
     """
@@ -147,4 +147,4 @@ class SFTPDataProvider(BaseFilesystemProviders[T]):
         url = urlparse(self.dataset.path)
         conn = self.hook.get_conn()
         stat = conn.stat(url.netloc + url.path).st_size
-        return int(stat) or -1
+        return int(stat) if stat else -1

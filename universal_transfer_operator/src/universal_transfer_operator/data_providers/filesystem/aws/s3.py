@@ -14,14 +14,13 @@ from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,
     Path,
-    T,
     TempFile,
 )
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
-class S3DataProvider(BaseFilesystemProviders[T]):
+class S3DataProvider(BaseFilesystemProviders):
     """
     DataProviders interactions with S3 Dataset.
     """
@@ -204,4 +203,5 @@ class S3DataProvider(BaseFilesystemProviders[T]):
         object_name = url.path
         if object_name.startswith("/"):
             object_name = object_name[1:]
-        return self.hook.head_object(key=object_name, bucket_name=bucket_name).get("ContentLength") or -1
+        obj = self.hook.head_object(key=object_name, bucket_name=bucket_name)
+        return obj.get("ContentLength") if obj else -1  # type: ignore

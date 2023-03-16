@@ -36,7 +36,7 @@ def create_dataprovider(
     module_path = DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING[(conn_type, type(dataset))]
     module = importlib.import_module(module_path)
     class_name = get_class_name(module_ref=module, suffix="DataProvider")
-    data_provider: DataProviders = getattr(module, class_name)[type(dataset)](
+    data_provider: DataProviders = getattr(module, class_name)(
         dataset=dataset,
         transfer_params=transfer_params,
         transfer_mode=transfer_mode,
