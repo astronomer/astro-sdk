@@ -8,15 +8,12 @@ import smart_open
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import (
-    BaseFilesystemProviders,
-    FileStream,
-)
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, FileStream, T
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
-class SFTPDataProvider(BaseFilesystemProviders):
+class SFTPDataProvider(BaseFilesystemProviders[T]):
     """
     DataProviders interactions with GS Dataset.
     """
@@ -143,3 +140,11 @@ class SFTPDataProvider(BaseFilesystemProviders):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
+
+    @property
+    def size(self) -> int:
+        """Return file size for SFTP location"""
+        url = urlparse(self.dataset.path)
+        conn = self.hook.get_conn()
+        stat = conn.stat(url.netloc + url.path).st_size
+        return int(stat) or -1

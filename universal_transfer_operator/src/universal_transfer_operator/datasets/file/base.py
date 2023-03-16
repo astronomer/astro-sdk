@@ -9,7 +9,6 @@ import smart_open
 from attr import define, field
 
 from universal_transfer_operator.constants import FileType as FileTypeConstant
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.types import create_file_type
 from universal_transfer_operator.datasets.file.types.base import FileType
@@ -37,8 +36,9 @@ class File(Dataset):
     is_dataframe: bool = False
 
     @property
-    def location(self) -> BaseFilesystemProviders:
+    def location(self):
         from universal_transfer_operator.data_providers import create_dataprovider
+        from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 
         return cast(BaseFilesystemProviders, create_dataprovider(dataset=self))
 
@@ -135,7 +135,14 @@ class File(Dataset):
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented
-        return self.location == other.location and self.type == other.type
+        # Casting self.location to BaseFilesystemProviders, because adding return type on `location` property
+        # is causing cyclic dependency issues.
+        from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
+
+        return (
+            cast(BaseFilesystemProviders, self.location) == cast(BaseFilesystemProviders, other.location)
+            and self.type == other.type
+        )
 
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id, self.filetype))

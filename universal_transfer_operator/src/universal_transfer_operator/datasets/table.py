@@ -7,7 +7,6 @@ from typing import Any, cast
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
-from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 from universal_transfer_operator.datasets.base import Dataset
 
 MAX_TABLE_NAME_LENGTH = 62
@@ -106,6 +105,7 @@ class Table(Dataset):
         Return the row count of table.
         """
         from universal_transfer_operator.data_providers import create_dataprovider
+        from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 
         database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
         return database_provider.row_count(self)
@@ -113,6 +113,7 @@ class Table(Dataset):
     @property
     def sql_type(self) -> Any:
         from universal_transfer_operator.data_providers import create_dataprovider
+        from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 
         if self.conn_id:
             database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
@@ -144,6 +145,7 @@ class Table(Dataset):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         from universal_transfer_operator.data_providers import create_dataprovider
+        from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 
         database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
         return database_provider.openlineage_dataset_name
@@ -154,6 +156,7 @@ class Table(Dataset):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         from universal_transfer_operator.data_providers import create_dataprovider
+        from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 
         database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
         return database_provider.openlineage_dataset_namespace
@@ -164,6 +167,7 @@ class Table(Dataset):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         from universal_transfer_operator.data_providers import create_dataprovider
+        from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 
         database_provider = cast(DatabaseDataProvider, create_dataprovider(dataset=self))
         return database_provider.openlineage_dataset_uri

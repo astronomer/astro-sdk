@@ -8,14 +8,14 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from snowflake.connector import pandas_tools
 
 from universal_transfer_operator.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
-from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider, T
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
 from universal_transfer_operator.universal_transfer_operator import TransferIntegrationOptions
 
 
-class SnowflakeDataProvider(DatabaseDataProvider):
+class SnowflakeDataProvider(DatabaseDataProvider[T]):
     """SnowflakeDataProvider represent all the DataProviders interactions with Snowflake Databases."""
 
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA

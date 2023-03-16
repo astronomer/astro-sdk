@@ -11,12 +11,17 @@ import attr
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, Path, TempFile
+from universal_transfer_operator.data_providers.filesystem.base import (
+    BaseFilesystemProviders,
+    Path,
+    T,
+    TempFile,
+)
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
-class GCSDataProvider(BaseFilesystemProviders):
+class GCSDataProvider(BaseFilesystemProviders[T]):
     """
     DataProviders interactions with GS Dataset.
     """
@@ -197,3 +202,13 @@ class GCSDataProvider(BaseFilesystemProviders):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
+
+    @property
+    def size(self) -> int:
+        """Return file size for GCS location"""
+        url = urlparse(self.dataset.path)
+        bucket_name = url.netloc
+        object_name = url.path
+        if object_name.startswith("/"):
+            object_name = object_name[1:]
+        return int(self.hook.get_size(bucket_name=bucket_name, object_name=object_name))

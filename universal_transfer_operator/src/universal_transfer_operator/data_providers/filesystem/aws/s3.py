@@ -11,12 +11,17 @@ import attr
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, Path, TempFile
+from universal_transfer_operator.data_providers.filesystem.base import (
+    BaseFilesystemProviders,
+    Path,
+    T,
+    TempFile,
+)
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
-class S3DataProvider(BaseFilesystemProviders):
+class S3DataProvider(BaseFilesystemProviders[T]):
     """
     DataProviders interactions with S3 Dataset.
     """
@@ -190,3 +195,13 @@ class S3DataProvider(BaseFilesystemProviders):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
+
+    @property
+    def size(self) -> int:
+        """Return file size for S3 location"""
+        url = urlparse(self.dataset.path)
+        bucket_name = url.netloc
+        object_name = url.path
+        if object_name.startswith("/"):
+            object_name = object_name[1:]
+        return self.hook.head_object(key=object_name, bucket_name=bucket_name).get("ContentLength") or -1
