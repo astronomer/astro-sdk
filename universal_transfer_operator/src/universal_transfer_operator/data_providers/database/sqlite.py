@@ -8,7 +8,7 @@ from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider, FileStream
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.utils import TransferParameters
 
@@ -59,17 +59,6 @@ class SqliteDataProvider(DatabaseDataProvider):
         """Since Sqlite does not use Metadata, we return an empty Metadata instances."""
         return Metadata()
 
-    def read(self):
-        """ ""Read the dataset and write to local reference location"""
-        raise NotImplementedError
-
-    def write(self, source_ref: FileStream):
-        """Write the data from local reference location to the dataset"""
-        return self.load_file_to_table(
-            input_file=source_ref.actual_file,
-            output_table=self.dataset,
-        )
-
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
@@ -82,13 +71,12 @@ class SqliteDataProvider(DatabaseDataProvider):
         """
         return str(table.name)
 
-    def populate_table_metadata(self, table: Table) -> Table:
+    def populate_metadata(self):  # skipcq: PTC-W0049
         """
         Since SQLite does not have a concept of databases or schemas, we just return the table as is,
         without any modifications.
         """
-        table.conn_id = table.conn_id or self.dataset.conn_id
-        return table
+        pass
 
     def create_schema_if_needed(self, schema: str | None) -> None:
         """

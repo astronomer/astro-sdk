@@ -67,6 +67,12 @@ class BaseFilesystemProviders(DataProviders):
         """Resolve patterns in path"""
         raise NotImplementedError
 
+    def delete(self):
+        """
+        Delete a file/object if they exists
+        """
+        raise NotImplementedError
+
     @property
     def transport_params(self) -> dict | None:  # skipcq: PYL-R0201
         """Get credentials required by smart open to access files"""
@@ -196,3 +202,9 @@ class BaseFilesystemProviders(DataProviders):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
+
+    def populate_metadata(self):  # skipcq: PTC-W0049
+        """
+        Given a dataset, check if the dataset has metadata.
+        """
+        pass
