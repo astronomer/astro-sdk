@@ -96,6 +96,10 @@ repos:
         name: mypy-sql-cli
         additional_dependencies: [types-PyYAML, types-requests]
         files: "^sql-cli/"
+      - id: mypy
+        name: mypy-uto
+        additional_dependencies: [ types-PyYAML, types-requests, types-attrs, attrs ]
+        files: "^universal_transfer_operator/"
 
   -   repo: https://github.com/asottile/pyupgrade
       rev: v3.3.1
