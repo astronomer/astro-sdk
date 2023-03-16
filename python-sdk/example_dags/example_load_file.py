@@ -39,6 +39,7 @@ DATABRICKS_CONN_ID = "databricks_conn"
 MSSQL_CONN_ID = "mssql_conn"
 DUCKDB_CONN_ID = "duckdb_conn"
 AWS_CONN_ID = "aws_conn"
+MYSQL_CONN_ID = "mysql_conn"
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -364,5 +365,14 @@ with dag:
         ),
     )
     # [END load_file_example_27]
+
+    # [START load_file_example_28]
+    aql.load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
+        output_table=Table(
+            conn_id=MYSQL_CONN_ID,
+        ),
+    )
+    # [END load_file_example_28]
 
     aql.cleanup()

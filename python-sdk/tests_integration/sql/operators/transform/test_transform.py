@@ -26,10 +26,11 @@ cwd = pathlib.Path(__file__).parent
         {"database": Database.SQLITE},
         {"database": Database.REDSHIFT},
         {"database": Database.MSSQL},
+        {"database": Database.MYSQL},
         {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_dataframe_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -67,9 +68,10 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
         {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
         {"database": Database.DUCKDB},
+        {"database": Database.MYSQL},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta", "duckdb", "mysql"],
 )
 def test_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -144,9 +146,10 @@ def test_transform_mssql(database_table_fixture, sample_dag):
         {"database": Database.REDSHIFT},
         {"database": Database.DELTA},
         {"database": Database.DUCKDB},
+        {"database": Database.MYSQL},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta", "duckdb", "mysql"],
 )
 def test_raw_sql(database_table_fixture, sample_dag):
     db, test_table = database_table_fixture
@@ -276,6 +279,47 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
     "database_table_fixture",
     [
         {
+            "database": Database.MYSQL,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+            ),
+            "table": Table(name="imdb", conn_id="mysql_conn"),
+        },
+    ],
+    indirect=True,
+    ids=["mysql"],
+)
+def test_transform_with_templated_table_for_mysql(database_table_fixture, sample_dag):
+    """Test table creation via select statement when the output table uses an Airflow template in its name"""
+    database, imdb_table = database_table_fixture
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return """
+            SELECT title, rating
+            FROM {{ input_table }}
+            WHERE genre1='Animation'
+            ORDER BY rating desc
+            LIMIT 5;
+        """
+
+    with sample_dag:
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id=imdb_table.conn_id)
+
+        top_five_animations(input_table=imdb_table, output_table=target_table)
+    test_utils.run_dag(sample_dag)
+
+    expected_target_table = target_table.create_similar_table()
+    expected_target_table.name = "test_is_True"
+    database.drop_table(expected_target_table)
+    assert not database.table_exists(expected_target_table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
             "database": Database.MSSQL,
             "file": File(
                 "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
@@ -370,7 +414,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
                 "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
             ),
             "table": Table(name="imdb", conn_id="mssql_conn"),
-        }
+        },
     ],
     indirect=True,
     ids=["mssql"],
@@ -387,6 +431,45 @@ def test_transform_with_file_for_mssql(database_table_fixture, sample_dag):
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="mssql_conn")
         table_from_query = aql.transform_file(
             file_path="tests_integration/sql/operators/transform/test_mssql.sql",
+            parameters={"input_table": imdb_table},
+            op_kwargs={"output_table": target_table},
+        )
+        validate(table_from_query)
+    test_utils.run_dag(sample_dag)
+
+    expected_target_table = target_table.create_similar_table()
+    expected_target_table.name = "test_is_True"
+    database.drop_table(expected_target_table)
+    assert not database.table_exists(expected_target_table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.MYSQL,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+            ),
+            "table": Table(name="imdb", conn_id="mysql_conn"),
+        },
+    ],
+    indirect=True,
+    ids=["mysql"],
+)
+def test_transform_with_file_for_mysql(database_table_fixture, sample_dag):
+    """Test table creation via select statement in a SQL file"""
+    database, imdb_table = database_table_fixture
+
+    @aql.dataframe
+    def validate(df: pd.DataFrame):
+        assert df.columns.tolist() == ["title", "rating"]
+
+    with sample_dag:
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="mysql_conn")
+        table_from_query = aql.transform_file(
+            file_path="tests_integration/sql/operators/transform/test_mysql.sql",
             parameters={"input_table": imdb_table},
             op_kwargs={"output_table": target_table},
         )
@@ -448,6 +531,33 @@ def test_transform_using_table_metadata_mssql(sample_dag):
             return "SELECT TOP 4 * FROM {{input_table}}"
 
         select(input_table=homes_file, output_table=Table(conn_id="mssql_conn"))
+        aql.cleanup()
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+def test_transform_using_table_metadata_mysql(sample_dag):
+    """
+    Test that load file and transform work when schema is available in table metadata instead of conn
+    Note that schema is synonymous with database in mysql
+    """
+    with sample_dag:
+        test_table = Table(
+            conn_id="mysql_conn",
+            metadata=Metadata(
+                schema=os.environ["MYSQL_DB"],
+            ),
+        )
+        homes_file = aql.load_file(
+            input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
+            output_table=test_table,
+        )
+
+        @aql.transform
+        def select(input_table: Table):
+            return "SELECT * FROM {{input_table}} LIMIT 4"
+
+        select(input_table=homes_file, output_table=Table(conn_id="mysql_conn"))
         aql.cleanup()
     test_utils.run_dag(sample_dag)
 

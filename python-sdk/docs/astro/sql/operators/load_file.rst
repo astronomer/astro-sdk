@@ -249,6 +249,17 @@ Loading to Duckdb
    :start-after: [START load_file_example_27]
    :end-before: [END load_file_example_27]
 
+Loading to MySQL
+~~~~~~~~~~~~~~~~~
+
+``load_file`` can load data to MySQL database hosted on cloud or on-premise server.
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_28]
+   :end-before: [END load_file_example_28]
+
+
 
 Patterns in file path
 ~~~~~~~~~~~~~~~~~~~~~
