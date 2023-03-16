@@ -104,4 +104,10 @@ class DataProviders(ABC):
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
+        return f"{self.openlineage_dataset_namespace}{self.openlineage_dataset_name}"
+
+    def populate_metadata(self):
+        """
+        Given a dataset, check if the dataset has metadata.
+        """
         raise NotImplementedError

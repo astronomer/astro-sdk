@@ -68,10 +68,6 @@ class SnowflakeDataProvider(DatabaseDataProvider):
             database=connection.database,
         )
 
-    def read(self):
-        """ ""Read the dataset and write to local reference location"""
-        raise NotImplementedError
-
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
@@ -256,4 +252,4 @@ class SnowflakeDataProvider(DatabaseDataProvider):
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name()}"
+        return f"{self.openlineage_dataset_namespace}{self.openlineage_dataset_name}"

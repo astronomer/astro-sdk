@@ -49,6 +49,13 @@ class S3DataProvider(BaseFilesystemProviders):
             extra_args=self.s3_extra_args,
         )
 
+    def delete(self):
+        """
+        Delete a file/object if they exists
+        """
+        url = urlparse(self.dataset.path)
+        self.hook.delete_objects(bucket=url.netloc, keys=url.path.lstrip("/"))
+
     @property
     def transport_params(self) -> dict:
         """Structure s3fs credentials from Airflow connection.
