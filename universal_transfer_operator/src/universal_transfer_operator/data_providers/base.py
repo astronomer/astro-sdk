@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 import attr
 from airflow.hooks.base import BaseHook
@@ -64,27 +64,6 @@ class DataProviders(ABC, Generic[T]):
     def write(self, source_ref):
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
-
-    def load_data_from_source_natively(self, source_dataset: T, destination_dataset: T) -> Any:
-        """
-        Loads data from source dataset to the destination using data provider
-        """
-        if not self.check_if_transfer_supported(source_dataset=source_dataset):
-            raise ValueError("Transfer not supported yet.")
-
-        source_connection_type = get_dataset_connection_type(source_dataset)
-        destination_connection_type = get_dataset_connection_type(destination_dataset)
-        method_name = self.LOAD_DATA_NATIVELY_FROM_SOURCE.get(source_connection_type)
-        if method_name:
-            transfer_method = self.__getattribute__(method_name)
-            return transfer_method(
-                source_dataset=source_dataset,
-                destination_dataset=destination_dataset,
-            )
-        else:
-            raise ValueError(
-                f"No transfer performed from {source_connection_type} to {destination_connection_type}."
-            )
 
     @property
     def openlineage_dataset_namespace(self) -> str:

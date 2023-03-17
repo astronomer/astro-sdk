@@ -4,7 +4,6 @@ import io
 import os
 from abc import abstractmethod
 from pathlib import Path
-from typing import Any
 
 import attr
 import smart_open
@@ -12,7 +11,6 @@ from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import FileType, Location
 from universal_transfer_operator.data_providers.base import DataProviders
-from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.file.types import create_file_type
 from universal_transfer_operator.universal_transfer_operator import TransferIntegrationOptions
@@ -163,24 +161,6 @@ class BaseFilesystemProviders(DataProviders[File]):
         for file in file_list:
             if os.path.exists(file.actual_filename):
                 os.remove(file.actual_filename)
-
-    def load_data_from_source_natively(self, source_dataset: File, destination_dataset: Dataset) -> Any:
-        """
-        Loads data from source dataset to the destination using data provider
-        """
-        if not self.check_if_transfer_supported(source_dataset=source_dataset):
-            raise ValueError("Transfer not supported yet.")
-
-        source_connection_type = get_dataset_connection_type(source_dataset)
-        method_name = self.LOAD_DATA_NATIVELY_FROM_SOURCE.get(source_connection_type)
-        if method_name:
-            transfer_method = self.__getattribute__(method_name)
-            return transfer_method(
-                source_dataset=source_dataset,
-                destination_dataset=destination_dataset,
-            )
-        else:
-            raise ValueError(f"No transfer performed from {source_connection_type} to S3.")
 
     @property
     def openlineage_dataset_namespace(self) -> str:

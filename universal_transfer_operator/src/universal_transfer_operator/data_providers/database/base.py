@@ -27,7 +27,6 @@ from universal_transfer_operator.constants import (
 from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.data_providers.filesystem import resolve_file_path_pattern
 from universal_transfer_operator.data_providers.filesystem.base import FileStream
-from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.dataframe.pandas import PandasDataframe
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
@@ -205,24 +204,6 @@ class DatabaseDataProvider(DataProviders[Table]):
         :param source_ref: Stream of data to be loaded into output table.
         """
         return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
-
-    def load_data_from_source_natively(self, source_dataset: Table, destination_dataset: Dataset) -> Any:
-        """
-        Loads data from source dataset to the destination using data provider
-        """
-        if not self.check_if_transfer_supported(source_dataset=source_dataset):
-            raise ValueError("Transfer not supported yet.")
-
-        source_connection_type = get_dataset_connection_type(source_dataset)
-        method_name = self.LOAD_DATA_NATIVELY_FROM_SOURCE.get(source_connection_type)
-        if method_name:
-            transfer_method = self.__getattribute__(method_name)
-            return transfer_method(
-                source_dataset=source_dataset,
-                destination_dataset=destination_dataset,
-            )
-        else:
-            raise ValueError(f"No transfer performed from {source_connection_type} to S3.")
 
     @property
     def openlineage_dataset_namespace(self) -> str:
