@@ -43,7 +43,7 @@ def test_size(remote_files_fixture):
 )
 def test_databricks_auth_settings_fails_due_to_missing_sas_token(remote_files_fixture):
     """Test get_size() of for Blob Storage file."""
-    location = WASBLocation(path=remote_files_fixture[0])
+    location = WASBLocation(path=remote_files_fixture[0], conn_id="wasb_default")
     with pytest.raises(WASBLocationException) as err:
         location.databricks_auth_settings()
     expected = "The connection extras must define `sas_token` for transfers from BlobStorage to Databricks using WASB"
