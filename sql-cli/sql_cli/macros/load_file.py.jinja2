@@ -1,6 +1,6 @@
 {% macro load_file(yaml_file, dag, tasks_to_execute) -%}
 {% set yaml_content = yaml_file.get_yaml_content() -%}
-{%- if tasks_to_execute and yaml_file.get_variable_name() not in tasks_to_execute %}
+{%- if tasks_to_execute and yaml_file.get_variable_name() not in tasks_to_execute -%}
 {{ yaml_file.get_variable_name() }} = naql.nominal_load_file(
 {%- else -%}
 {{ yaml_file.get_variable_name() }} = aql.load_file(
