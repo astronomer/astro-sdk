@@ -11,10 +11,10 @@ from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
-T = TypeVar("T", File, Table)
+DatasetType = TypeVar("DatasetType", File, Table)
 
 
-class DataProviders(ABC, Generic[T]):
+class DataProviders(ABC, Generic[DatasetType]):
     """
     Base class to represent all the DataProviders interactions with Dataset.
 
@@ -25,14 +25,14 @@ class DataProviders(ABC, Generic[T]):
 
     def __init__(
         self,
-        dataset: T,
+        dataset: DatasetType,
         transfer_mode,
         transfer_params: TransferParameters = attr.field(
             factory=TransferParameters,
             converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
         ),
     ):
-        self.dataset: T = dataset
+        self.dataset: DatasetType = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
         self.transfer_mapping: set[Location] = set()
@@ -50,7 +50,7 @@ class DataProviders(ABC, Generic[T]):
         """Return true if the dataset exists"""
         raise NotImplementedError
 
-    def check_if_transfer_supported(self, source_dataset: T) -> bool:
+    def check_if_transfer_supported(self, source_dataset: DatasetType) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
         """
