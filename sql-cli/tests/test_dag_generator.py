@@ -117,7 +117,7 @@ from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
 from astro.table import Metadata, Table
-from sql_cli import operators as naql
+
 
 DAGS_FOLDER = Path(__file__).parent.as_posix()
 
