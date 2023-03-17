@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 from abc import ABC
+from typing import Generic, TypeVar
 
 import attr
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import Location
-from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.datasets.file.base import File
+from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
+DatasetType = TypeVar("DatasetType", File, Table)
 
-class DataProviders(ABC):
+
+class DataProviders(ABC, Generic[DatasetType]):
     """
     Base class to represent all the DataProviders interactions with Dataset.
 
@@ -21,14 +25,14 @@ class DataProviders(ABC):
 
     def __init__(
         self,
-        dataset: Dataset,
+        dataset: DatasetType,
         transfer_mode,
         transfer_params: TransferParameters = attr.field(
             factory=TransferParameters,
             converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
         ),
     ):
-        self.dataset = dataset
+        self.dataset: DatasetType = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
         self.transfer_mapping: set[Location] = set()
@@ -46,7 +50,7 @@ class DataProviders(ABC):
         """Return true if the dataset exists"""
         raise NotImplementedError
 
-    def check_if_transfer_supported(self, source_dataset: Dataset) -> bool:
+    def check_if_transfer_supported(self, source_dataset: DatasetType) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
         """
@@ -60,27 +64,6 @@ class DataProviders(ABC):
     def write(self, source_ref):
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
-
-    def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
-        """
-        Loads data from source dataset to the destination using data provider
-        """
-        if not self.check_if_transfer_supported(source_dataset=source_dataset):
-            raise ValueError("Transfer not supported yet.")
-
-        source_connection_type = get_dataset_connection_type(source_dataset)
-        destination_connection_type = get_dataset_connection_type(destination_dataset)
-        method_name = self.LOAD_DATA_FROM_SOURCE.get(source_connection_type)
-        if method_name:
-            transfer_method = self.__getattribute__(method_name)
-            return transfer_method(
-                source_dataset=source_dataset,
-                destination_dataset=destination_dataset,
-            )
-        else:
-            raise ValueError(
-                f"No transfer performed from {source_connection_type} to {destination_connection_type}."
-            )
 
     @property
     def openlineage_dataset_namespace(self) -> str:

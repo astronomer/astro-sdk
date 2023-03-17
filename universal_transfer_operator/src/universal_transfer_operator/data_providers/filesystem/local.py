@@ -43,7 +43,7 @@ class LocalDataProvider(BaseFilesystemProviders):
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return os.path.basename(self.path)
+        return str(os.path.basename(self.dataset.path))
 
     @property
     def openlineage_dataset_name(self) -> str:
@@ -51,7 +51,7 @@ class LocalDataProvider(BaseFilesystemProviders):
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return urlparse(self.path).path
+        return str(urlparse(self.dataset.path).path)
 
     def delete(self):
         """
@@ -65,7 +65,7 @@ class LocalDataProvider(BaseFilesystemProviders):
 
     def write_using_smart_open(self, source_ref: FileStream):
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
-        mode = "wb" if self.read_as_binary(source_ref.actual_filename) else "w"
+        mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
         # destination_file = os.path.join(, os.path.basename(source_ref.actual_filename))
         with smart_open.open(self.dataset.path, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())

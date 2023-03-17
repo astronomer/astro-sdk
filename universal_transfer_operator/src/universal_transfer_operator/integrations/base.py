@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import attr
 from airflow.hooks.base import BaseHook
@@ -29,7 +30,7 @@ class TransferIntegration(ABC):
         self.transfer_params = transfer_params
         # transfer mapping creates a mapping between various sources and destination, where
         # transfer is possible using the integration
-        self.transfer_mapping: dict[str, str] = None
+        self.transfer_mapping: dict[str, str] = {}
         # TODO: add method for validation, transfer mapping, transfer params etc
 
     @property
@@ -38,7 +39,7 @@ class TransferIntegration(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
+    def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> Any:
         """
         Loads data from source dataset to the destination using ingestion config
         """

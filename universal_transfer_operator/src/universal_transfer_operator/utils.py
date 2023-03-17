@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 from typing import Any
 
 import attr
 from airflow.hooks.base import BaseHook
 
-from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.datasets.file.base import File
+from universal_transfer_operator.datasets.table import Table
 
 
 @attr.define
@@ -26,7 +29,7 @@ def check_if_connection_exists(conn_id: str) -> bool:
     return True
 
 
-def get_dataset_connection_type(dataset: Dataset) -> str:
+def get_dataset_connection_type(dataset: Table | File) -> str:
     """
     Given dataset fetch the connection type based on airflow connection
     """

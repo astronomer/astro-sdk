@@ -8,9 +8,10 @@ from airflow.utils.context import Context
 
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers import create_dataprovider
-from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.datasets.file.base import File
+from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.integrations import get_transfer_integration
-from universal_transfer_operator.utils import TransferParameters
+from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
 class UniversalTransferOperator(BaseOperator):
@@ -30,11 +31,11 @@ class UniversalTransferOperator(BaseOperator):
     def __init__(
         self,
         *,
-        source_dataset: Dataset,
-        destination_dataset: Dataset,
-        transfer_params: TransferParameters = attr.field(
-            factory=TransferParameters,
-            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        source_dataset: Table | File,
+        destination_dataset: Table | File,
+        transfer_params: TransferIntegrationOptions = attr.field(
+            factory=TransferIntegrationOptions,
+            converter=lambda val: TransferIntegrationOptions(**val) if isinstance(val, dict) else val,
         ),
         transfer_mode: TransferMode = TransferMode.NONNATIVE,
         **kwargs,

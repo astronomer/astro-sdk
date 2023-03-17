@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import cast
+
 from universal_transfer_operator.constants import FileType, TransferMode
 from universal_transfer_operator.data_providers import create_dataprovider
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.utils import TransferParameters
 
@@ -10,7 +13,7 @@ def resolve_file_path_pattern(
     file: File,
     filetype: FileType | None = None,
     normalize_config: dict | None = None,
-    transfer_params: TransferParameters = None,
+    transfer_params: TransferParameters | None = None,
     transfer_mode: TransferMode = TransferMode.NONNATIVE,
 ) -> list[File]:
     """get file objects by resolving path_pattern from local/object stores
@@ -24,10 +27,16 @@ def resolve_file_path_pattern(
     :param transfer_params: kwargs to be used by method involved in transfer flow.
     :param transfer_mode: Use transfer_mode TransferMode; native, non-native or thirdparty.
     """
-    location = create_dataprovider(
-        dataset=file,
-        transfer_params=transfer_params,
-        transfer_mode=transfer_mode,
+    if transfer_params is None:
+        transfer_params = TransferParameters()
+
+    location = cast(
+        BaseFilesystemProviders,
+        create_dataprovider(
+            dataset=file,
+            transfer_params=transfer_params,
+            transfer_mode=transfer_mode,
+        ),
     )
     files = []
     for path in location.paths:

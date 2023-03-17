@@ -4,16 +4,20 @@ import logging
 from contextlib import contextmanager
 from functools import cached_property
 from tempfile import NamedTemporaryFile
-from typing import Sequence
+from typing import Any, Iterator
 from urllib.parse import urlparse, urlunparse
 
 import attr
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, Path, TempFile
+from universal_transfer_operator.data_providers.filesystem.base import (
+    BaseFilesystemProviders,
+    Path,
+    TempFile,
+)
 from universal_transfer_operator.datasets.file.base import File
-from universal_transfer_operator.utils import TransferParameters
+from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
 
 class GCSDataProvider(BaseFilesystemProviders):
@@ -24,9 +28,9 @@ class GCSDataProvider(BaseFilesystemProviders):
     def __init__(
         self,
         dataset: File,
-        transfer_params: TransferParameters = attr.field(
-            factory=TransferParameters,
-            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        transfer_params: TransferIntegrationOptions = attr.field(
+            factory=TransferIntegrationOptions,
+            converter=lambda val: TransferIntegrationOptions(**val) if isinstance(val, dict) else val,
         ),
         transfer_mode: TransferMode = TransferMode.NONNATIVE,
     ):
@@ -80,7 +84,7 @@ class GCSDataProvider(BaseFilesystemProviders):
         return self.hook.exists(bucket_name=self.bucket_name, object_name=self.blob_name)
 
     @contextmanager
-    def read_using_hook(self) -> list[TempFile]:
+    def read_using_hook(self) -> Iterator[list[TempFile]]:
         """Read the file from dataset and write to local file location"""
         if not self.check_if_exists():
             raise ValueError(f"{self.dataset.path} doesn't exits")
@@ -122,6 +126,8 @@ class GCSDataProvider(BaseFilesystemProviders):
         """Upload file to GCS and return path"""
         # There will always be a '/' before file because it is
         # enforced at instantiation time
+        if file.tmp_file is None:
+            raise ValueError("Required param `file.tmp_file` missing")
         dest_gcs_object = self.blob_name + file.actual_filename.name
         self.hook.upload(
             bucket_name=self.bucket_name,
@@ -143,15 +149,15 @@ class GCSDataProvider(BaseFilesystemProviders):
             return TempFile(tmp_file=Path(tmp_file.name), actual_filename=Path(file_name))
 
     @property
-    def delegate_to(self) -> str | None:
+    def delegate_to(self) -> Any:
         return self.dataset.extra.get("delegate_to", None)
 
     @property
-    def google_impersonation_chain(self) -> str | Sequence[str] | None:
+    def google_impersonation_chain(self) -> Any:
         return self.dataset.extra.get("google_impersonation_chain", None)
 
     @property
-    def delimiter(self) -> str | None:
+    def delimiter(self) -> Any:
         return self.dataset.extra.get("delimiter", None)
 
     @property
@@ -160,11 +166,11 @@ class GCSDataProvider(BaseFilesystemProviders):
         return bucket_name
 
     @property
-    def prefix(self) -> str | None:
+    def prefix(self) -> Any:
         return self.dataset.extra.get("prefix", None)
 
     @property
-    def gzip(self) -> bool | None:
+    def gzip(self) -> Any:
         return self.dataset.extra.get("gzip", False)
 
     @property
@@ -195,3 +201,13 @@ class GCSDataProvider(BaseFilesystemProviders):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
+
+    @property
+    def size(self) -> int:
+        """Return file size for GCS location"""
+        url = urlparse(self.dataset.path)
+        bucket_name = url.netloc
+        object_name = url.path
+        if object_name.startswith("/"):
+            object_name = object_name[1:]
+        return int(self.hook.get_size(bucket_name=bucket_name, object_name=object_name))
