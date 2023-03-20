@@ -51,11 +51,9 @@ repos:
       - id: forbid-crlf
       - id: remove-crlf
       - id: forbid-tabs
-        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
       - id: remove-tabs
-        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile$
-      - id: remove-tabs
-        exclude: ^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$|$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
 
   - repo: https://github.com/psf/black
     rev: 23.1.0
