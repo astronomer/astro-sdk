@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 (Astro CLI 1.11.0)
+
+### Bug fixes
+
+* Fix astro flow deploy by having a conditional sql_cli import ([#1841](https://github.com/astronomer/astro-sdk/pull/1841))
+
+
 ## 0.4.0 (Astro CLI 1.11.0)
 
 ### Features
