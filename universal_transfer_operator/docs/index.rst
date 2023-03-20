@@ -15,8 +15,22 @@ Welcome to universal-transfer-operator's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Guides
-   :titlesonly:
+   :caption: Universal Transfer Operator:
+   :glob:
+
+   universal_transfer_operator/operator.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Transfer examples:
+   :glob:
+
+   universal_transfer_operator/*
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Concepts and guides
+   :glob:
 
    guides/concepts.rst
 

@@ -58,6 +58,7 @@ with DAG(
     )
     # [END fivetran_transfer_with_setup]
 
+    # [START fivetran_transfer_without_setup]
     transfer_fivetran_without_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_without_connector_id",
         source_dataset=File(path=f"{s3_bucket}/uto/", conn_id="aws_default"),
@@ -87,3 +88,4 @@ with DAG(
             ),
         ),
     )
+    # [END fivetran_transfer_without_setup]

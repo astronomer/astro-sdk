@@ -192,7 +192,6 @@ Here is an example of how to use Fivetran for transfers:
    :start-after: [START fivetran_transfer_with_setup]
    :end-before: [END fivetran_transfer_with_setup]
 
-
 .. _file_pattern:
 
 Patterns in File path

@@ -1,0 +1,44 @@
+.. _universal_transfer_operator:
+
+========================================================================================================
+:py:mod:`universal_transfer_operator operator <universal_transfer_operator.universal_transfer_operator>`
+========================================================================================================
+
+When to use the ``universal_transfer_operator`` operator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Universal Transfer Operator allows data transfers between any :ref:`dataset`. It copies all the data from the source
+Dataset to the destination Dataset. The DAG author only needs to use the Universal Transfer Operator for all transfers.
+
+This ensures a consistent set of :py:mod:`Data Providers <universal_transfer_operator.data_providers>` that can read
+from and write to Datasets. The Universal Transfer Operator can use any Data Provider as a source or a destination. It
+also takes advantage of any existing fast and direct high-speed endpoints, such as Snowflake’s built-in feature to load
+S3 files efficiently into Snowflake. Universal transfer operator also supports the transfers using third-party
+platforms like Fivetran.
+
+.. figure:: /images/approach.png
+
+There are three modes to transfer data using of the ``universal_transfer_operator``.
+
+1. Transfer using non-native approach
+2. Transfer using native approach
+3. Transfer using third-party platform
+
+More details on how transfer works can be found at :ref:`transfer_working`.
+
+Case 1: Transfer using non-native approach
+    Following is an example of non-native transfers between Google cloud storage and Sqlite:
+
+    .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+       :language: python
+       :start-after: [START transfer_non_native_gs_to_sqlite]
+       :end-before: [END transfer_non_native_gs_to_sqlite]
+
+Case 2: Transfer using native approach
+
+Case 3: Transfer using third-party platform
+    Here is an example of how to use Fivetran for transfers:
+
+    .. literalinclude:: ../../example_dags/example_dag_fivetran.py
+       :language: python
+       :start-after: [START fivetran_transfer_with_setup]
+       :end-before: [END fivetran_transfer_with_setup]
