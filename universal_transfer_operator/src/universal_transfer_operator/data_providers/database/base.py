@@ -464,7 +464,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         use_native_support: bool = True,
     ):
         """
-        Checks if the autodetect schema exists for native support else creates the schema and table
+        Creates the schema and table from dataframe
         :param table: Table to create
         :param file: File path and conn_id for object stores
         :param normalize_config: pandas json_normalize params config
