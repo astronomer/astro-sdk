@@ -50,11 +50,13 @@ with DAG(
     )
     # [END transfer_non_native_s3_to_gs]
 
+    # [START transfer_non_native_s3_to_sqlite]
     transfer_non_native_s3_to_sqlite = UniversalTransferOperator(
         task_id="transfer_non_native_s3_to_sqlite",
         source_dataset=File(path=f"{s3_bucket}/uto/csv_files/", conn_id="aws_default", filetype=FileType.CSV),
         destination_dataset=Table(name="uto_s3_to_sqlite_table", conn_id="sqlite_default"),
     )
+    # [END transfer_non_native_s3_to_sqlite]
 
     # [START transfer_non_native_gs_to_sqlite]
     transfer_non_native_gs_to_sqlite = UniversalTransferOperator(

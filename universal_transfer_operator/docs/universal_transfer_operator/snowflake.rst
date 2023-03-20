@@ -3,7 +3,7 @@ Snowflake
 *********
 
 Transfer to Snowflake as destination dataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 User can transfer data to Snowflake as destination as from following sources dataset:
 
 #. :ref:`table`
