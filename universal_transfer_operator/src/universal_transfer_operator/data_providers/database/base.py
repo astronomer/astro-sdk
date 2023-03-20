@@ -185,7 +185,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
-    def read(self):
+    def read(self) -> pd.DataFrame:
         """Read the dataset and write to local reference location"""
         yield self.export_table_to_pandas_dataframe()
 

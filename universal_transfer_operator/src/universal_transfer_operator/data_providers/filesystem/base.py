@@ -4,6 +4,7 @@ import io
 import os
 from abc import abstractmethod
 from pathlib import Path
+from typing import Iterator
 
 import attr
 import pandas as pd
@@ -91,17 +92,17 @@ class BaseFilesystemProviders(DataProviders[File]):
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
-    def read(self):
+    def read(self) -> Iterator[FileStream]:
         """ ""Read the dataset and write to local reference location"""
         return self.read_using_smart_open()
 
-    def read_using_smart_open(self):
+    def read_using_smart_open(self) -> Iterator[FileStream]:
         """Read the file dataset using smart open returns i/o buffer"""
         files = self.paths
         for file in files:
             yield FileStream(
                 remote_obj_buffer=self._convert_remote_file_to_byte_stream(file),
-                actual_filename=file,
+                actual_filename=Path(file),
                 actual_file=self.dataset,
             )
 
