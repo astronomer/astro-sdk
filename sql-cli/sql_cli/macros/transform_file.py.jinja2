@@ -1,5 +1,5 @@
 {% macro transform_file(sql_file, dag, tasks_to_execute) -%}
-{%- if tasks_to_execute and sql_file.get_variable_name() not in tasks_to_execute %}
+{%- if tasks_to_execute and sql_file.get_variable_name() not in tasks_to_execute -%}
 {{ sql_file.get_variable_name() }} = naql.nominal_transform_file(
 {%- else -%}
 {{ sql_file.get_variable_name() }} = aql.transform_file(
