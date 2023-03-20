@@ -173,6 +173,12 @@ class FivetranIntegration(TransferIntegration):
         :param source_dataset: Source dataset
         :param destination_dataset: Destination dataset
         """
+        if not source_dataset:
+            raise ValueError("Source dataset is not specified.")
+
+        if not destination_dataset:
+            raise ValueError("Destination dataset is not specified.")
+
         fivetran_hook = self.hook
 
         # Check if connector_id is passed and check if it exists and do the transfer.
