@@ -54,6 +54,8 @@ repos:
         exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile$
       - id: remove-tabs
         exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile$
+      - id: remove-tabs
+        exclude: ^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$|$
 
   - repo: https://github.com/psf/black
     rev: 23.1.0

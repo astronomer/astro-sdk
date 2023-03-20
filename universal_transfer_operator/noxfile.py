@@ -73,3 +73,11 @@ def lint(session: nox.Session) -> None:
     else:
         args = ["--all-files", "--show-diff-on-failure"]
     session.run("pre-commit", "run", *args)
+
+
+@nox.session(python="3.9")
+def build_docs(session: nox.Session) -> None:
+    """Build release artifacts."""
+    session.install("-e", ".[doc]")
+    session.chdir("./docs")
+    session.run("make", "html")

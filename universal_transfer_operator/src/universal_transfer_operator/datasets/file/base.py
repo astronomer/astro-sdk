@@ -11,7 +11,7 @@ from attr import define, field
 from universal_transfer_operator.constants import FileType as FileTypeConstant
 from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.datasets.file.types import create_file_type
-from universal_transfer_operator.datasets.file.types.base import FileType
+from universal_transfer_operator.datasets.file.types.base import FileTypes
 
 
 @define
@@ -53,7 +53,7 @@ class File(Dataset):
         return size
 
     @property
-    def type(self) -> FileType:  # noqa: A003
+    def type(self) -> FileTypes:  # noqa: A003
         return create_file_type(
             path=self.path,
             filetype=self.filetype,
