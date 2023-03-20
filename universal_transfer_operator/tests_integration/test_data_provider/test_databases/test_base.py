@@ -61,13 +61,13 @@ CWD = pathlib.Path(__file__).parent
         {
             "name": "SnowflakeDataProvider",
         },
-        {"name": "S3DataProvider", "object": File(path=f"s3://tmp9/{create_unique_str(10)}")},
+        {"name": "S3DataProvider", "object": File(path=f"s3://tmp9/{create_unique_str(10)}.csv")},
         {
             "name": "GCSDataProvider",
-            "object": File(path=f"gs://uto-test/{create_unique_str(10)}"),
+            "object": File(path=f"gs://uto-test/{create_unique_str(10)}.csv"),
         },
-        {"name": "LocalDataProvider", "object": File(path=f"/tmp/{create_unique_str(10)}")},
-        {"name": "SFTPDataProvider", "object": File(path=f"sftp://upload/{create_unique_str(10)}")},
+        {"name": "LocalDataProvider", "object": File(path=f"/tmp/{create_unique_str(10)}.csv")},
+        {"name": "SFTPDataProvider", "object": File(path=f"sftp://upload/{create_unique_str(10)}.csv")},
     ],
     indirect=True,
     ids=lambda dp: dp["name"],
