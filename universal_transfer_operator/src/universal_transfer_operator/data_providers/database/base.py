@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
@@ -188,22 +187,17 @@ class DatabaseDataProvider(DataProviders[Table]):
 
     def read(self):
         """Read the dataset and write to local reference location"""
-        with NamedTemporaryFile(mode="wb+", suffix=".parquet", delete=False) as tmp_file:
-            df = self.export_table_to_pandas_dataframe()
-            df.to_parquet(tmp_file.name)
-            local_temp_file = FileStream(
-                remote_obj_buffer=tmp_file.file,
-                actual_filename=tmp_file.name,
-                actual_file=File(path=tmp_file.name),
-            )
-            yield local_temp_file
+        yield self.export_table_to_pandas_dataframe()
 
-    def write(self, source_ref: FileStream):
+    def write(self, source_ref: FileStream | pd.DataFrame):
         """
         Write the data from local reference location to the dataset.
         :param source_ref: Stream of data to be loaded into output table.
         """
-        return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
+        if isinstance(source_ref, FileStream):
+            return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
+        elif isinstance(source_ref, pd.DataFrame):
+            return self.load_dataframe_to_table(input_dataframe=source_ref, output_table=self.dataset)
 
     @property
     def openlineage_dataset_namespace(self) -> str:
@@ -461,6 +455,34 @@ class DatabaseDataProvider(DataProviders[Table]):
                 use_native_support=use_native_support,
             )
 
+    def create_schema_and_table_if_needed_from_dataframe(
+        self,
+        table: Table,
+        dataframe: pd.DataFrame,
+        columns_names_capitalization: ColumnCapitalization = "original",
+        if_exists: LoadExistStrategy = "replace",
+        use_native_support: bool = True,
+    ):
+        """
+        Checks if the autodetect schema exists for native support else creates the schema and table
+        :param table: Table to create
+        :param file: File path and conn_id for object stores
+        :param normalize_config: pandas json_normalize params config
+        :param columns_names_capitalization:  determines whether to convert all columns to lowercase/uppercase
+        :param if_exists:  Overwrite file if exists
+        :param use_native_support: Use native support for data transfer if available on the destination
+        """
+        if if_exists == "replace":
+            self.drop_table(table)
+        self.create_schema_if_needed(table.metadata.schema)
+        if if_exists == "replace" or not self.table_exists(table):
+            self.create_table(
+                table,
+                dataframe=dataframe,
+                columns_names_capitalization=columns_names_capitalization,
+                use_native_support=use_native_support,
+            )
+
     def fetch_all_rows(self, table: Table, row_limit: int = -1) -> list:
         """
         Fetches all rows for a table and returns as a list. This is needed because some
@@ -516,6 +538,39 @@ class DatabaseDataProvider(DataProviders[Table]):
             normalize_config=normalize_config,
             if_exists="append",
             chunk_size=chunk_size,
+        )
+
+    def load_dataframe_to_table(
+        self,
+        input_dataframe: pd.DataFrame,
+        output_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        columns_names_capitalization: ColumnCapitalization = "original",
+    ):
+        """
+        Load content of dataframe in output_table.
+
+        :param input_dataframe: dataframe
+        :param output_table: Table to create
+        :param if_exists: Overwrite file if exists
+        :param chunk_size: Specify the number of records in each batch to be written at a time
+        :param normalize_config: pandas json_normalize params config
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
+        """
+
+        self.create_schema_and_table_if_needed_from_dataframe(
+            table=output_table,
+            dataframe=input_dataframe,
+            columns_names_capitalization=columns_names_capitalization,
+            if_exists=if_exists,
+        )
+        self.load_pandas_dataframe_to_table(
+            input_dataframe,
+            output_table,
+            chunk_size=chunk_size,
+            if_exists=if_exists,
         )
 
     def load_file_to_table_using_pandas(

@@ -6,6 +6,7 @@ from abc import abstractmethod
 from pathlib import Path
 
 import attr
+import pandas as pd
 import smart_open
 from airflow.hooks.base import BaseHook
 
@@ -118,19 +119,22 @@ class BaseFilesystemProviders(DataProviders[File]):
             remote_obj_buffer.seek(0)
             return remote_obj_buffer
 
-    def write(self, source_ref: FileStream):
+    def write(self, source_ref: FileStream | pd.DataFrame):
         """
         Write the data from local reference location to the dataset
         :param source_ref: Source FileStream object which will be used to read data
         """
         return self.write_using_smart_open(source_ref=source_ref)
 
-    def write_using_smart_open(self, source_ref: FileStream):
+    def write_using_smart_open(self, source_ref: FileStream | pd.DataFrame):
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
-        mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
+        mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
         destination_file = self.dataset.path
         with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
-            stream.write(source_ref.remote_obj_buffer.read())
+            if isinstance(source_ref, FileStream):
+                stream.write(source_ref.remote_obj_buffer.read())
+            elif isinstance(source_ref, pd.DataFrame):
+                self.dataset.type.create_from_dataframe(stream=stream, df=source_ref)
         return destination_file
 
     def read_as_binary(self, file: str) -> bool:

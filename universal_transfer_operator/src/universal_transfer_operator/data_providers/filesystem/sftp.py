@@ -4,6 +4,7 @@ from functools import cached_property
 from urllib.parse import ParseResult, urlparse, urlunparse
 
 import attr
+import pandas as pd
 import smart_open
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
@@ -116,7 +117,13 @@ class SFTPDataProvider(BaseFilesystemProviders):
 
         return urlunparse(final_url)
 
-    def write_using_smart_open(self, source_ref: FileStream) -> str:
+    def write_using_smart_open(self, source_ref: FileStream | pd.DataFrame):
+        if isinstance(source_ref, FileStream):
+            return self.write_file_using_smart_open(source_ref=source_ref)
+        elif isinstance(source_ref, pd.DataFrame):
+            return self.write_dataframe_using_smart_open(source_ref=source_ref)
+
+    def write_file_using_smart_open(self, source_ref: FileStream) -> str:
         """Write the source data from remote object i/o buffer to the dataset using smart open
         :param source_ref: FileStream object of source dataset
         :return: File path that is the used for write pattern
@@ -125,6 +132,17 @@ class SFTPDataProvider(BaseFilesystemProviders):
         complete_url = self.get_complete_url(self.dataset.path, source_ref.actual_file.path)
         with smart_open.open(complete_url, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())
+        return complete_url
+
+    def write_dataframe_using_smart_open(self, source_ref: pd.DataFrame) -> str:
+        """Write the source data from remote object i/o buffer to the dataset using smart open
+        :param source_ref: FileStream object of source dataset
+        :return: File path that is the used for write pattern
+        """
+        mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
+        complete_url = self.get_complete_url(self.dataset.path, "")
+        with smart_open.open(complete_url, mode=mode, transport_params=self.transport_params) as stream:
+            self.dataset.type.create_from_dataframe(stream=stream, df=source_ref)
         return complete_url
 
     @property
