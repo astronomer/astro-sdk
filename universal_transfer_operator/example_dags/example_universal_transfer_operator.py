@@ -109,7 +109,9 @@ with DAG(
         task_id="transfer_native_gs_to_bigquery",
         source_dataset=File(path="gs://uto-test/uto/homes_append.csv", conn_id="google_cloud_default"),
         destination_dataset=Table(
-            name="uto_gs_to_bigquery_table_native", conn_id="google_cloud_default", metadata=Metadata(schema="rajath")
+            name="uto_gs_to_bigquery_table_native",
+            conn_id="google_cloud_default",
+            metadata=Metadata(schema="rajath"),
         ),
         transfer_mode=TransferMode.NATIVE,
         transfer_params={
@@ -124,7 +126,11 @@ with DAG(
         source_dataset=File(
             path="s3://astro-sdk-test/uto/sample.csv", conn_id="aws_default", filetype=FileType.CSV
         ),
-        destination_dataset=Table(name="uto_s3_to_bigquery_table_native", conn_id="google_cloud_default",metadata=Metadata(schema="rajath")),
+        destination_dataset=Table(
+            name="uto_s3_to_bigquery_table_native",
+            conn_id="google_cloud_default",
+            metadata=Metadata(schema="rajath"),
+        ),
         transfer_mode=TransferMode.NATIVE,
         transfer_params={
             "ignore_unknown_values": True,

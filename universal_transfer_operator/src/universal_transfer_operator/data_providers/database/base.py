@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import logging
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Callable
 
-import logging
 import pandas as pd
 import sqlalchemy
 
@@ -31,12 +31,14 @@ from universal_transfer_operator.data_providers.filesystem.base import FileStrea
 from universal_transfer_operator.datasets.dataframe.pandas import PandasDataframe
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
-from universal_transfer_operator.universal_transfer_operator import TransferIntegrationOptions, TransferParameters
 from universal_transfer_operator.exceptions import DatabaseCustomError
 from universal_transfer_operator.settings import (
     LOAD_FILE_ENABLE_NATIVE_FALLBACK,
     LOAD_TABLE_AUTODETECT_ROWS_COUNT,
     SCHEMA,
+)
+from universal_transfer_operator.universal_transfer_operator import (
+    TransferIntegrationOptions,
 )
 from universal_transfer_operator.utils import get_dataset_connection_type
 
@@ -518,7 +520,9 @@ class DatabaseDataProvider(DataProviders[Table]):
             if_exists=if_exists,
             normalize_config=normalize_config,
         )
-        if self.transfer_mode == TransferMode.NATIVE and self.is_native_load_file_available(source_file=input_file, target_table=output_table):
+        if self.transfer_mode == TransferMode.NATIVE and self.is_native_load_file_available(
+            source_file=input_file, target_table=output_table
+        ):
             self.load_file_to_table_natively_with_fallback(
                 source_file=input_file,
                 target_table=output_table,
@@ -583,7 +587,7 @@ class DatabaseDataProvider(DataProviders[Table]):
                 )
             else:
                 raise load_exception
-    
+
     def load_file_to_table_natively(
         self,
         source_file: File,
