@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 import warnings
 
 import attr
-from airflow.hooks.dbapi import DbApiHook
+from airflow.providers.common.sql.hooks.sql import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.schema import Table as SqlaTable

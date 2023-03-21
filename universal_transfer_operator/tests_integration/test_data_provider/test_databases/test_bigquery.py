@@ -1,4 +1,4 @@
-"""Tests specific to the Sqlite Database implementation."""
+"""Tests specific to the BigQuery Database implementation."""
 import pathlib
 from unittest import mock
 
@@ -57,9 +57,9 @@ def test_table_exists_raises_exception():
     indirect=True,
     ids=["bigquery"],
 )
-def test_bigquery_create_table_with_columns(database_table_fixture):
+def test_bigquery_create_table_with_columns(dataset_table_fixture):
     """Test table creation with columns data"""
-    database, table = database_table_fixture
+    database, table = dataset_table_fixture
 
     # Looking for specific columns in INFORMATION_SCHEMA.COLUMNS as Bigquery can add/remove columns in the table.
     statement = (
@@ -102,9 +102,9 @@ def test_bigquery_create_table_with_columns(database_table_fixture):
     indirect=True,
     ids=["bigquery"],
 )
-def test_load_pandas_dataframe_to_table(database_table_fixture):
+def test_load_pandas_dataframe_to_table(dataset_table_fixture):
     """Test load_pandas_dataframe_to_table against bigquery"""
-    database, table = database_table_fixture
+    database, table = dataset_table_fixture
 
     pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
     database.load_pandas_dataframe_to_table(pandas_dataframe, table)
@@ -130,9 +130,9 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     indirect=True,
     ids=["bigquery"],
 )
-def test_load_file_to_table_natively_for_not_optimised_path(database_table_fixture):
+def test_load_file_to_table_natively_for_not_optimised_path(dataset_table_fixture):
     """Test loading on files to bigquery natively for non optimized path."""
-    database, target_table = database_table_fixture
+    database, target_table = dataset_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     response = database.load_file_to_table_natively(File(filepath), target_table)
     assert response is None
@@ -151,10 +151,10 @@ def test_load_file_to_table_natively_for_not_optimised_path(database_table_fixtu
     ids=["bigquery"],
 )
 @mock.patch("astro.databases.google.bigquery.BigqueryDatabase.load_file_to_table_natively")
-def test_load_file_to_table_natively_for_fallback(mock_load_file, database_table_fixture):
+def test_load_file_to_table_natively_for_fallback(mock_load_file, dataset_table_fixture):
     """Test loading on files to bigquery natively for fallback."""
     mock_load_file.side_effect = DatabaseCustomError
-    database, target_table = database_table_fixture
+    database, target_table = dataset_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     response = database.load_file_to_table_natively_with_fallback(
         File(filepath),
@@ -177,13 +177,13 @@ def test_load_file_to_table_natively_for_fallback(mock_load_file, database_table
     ids=["bigquery"],
 )
 def test_load_file_to_table_natively_for_fallback_wrong_file_location_with_enable_native_fallback(
-    database_table_fixture,
+    dataset_table_fixture,
 ):
     """
     Test loading on files to bigquery natively for fallback without fallback
     gracefully for wrong file location.
     """
-    database, target_table = database_table_fixture
+    database, target_table = dataset_table_fixture
     filepath = "https://www.data.com/data/sample.json"
 
     with pytest.raises(DatabaseCustomError):
