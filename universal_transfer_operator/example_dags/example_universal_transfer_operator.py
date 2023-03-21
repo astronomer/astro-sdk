@@ -3,7 +3,7 @@ from datetime import datetime
 
 from airflow import DAG
 
-from universal_transfer_operator.constants import FileType
+from universal_transfer_operator.constants import FileType, TransferMode
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.universal_transfer_operator import UniversalTransferOperator
@@ -103,4 +103,32 @@ with DAG(
             name="uto_s3_to_bigquery_table", conn_id="google_cloud_default", metadata=Metadata(schema="astro")
         ),
         destination_dataset=Table(name="uto_bigquery_to_sqlite_table", conn_id="sqlite_default"),
+    )
+
+    transfer_native_gs_to_bigquery = UniversalTransferOperator(
+        task_id="transfer_native_gs_to_bigquery",
+        source_dataset=File(path="gs://uto-test/uto/homes_append.csv", conn_id="google_cloud_default"),
+        destination_dataset=Table(
+            name="uto_gs_to_bigquery_table_native", conn_id="google_cloud_default", metadata=Metadata(schema="rajath")
+        ),
+        transfer_mode=TransferMode.NATIVE,
+        transfer_params={
+            "ignore_unknown_values": True,
+            "allow_jagged_rows": True,
+            "skip_leading_rows": "1",
+        },
+    )
+
+    transfer_native_s3_to_bigquery = UniversalTransferOperator(
+        task_id="transfer_native_s3_to_bigquery",
+        source_dataset=File(
+            path="s3://astro-sdk-test/uto/sample.csv", conn_id="aws_default", filetype=FileType.CSV
+        ),
+        destination_dataset=Table(name="uto_s3_to_bigquery_table_native", conn_id="google_cloud_default",metadata=Metadata(schema="rajath")),
+        transfer_mode=TransferMode.NATIVE,
+        transfer_params={
+            "ignore_unknown_values": True,
+            "allow_jagged_rows": True,
+            "skip_leading_rows": "1",
+        },
     )

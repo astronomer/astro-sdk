@@ -43,6 +43,7 @@ class GCSDataProvider(BaseFilesystemProviders):
             Location.S3,
             Location.GS,
         }
+        self.location_type = Location.GS
 
     @cached_property
     def hook(self) -> GCSHook:

@@ -36,6 +36,7 @@ class SFTPDataProvider(BaseFilesystemProviders):
             Location.S3,
             Location.GS,
         }
+        self.location_type = Location.SFTP
 
     @cached_property
     def hook(self) -> SFTPHook:
