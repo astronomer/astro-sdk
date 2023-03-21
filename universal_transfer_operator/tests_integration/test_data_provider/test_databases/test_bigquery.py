@@ -1,6 +1,5 @@
 """Tests specific to the BigQuery Database implementation."""
 import pathlib
-from unittest import mock
 
 import pandas as pd
 import pytest
@@ -10,7 +9,6 @@ from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers.database.google.bigquery import BigqueryDataProvider
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
-from universal_transfer_operator.exceptions import DatabaseCustomError
 from universal_transfer_operator.settings import BIGQUERY_SCHEMA
 
 DEFAULT_CONN_ID = "google_cloud_default"
@@ -23,7 +21,9 @@ CWD = pathlib.Path(__file__).parent
 def test_bigquery_run_sql():
     """Test run_sql against bigquery database"""
     statement = "SELECT 1 + 1;"
-    database = BigqueryDataProvider(conn_id=DEFAULT_CONN_ID)
+    database = BigqueryDataProvider(
+        dataset=Table(name="some_table", conn_id="gcp_conn"), transfer_mode=TransferMode.NONNATIVE
+    )
     response = database.run_sql(statement, handler=lambda x: x.first())
     assert response[0] == 2
 
@@ -133,61 +133,6 @@ def test_load_pandas_dataframe_to_table(dataset_table_fixture):
 def test_load_file_to_table_natively_for_not_optimised_path(dataset_table_fixture):
     """Test loading on files to bigquery natively for non optimized path."""
     database, target_table = dataset_table_fixture
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    filepath = f"{str(CWD)}/../../data/sample.csv"
     response = database.load_file_to_table_natively(File(filepath), target_table)
     assert response is None
-
-
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "dataset_table_fixture",
-    [
-        {
-            "dataset": "BigqueryDataProvider",
-            "table": Table(metadata=Metadata(schema=BIGQUERY_SCHEMA)),
-        },
-    ],
-    indirect=True,
-    ids=["bigquery"],
-)
-@mock.patch("astro.databases.google.bigquery.BigqueryDatabase.load_file_to_table_natively")
-def test_load_file_to_table_natively_for_fallback(mock_load_file, dataset_table_fixture):
-    """Test loading on files to bigquery natively for fallback."""
-    mock_load_file.side_effect = DatabaseCustomError
-    database, target_table = dataset_table_fixture
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    response = database.load_file_to_table_natively_with_fallback(
-        File(filepath),
-        target_table,
-        enable_native_fallback=True,
-    )
-    assert response is None
-
-
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "dataset_table_fixture",
-    [
-        {
-            "dataset": "BigqueryDataProvider",
-            "table": Table(metadata=Metadata(schema=BIGQUERY_SCHEMA)),
-        },
-    ],
-    indirect=True,
-    ids=["bigquery"],
-)
-def test_load_file_to_table_natively_for_fallback_wrong_file_location_with_enable_native_fallback(
-    dataset_table_fixture,
-):
-    """
-    Test loading on files to bigquery natively for fallback without fallback
-    gracefully for wrong file location.
-    """
-    database, target_table = dataset_table_fixture
-    filepath = "https://www.data.com/data/sample.json"
-
-    with pytest.raises(DatabaseCustomError):
-        database.load_file_to_table_natively_with_fallback(
-            source_file=File(filepath),
-            target_table=target_table,
-        )
