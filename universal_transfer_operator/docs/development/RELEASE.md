@@ -35,7 +35,7 @@ branch from main (please use `git cherry-pick -x <commit id>` to retain
 git commit hashes and messages). Depending on the fix there might be some git conflicts to resolve. If you run into conflicts, please
 resolve said conflicts, run `git add .`, and then `git cherry-pick --continue` to continue the merge.
 
-After cherry-picking all needed fixes, follow the instructions to [create a release from the release branch](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/docs/development/RELEASE.md#creating-a-release-from-the-release-branch).
+After cherry-picking all needed fixes, follow the instructions to [create a release from the release branch](https://github.com/astronomer/astro-sdk/blob/main/universal_transfer_operator/docs/development/RELEASE.md#creating-a-release-from-the-release-branch).
 
 ## Handling minor releases
 ### When should I create a minor release?
@@ -51,7 +51,7 @@ major release.
 
 To create a minor release, first create a new release branch based on main under the new minor release number.
 If we are currently releasing from `release-0.6` then you should create the branch `release-0.7`. Since this branch is
-pulled directly from main, there is nothing for you to cherry-pick. Simply follow the following instructions to [create a release from the release branch](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/docs/development/RELEASE.md#creating-a-release-from-the-release-branch)
+pulled directly from main, there is nothing for you to cherry-pick. Simply follow the following instructions to [create a release from the release branch](https://github.com/astronomer/universal_transfer_operator/blob/main/universal_transfer_operator/docs/development/RELEASE.md#creating-a-release-from-the-release-branch)
 
 # Handling Major releases
 
@@ -63,13 +63,13 @@ ample time with deprecation warnings and migration steps before removing a featu
 
 ## Creating a major release
 
-The instructions for creating a major release are identical for those of [creating a minor release](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/docs/development/RELEASE.md#creating-a-minor-release).
+The instructions for creating a major release are identical for those of [creating a minor release](https://github.com/astronomer/astro-sdk/blob/main/universal_transfer_operator/docs/development/RELEASE.md#creating-a-minor-release).
 
 # Creating a release from the release branch
 
 Once your release branch is ready to go there are a few simple steps to actually release the project to PyPI.
 
-The first step is to go to [the base level \_\_init\_\_.py](../../src/astro/__init__.py) and change the `__version__` variable to the new version. You can then
+The first step is to go to [the base level \_\_init\_\_.py](../../src/universal_transfer_operator/__init__.py) and change the `__version__` variable to the new version. You can then
 push this change to main or create a PR depending on your level of permission within the project.
 
 <!-- markdown-link-check-disable -->
