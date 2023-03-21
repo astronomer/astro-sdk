@@ -1,28 +1,22 @@
 """Tests specific to the Sqlite Database implementation."""
-import os
 import pathlib
 from unittest import mock
-from urllib.parse import urlparse
 
 import pandas as pd
 import pytest
 import sqlalchemy
 
-
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers.database.google.bigquery import BigqueryDataProvider
-from universal_transfer_operator.data_providers.filesystem.base import FileStream
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
-from universal_transfer_operator.settings import BIGQUERY_SCHEMA
 from universal_transfer_operator.exceptions import DatabaseCustomError
-
+from universal_transfer_operator.settings import BIGQUERY_SCHEMA
 
 DEFAULT_CONN_ID = "google_cloud_default"
 CUSTOM_CONN_ID = "gcp_conn"
 SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
 CWD = pathlib.Path(__file__).parent
-
 
 
 @pytest.mark.integration
@@ -122,7 +116,6 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)
-
 
 
 @pytest.mark.integration
