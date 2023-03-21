@@ -492,6 +492,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         columns_names_capitalization: ColumnCapitalization = "original",
+        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
     ):
         """
@@ -525,7 +526,7 @@ class DatabaseDataProvider(DataProviders[Table]):
                 if_exists="append",
                 normalize_config=normalize_config,
                 native_support_kwargs=self.transfer_params,
-                enable_native_fallback=False,
+                enable_native_fallback=enable_native_fallback,
                 chunk_size=chunk_size,
             )
         else:

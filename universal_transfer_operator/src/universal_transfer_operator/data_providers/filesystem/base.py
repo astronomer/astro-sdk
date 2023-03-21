@@ -46,7 +46,7 @@ class BaseFilesystemProviders(DataProviders[File]):
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
         self.transfer_mapping = set()
-        self.location_type = None
+        self.location_type: Location | None = None
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
         super().__init__(
             dataset=self.dataset, transfer_mode=self.transfer_mode, transfer_params=self.transfer_params
