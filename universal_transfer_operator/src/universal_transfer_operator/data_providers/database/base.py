@@ -494,7 +494,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        enable_native_fallback: bool = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
     ):
         """
@@ -549,7 +549,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         if_exists: LoadExistStrategy = "replace",
         normalize_config: dict | None = None,
         native_support_kwargs: dict | None = None,
-        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        enable_native_fallback: bool = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         **kwargs,
     ):
