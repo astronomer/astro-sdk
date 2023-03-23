@@ -9,10 +9,10 @@ from universal_transfer_operator.datasets.dataframe.pandas import (
     PandasDataframe,
     convert_columns_names_capitalization,
 )
-from universal_transfer_operator.datasets.file.types.base import FileType
+from universal_transfer_operator.datasets.file.types.base import FileTypes
 
 
-class JSONFileType(FileType):
+class JSONFileTypes(FileTypes):
     """Concrete implementation to handle JSON file type"""
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
@@ -22,7 +22,9 @@ class JSONFileType(FileType):
         columns_names_capitalization="original",
         **kwargs,
     ) -> pd.DataFrame:  # skipcq PYL-R0201
-        """read json file from one of the supported locations and return dataframe
+        """
+        Read json file from one of the supported locations and return dataframe
+
         :param stream: file stream object
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
@@ -38,7 +40,9 @@ class JSONFileType(FileType):
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:  # skipcq PYL-R0201
-        """Write json file to one of the supported locations
+        """
+        Write json file to one of the supported locations
+
         :param df: pandas dataframe
         :param stream: file stream object
         """

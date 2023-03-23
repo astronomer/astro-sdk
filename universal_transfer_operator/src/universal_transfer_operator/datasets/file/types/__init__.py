@@ -3,24 +3,24 @@ from __future__ import annotations
 import pathlib
 
 from universal_transfer_operator.constants import FileType as FileTypeConstants
-from universal_transfer_operator.datasets.file.types.base import FileType
-from universal_transfer_operator.datasets.file.types.csv import CSVFileType
-from universal_transfer_operator.datasets.file.types.json import JSONFileType
-from universal_transfer_operator.datasets.file.types.ndjson import NDJsonFileType
-from universal_transfer_operator.datasets.file.types.parquet import ParquetFileType
+from universal_transfer_operator.datasets.file.types.base import FileTypes
+from universal_transfer_operator.datasets.file.types.csv import CSVFileTypes
+from universal_transfer_operator.datasets.file.types.json import JSONFileTypes
+from universal_transfer_operator.datasets.file.types.ndjson import NDJsonFileTypes
+from universal_transfer_operator.datasets.file.types.parquet import ParquetFileTypes
 
 
 def create_file_type(
     path: str,
     filetype: FileTypeConstants | None = None,
     normalize_config: dict | None = None,
-) -> FileType:
+) -> FileTypes:
     """Factory method to create FileType super objects based on the file extension in path or filetype specified."""
-    filetype_to_class: dict[FileTypeConstants, type[FileType]] = {
-        FileTypeConstants.CSV: CSVFileType,
-        FileTypeConstants.JSON: JSONFileType,
-        FileTypeConstants.NDJSON: NDJsonFileType,
-        FileTypeConstants.PARQUET: ParquetFileType,
+    filetype_to_class: dict[FileTypeConstants, type[FileTypes]] = {
+        FileTypeConstants.CSV: CSVFileTypes,
+        FileTypeConstants.JSON: JSONFileTypes,
+        FileTypeConstants.NDJSON: NDJsonFileTypes,
+        FileTypeConstants.PARQUET: ParquetFileTypes,
     }
     if not filetype:
         filetype = get_filetype(path)

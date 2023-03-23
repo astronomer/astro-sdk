@@ -54,14 +54,16 @@ class SFTPDataProvider(BaseFilesystemProviders):
 
     @property
     def paths(self) -> list[str]:
-        """Resolve SFTP file paths with netloc of self.dataset.path as prefix. Paths are added if they start with prefix
+        """
+        Resolve SFTP file paths with netloc of self.dataset.path as prefix. Paths are added if they start with prefix
+
         Example - if there are multiple paths like
             - sftp://upload/test.csv
             - sftp://upload/test.json
             - sftp://upload/home.parquet
             - sftp://upload/sample.ndjson
 
-        if self.dataset.path is "sftp://upload/test" will return sftp://upload/test.csv and sftp://upload/test.json
+        If self.dataset.path is "sftp://upload/test" will return sftp://upload/test.csv and sftp://upload/test.json
         """
         url = urlparse(self.dataset.path)
         uri = self.get_uri()
