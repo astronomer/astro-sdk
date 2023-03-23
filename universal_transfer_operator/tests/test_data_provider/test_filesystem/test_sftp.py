@@ -5,7 +5,7 @@ from airflow.providers.sftp.hooks.sftp import SFTPHook
 from utils.test_utils import create_unique_str
 
 from universal_transfer_operator.data_providers import create_dataprovider
-from universal_transfer_operator.data_providers.filesystem.base import FileStream
+from universal_transfer_operator.data_providers.base import FileStream
 from universal_transfer_operator.datasets.file.base import File
 
 CWD = pathlib.Path(__file__).parent
