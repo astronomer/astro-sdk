@@ -10,7 +10,7 @@ import pandas as pd
 import smart_open
 from airflow.hooks.base import BaseHook
 
-from universal_transfer_operator.data_providers.base import FileStream
+from universal_transfer_operator.data_providers.base import DataStream
 from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 
 
@@ -65,11 +65,11 @@ class LocalDataProvider(BaseFilesystemProviders):
         """Return true if the dataset exists"""
         return exists(self.dataset.path)
 
-    def write_using_smart_open(self, source_ref: FileStream | pd.DataFrame) -> str:
+    def write_using_smart_open(self, source_ref: DataStream | pd.DataFrame) -> str:
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
         mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
         with smart_open.open(self.dataset.path, mode=mode, transport_params=self.transport_params) as stream:
-            if isinstance(source_ref, FileStream):
+            if isinstance(source_ref, DataStream):
                 stream.write(source_ref.remote_obj_buffer.read())
             elif isinstance(source_ref, pd.DataFrame):
                 self.dataset.type.create_from_dataframe(stream=stream, df=source_ref)

@@ -18,7 +18,7 @@ DatasetType = TypeVar("DatasetType", File, Table)
 
 
 @attr.define
-class FileStream:
+class DataStream:
     remote_obj_buffer: io.IOBase
     actual_filename: Path
     actual_file: File
@@ -67,11 +67,11 @@ class DataProviders(ABC, Generic[DatasetType]):
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
-    def read(self) -> Iterator[pd.DataFrame] | Iterator[FileStream]:
+    def read(self) -> Iterator[pd.DataFrame] | Iterator[DataStream]:
         """Read from filesystem dataset or databases dataset and write to local reference locations or dataframes"""
         raise NotImplementedError
 
-    def write(self, source_ref: pd.DataFrame | FileStream) -> str:  # type: ignore
+    def write(self, source_ref: pd.DataFrame | DataStream) -> str:  # type: ignore
         """Write the data from local reference location or a dataframe to the database dataset or filesystem dataset
 
         :param source_ref: Stream of data to be loaded into output table or a pandas dataframe.

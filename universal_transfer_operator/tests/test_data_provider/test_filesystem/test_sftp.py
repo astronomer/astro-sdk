@@ -5,7 +5,7 @@ from airflow.providers.sftp.hooks.sftp import SFTPHook
 from utils.test_utils import create_unique_str
 
 from universal_transfer_operator.data_providers import create_dataprovider
-from universal_transfer_operator.data_providers.base import FileStream
+from universal_transfer_operator.data_providers.base import DataStream
 from universal_transfer_operator.datasets.file.base import File
 
 CWD = pathlib.Path(__file__).parent
@@ -42,16 +42,16 @@ def download_file_from_sftp(conn_id: str, local_path: str, remote_path: str):
     )
 
 
-def test_sftp_write_with_FileStream():
+def test_sftp_write_with_DataStream():
     """
-    Test to validate working of SFTPDataProvider.write() method with FileStream object
+    Test to validate working of SFTPDataProvider.write() method with DataStream object
     """
     local_filepath = DATA_DIR + "sample.csv"
     file_name = f"{create_unique_str(10)}.csv"
     remote_filepath = f"sftp://upload/{file_name}"
 
     dataprovider = create_dataprovider(dataset=File(path=remote_filepath, conn_id="sftp_conn"))
-    fs = FileStream(
+    fs = DataStream(
         remote_obj_buffer=open(local_filepath),
         actual_filename=local_filepath,
         actual_file=File(local_filepath),

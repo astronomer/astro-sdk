@@ -12,7 +12,7 @@ import smart_open
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import FileType, Location
-from universal_transfer_operator.data_providers.base import DataProviders, FileStream
+from universal_transfer_operator.data_providers.base import DataProviders, DataStream
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.file.types import create_file_type
 from universal_transfer_operator.universal_transfer_operator import TransferIntegrationOptions
@@ -85,15 +85,15 @@ class BaseFilesystemProviders(DataProviders[File]):
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
-    def read(self) -> Iterator[FileStream]:
+    def read(self) -> Iterator[DataStream]:
         """Read the remote or local file dataset and returns i/o buffers"""
         return self.read_using_smart_open()
 
-    def read_using_smart_open(self) -> Iterator[FileStream]:
+    def read_using_smart_open(self) -> Iterator[DataStream]:
         """Read the file dataset using smart open returns i/o buffer"""
         files = self.paths
         for file in files:
-            yield FileStream(
+            yield DataStream(
                 remote_obj_buffer=self._convert_remote_file_to_byte_stream(file),
                 actual_filename=Path(file),
                 actual_file=self.dataset,
@@ -113,15 +113,15 @@ class BaseFilesystemProviders(DataProviders[File]):
             remote_obj_buffer.seek(0)
             return remote_obj_buffer
 
-    def write(self, source_ref: FileStream | pd.DataFrame) -> str:
+    def write(self, source_ref: DataStream | pd.DataFrame) -> str:
         """
         Write the data from local reference location or a dataframe to the filesystem dataset or database dataset
 
-        :param source_ref: Source FileStream object which will be used to read data
+        :param source_ref: Source DataStream object which will be used to read data
         """
         return self.write_using_smart_open(source_ref=source_ref)
 
-    def write_using_smart_open(self, source_ref: FileStream | pd.DataFrame) -> str:
+    def write_using_smart_open(self, source_ref: DataStream | pd.DataFrame) -> str:
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
         mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
         destination_file = self.dataset.path
@@ -129,8 +129,8 @@ class BaseFilesystemProviders(DataProviders[File]):
             # `source_ref` can be a dataframe for all the filetypes we can create a dataframe for like -
             # CSV, JSON, NDJSON, and Parquet or SQL Tables. This gives us the option to perform various
             # functions on the data on the fly, like filtering or changing the file format altogether. For other
-            # files whose content cannot be converted to dataframe like - zip or image, we get a Filestream object.
-            if isinstance(source_ref, FileStream):
+            # files whose content cannot be converted to dataframe like - zip or image, we get a DataStream object.
+            if isinstance(source_ref, DataStream):
                 stream.write(source_ref.remote_obj_buffer.read())
             elif isinstance(source_ref, pd.DataFrame):
                 self.dataset.type.create_from_dataframe(stream=stream, df=source_ref)

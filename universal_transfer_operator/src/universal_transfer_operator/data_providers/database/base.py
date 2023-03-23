@@ -23,7 +23,7 @@ from universal_transfer_operator.constants import (
     Location,
     TransferMode,
 )
-from universal_transfer_operator.data_providers.base import DataProviders, FileStream
+from universal_transfer_operator.data_providers.base import DataProviders, DataStream
 from universal_transfer_operator.data_providers.filesystem import resolve_file_path_pattern
 from universal_transfer_operator.datasets.dataframe.pandas import PandasDataframe
 from universal_transfer_operator.datasets.file.base import File
@@ -188,7 +188,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         """Read database dataset and convert them to dataframes"""
         yield self.export_table_to_pandas_dataframe()
 
-    def write(self, source_ref: FileStream | pd.DataFrame) -> str:
+    def write(self, source_ref: DataStream | pd.DataFrame) -> str:
         """
         Write the data from local reference location or dataframe to the database dataset or filesystem dataset.
 
@@ -197,8 +197,8 @@ class DatabaseDataProvider(DataProviders[Table]):
         # `source_ref` can be a dataframe for all the filetypes we can create a dataframe for like -
         # CSV, JSON, NDJSON, and Parquet or SQL Tables. This gives us the option to perform various
         # functions on the data on the fly, like filtering or changing the file format altogether. For other
-        # files whose content cannot be converted to dataframe like - zip or image, we get a Filestream object.
-        if isinstance(source_ref, FileStream):
+        # files whose content cannot be converted to dataframe like - zip or image, we get a DataStream object.
+        if isinstance(source_ref, DataStream):
             return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
         return self.load_dataframe_to_table(input_dataframe=source_ref, output_table=self.dataset)
 
