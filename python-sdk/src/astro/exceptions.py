@@ -24,3 +24,7 @@ class DatabaseCustomError(ValueError, AttributeError):
 
 class PermissionNotSetError(Exception):
     """Raised if a permission to files present in locations are not accessible"""
+
+
+class AstroSDKConfigError(Exception):
+    """Raised if a configuration parameter required for Astro SDK is not set correctly"""

@@ -6,6 +6,7 @@ from typing import ClassVar
 from pandas import DataFrame, read_json
 
 from astro import settings
+from astro.exceptions import AstroSDKConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,13 @@ class PandasDataframe(DataFrame):
             logger.info("Dataframe size: %s bytes. Storing it in Airflow's metadata DB", df_size)
             return {"data": self.to_json()}
         else:
+            if settings.DATAFRAME_STORAGE_CONN_ID is None:
+                raise AstroSDKConfigError(
+                    "Dataframe size exceeds allowed limit for storing in Airflow's metadata DB. "
+                    "Airflow config variable AIRFLOW__ASTRO_SDK__XCOM_STORAGE_CONN_ID needs to "
+                    "be set for remote storage of the dataframe."
+                )
+
             # Avoid cyclic dependency
             from astro.utils.dataframe import convert_dataframe_to_file
 
