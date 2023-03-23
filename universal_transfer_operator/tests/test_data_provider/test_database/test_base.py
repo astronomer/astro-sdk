@@ -1,5 +1,7 @@
 import pathlib
+from unittest import mock
 
+import pandas as pd
 import pytest
 from pandas import DataFrame
 
@@ -71,3 +73,67 @@ def test_create_table_using_columns_raises_exception():
     with pytest.raises(ValueError) as exc_info:
         db.create_table_using_columns(table)
     assert exc_info.match("To use this method, table.columns must be defined")
+
+
+@mock.patch(
+    "universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.schema_exists",
+    return_value=False,
+)
+@mock.patch("universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.run_sql")
+def test_create_schema_if_needed(mock_run_sql, mock_schema_exists):
+    """
+    Test that run_sql is called with expected arguments when
+    create_schema_if_needed method is called when the schema is not available
+    """
+    dp = DatabaseDataProvider(dataset=Table(name="some_table"), transfer_mode=TransferMode.NONNATIVE)
+    dp.create_schema_if_needed("non-existing-schema")
+    mock_run_sql.assert_called_once_with("CREATE SCHEMA IF NOT EXISTS non-existing-schema")
+
+
+@mock.patch(
+    "universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.create_schema_if_needed"
+)
+@mock.patch("universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.drop_table")
+@mock.patch("universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.create_table")
+@mock.patch("universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.table_exists")
+def test_create_schema_if_needed_replace(
+    mock_table_exists, mock_create_table, mock_drop_table, mock_create_schema_if_needed
+):
+    """
+    Test that for if_exists == "replace" correct set of methods are called.
+    """
+    table = Table(name="Some-table")
+    df = pd.DataFrame(data={"a": [1, 2], "b": [3, 4]})
+    dp = DatabaseDataProvider(dataset=Table(name="some_table"), transfer_mode=TransferMode.NONNATIVE)
+    dp.create_schema_and_table_if_needed_from_dataframe(table=table, dataframe=df)
+    mock_drop_table.assert_called_once_with(table)
+    mock_table_exists.assert_not_called()
+    mock_create_table.assert_called_once_with(
+        table, dataframe=df, columns_names_capitalization="original", use_native_support=True
+    )
+
+
+@mock.patch(
+    "universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.create_schema_if_needed"
+)
+@mock.patch("universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.drop_table")
+@mock.patch("universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.create_table")
+@mock.patch(
+    "universal_transfer_operator.data_providers.database.base.DatabaseDataProvider.table_exists",
+    return_value=False,
+)
+def test_create_schema_if_needed_append(
+    mock_table_exists, mock_create_table, mock_drop_table, mock_create_schema_if_needed
+):
+    """
+    Test that for if_exists == "append" correct set of methods are called.
+    """
+    table = Table(name="Some-table")
+    df = pd.DataFrame(data={"a": [1, 2], "b": [3, 4]})
+    dp = DatabaseDataProvider(dataset=Table(name="some_table"), transfer_mode=TransferMode.NONNATIVE)
+    dp.create_schema_and_table_if_needed_from_dataframe(table=table, dataframe=df, if_exists="append")
+    mock_drop_table.assert_not_called()
+    mock_table_exists.assert_called_once_with(table)
+    mock_create_table.assert_called_once_with(
+        table, dataframe=df, columns_names_capitalization="original", use_native_support=True
+    )

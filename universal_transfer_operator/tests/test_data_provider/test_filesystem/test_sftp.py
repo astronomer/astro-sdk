@@ -5,7 +5,7 @@ from airflow.providers.sftp.hooks.sftp import SFTPHook
 from utils.test_utils import create_unique_str
 
 from universal_transfer_operator.data_providers import create_dataprovider
-from universal_transfer_operator.data_providers.filesystem.base import FileStream
+from universal_transfer_operator.data_providers.base import DataStream
 from universal_transfer_operator.datasets.file.base import File
 
 CWD = pathlib.Path(__file__).parent
@@ -42,21 +42,43 @@ def download_file_from_sftp(conn_id: str, local_path: str, remote_path: str):
     )
 
 
-def test_sftp_write():
+def test_sftp_write_with_DataStream():
     """
-    Test to validate working of SFTPDataProvider.write() method
+    Test to validate working of SFTPDataProvider.write() method with DataStream object
     """
     local_filepath = DATA_DIR + "sample.csv"
     file_name = f"{create_unique_str(10)}.csv"
     remote_filepath = f"sftp://upload/{file_name}"
 
     dataprovider = create_dataprovider(dataset=File(path=remote_filepath, conn_id="sftp_conn"))
-    fs = FileStream(
+    fs = DataStream(
         remote_obj_buffer=open(local_filepath),
         actual_filename=local_filepath,
         actual_file=File(local_filepath),
     )
     dataprovider.write(source_ref=fs)
+
+    downloaded_file = f"/tmp/{file_name}"
+    download_file_from_sftp(
+        conn_id="sftp_conn", local_path=downloaded_file, remote_path=f"{remote_filepath.split('sftp:/')[1]}"
+    )
+
+    sftp_df = pd.read_csv(downloaded_file)
+    true_df = pd.read_csv(local_filepath)
+    assert sftp_df.equals(true_df)
+
+
+def test_sftp_write_with_dataframe():
+    """
+    Test to validate working of SFTPDataProvider.write() method with dataframe
+    """
+    local_filepath = DATA_DIR + "sample.csv"
+    file_name = f"{create_unique_str(10)}.csv"
+    remote_filepath = f"sftp://upload/{file_name}"
+
+    dataprovider = create_dataprovider(dataset=File(path=remote_filepath, conn_id="sftp_conn"))
+    df = pd.read_csv(local_filepath)
+    dataprovider.write(source_ref=df)
 
     downloaded_file = f"/tmp/{file_name}"
     download_file_from_sftp(

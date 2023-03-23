@@ -4,11 +4,13 @@ from functools import cached_property
 from urllib.parse import ParseResult, urlparse, urlunparse
 
 import attr
+import pandas as pd
 import smart_open
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, FileStream
+from universal_transfer_operator.data_providers.base import DataStream
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 
@@ -116,16 +118,34 @@ class SFTPDataProvider(BaseFilesystemProviders):
 
         return urlunparse(final_url)
 
-    def write_using_smart_open(self, source_ref: FileStream) -> str:
-        """Write the source data from remote object i/o buffer to the dataset using smart open
-        :param source_ref: FileStream object of source dataset
+    def write_using_smart_open(self, source_ref: DataStream | pd.DataFrame):
+        """Write the source data from remote object i/o buffer to the dataset using smart open"""
+        if isinstance(source_ref, DataStream):
+            return self.write_from_file(source_ref=source_ref)
+        elif isinstance(source_ref, pd.DataFrame):
+            return self.write_from_dataframe(source_ref=source_ref)
+
+    def write_from_file(self, source_ref: DataStream) -> str:
+        """Write the remote object i/o buffer to the dataset using smart open
+        :param source_ref: DataStream object of source dataset
         :return: File path that is the used for write pattern
         """
         mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
         complete_url = self.get_complete_url(self.dataset.path, source_ref.actual_file.path)
         with smart_open.open(complete_url, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())
-        return complete_url
+        return self.dataset.path
+
+    def write_from_dataframe(self, source_ref: pd.DataFrame) -> str:
+        """Write the dataframe to the SFTP dataset using smart open
+        :param source_ref: DataStream object of source dataset
+        :return: File path that is the used for write pattern
+        """
+        mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
+        complete_url = self.get_complete_url(self.dataset.path, "")
+        with smart_open.open(complete_url, mode=mode, transport_params=self.transport_params) as stream:
+            self.dataset.type.create_from_dataframe(stream=stream, df=source_ref)
+        return self.dataset.path
 
     @property
     def openlineage_dataset_namespace(self) -> str:

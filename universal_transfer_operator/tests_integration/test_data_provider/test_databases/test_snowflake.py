@@ -8,8 +8,8 @@ import sqlalchemy
 from sqlalchemy.exc import ProgrammingError
 
 from universal_transfer_operator.constants import TransferMode
+from universal_transfer_operator.data_providers.base import DataStream
 from universal_transfer_operator.data_providers.database.snowflake import SnowflakeDataProvider
-from universal_transfer_operator.data_providers.filesystem.base import FileStream
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.settings import SNOWFLAKE_SCHEMA
@@ -145,7 +145,7 @@ def test_write_method(dataset_table_fixture):
     """Test write() for snowflake"""
     dp, table = dataset_table_fixture
     file_path = f"{str(CWD)}/../../data/sample.csv"
-    fs = FileStream(
+    fs = DataStream(
         remote_obj_buffer=file_path,
         actual_file=File(
             path=file_path,

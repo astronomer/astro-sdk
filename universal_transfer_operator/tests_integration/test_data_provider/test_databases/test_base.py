@@ -61,13 +61,13 @@ CWD = pathlib.Path(__file__).parent
         {
             "name": "SnowflakeDataProvider",
         },
-        {"name": "S3DataProvider", "object": File(path=f"s3://tmp9/{create_unique_str(10)}")},
+        {"name": "S3DataProvider", "object": File(path=f"s3://tmp9/{create_unique_str(10)}.csv")},
         {
             "name": "GCSDataProvider",
-            "object": File(path=f"gs://uto-test/{create_unique_str(10)}"),
+            "object": File(path=f"gs://uto-test/{create_unique_str(10)}.csv"),
         },
-        {"name": "LocalDataProvider", "object": File(path=f"/tmp/{create_unique_str(10)}")},
-        {"name": "SFTPDataProvider", "object": File(path=f"sftp://upload/{create_unique_str(10)}")},
+        {"name": "LocalDataProvider", "object": File(path=f"/tmp/{create_unique_str(10)}.csv")},
+        {"name": "SFTPDataProvider", "object": File(path=f"sftp://upload/{create_unique_str(10)}.csv")},
     ],
     indirect=True,
     ids=lambda dp: dp["name"],
@@ -121,3 +121,86 @@ def get_complete_url(dataset_provider):
     cred_url = cred_url._replace(netloc=url_netloc, path=url_path)
     path = urlunparse(cred_url)
     return path
+
+
+@pytest.mark.parametrize(
+    "dst_dataset_fixture",
+    [
+        {"name": "SqliteDataProvider"},
+        {"name": "SnowflakeDataProvider"},
+        {"name": "BigqueryDataProvider"},
+    ],
+    indirect=True,
+    ids=lambda db: db["name"],
+)
+def test_load_pandas_dataframe_to_table_with_replace(dst_dataset_fixture):
+    """Load Pandas Dataframe to a SQL table with replace strategy"""
+    dst_dp, dataset = dst_dataset_fixture
+
+    pandas_dataframe = pd.DataFrame(data={"id": [1, 2, 3]})
+    dst_dp.load_pandas_dataframe_to_table(
+        source_dataframe=pandas_dataframe,
+        target_table=dataset,
+    )
+
+    rows = dst_dp.fetch_all_rows(dataset)
+    assert len(rows) == 3
+    assert rows[0] == (1,)
+    assert rows[1] == (2,)
+
+    pandas_dataframe = pd.DataFrame(data={"id": [3, 4]})
+    dst_dp.load_pandas_dataframe_to_table(
+        source_dataframe=pandas_dataframe,
+        target_table=dataset,
+    )
+
+    rows = dst_dp.fetch_all_rows(dataset)
+    assert len(rows) == 2
+    assert rows[0] == (3,)
+    assert rows[1] == (4,)
+
+    dst_dp.drop_table(dataset)
+
+
+@pytest.mark.parametrize(
+    "dst_dataset_fixture",
+    [
+        {"name": "SqliteDataProvider"},
+        {
+            "name": "SnowflakeDataProvider",
+        },
+        {
+            "name": "BigqueryDataProvider",
+        },
+    ],
+    indirect=True,
+    ids=lambda db: db["name"],
+)
+def test_load_pandas_dataframe_to_table_with_append(dst_dataset_fixture):
+    """Load Pandas Dataframe to a SQL table with append strategy"""
+    dst_dp, dataset = dst_dataset_fixture
+
+    pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
+    dst_dp.load_pandas_dataframe_to_table(
+        source_dataframe=pandas_dataframe,
+        target_table=dataset,
+        if_exists="append",
+    )
+
+    rows = dst_dp.fetch_all_rows(dataset)
+    assert len(rows) == 2
+    assert rows[0] == (1,)
+    assert rows[1] == (2,)
+
+    dst_dp.load_pandas_dataframe_to_table(
+        source_dataframe=pandas_dataframe,
+        target_table=dataset,
+        if_exists="append",
+    )
+
+    rows = dst_dp.fetch_all_rows(dataset)
+    assert len(rows) == 4
+    assert rows[0] == (1,)
+    assert rows[1] == (2,)
+
+    dst_dp.drop_table(dataset)
