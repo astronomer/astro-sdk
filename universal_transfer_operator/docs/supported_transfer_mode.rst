@@ -8,3 +8,5 @@ With universal transfer operator, users can perform data transfers using the fol
    :language: python
    :start-after: [START TransferMode]
    :end-before: [END TransferMode]
+
+More details can be found at :ref:`transfer_working`.

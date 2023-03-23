@@ -7,15 +7,18 @@ Transfer to Sqlite as destination dataset
 User can transfer data to Sqlite as destination as from following sources dataset:
 
 #. :ref:`table`
-    - Sqlite
-    - Snowflake
-    - Bigquery
+
+    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+       :language: python
+       :start-after: [START database]
+       :end-before: [END database]
 
 #. :ref:`file`
-    - AWS S3
-    - Google cloud storage
-    - Local
-    - SFTP
+
+    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+       :language: python
+       :start-after: [START filelocation]
+       :end-before: [END filelocation]
 
 Following transfer modes are supported:
 
@@ -27,8 +30,7 @@ Following transfer modes are supported:
        :start-after: [START transfer_non_native_bigquery_to_sqlite]
        :end-before: [END transfer_non_native_bigquery_to_sqlite]
 
-2. Transfer using native approach
-3. Transfer using third-party platform
+2. Transfer using third-party platform
 
 Examples
 ########
@@ -65,18 +67,20 @@ Transfer from Sqlite as source dataset
 User can transfer data from Sqlite the following destination dataset:
 
 #. :ref:`table`
-    - Sqlite
-    - Snowflake
-    - Bigquery
+
+    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+       :language: python
+       :start-after: [START database]
+       :end-before: [END database]
 
 #. :ref:`file`
-    - AWS S3
-    - Google cloud storage
-    - Local
-    - SFTP
+
+    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+       :language: python
+       :start-after: [START filelocation]
+       :end-before: [END filelocation]
 
 Following transfer modes are supported:
 
 1. Transfer using non-native approach
-2. Transfer using native approach
-3. Transfer using third-party platform
+2. Transfer using third-party platform

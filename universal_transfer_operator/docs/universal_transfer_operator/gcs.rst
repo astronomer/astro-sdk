@@ -7,15 +7,18 @@ Transfer to Google Cloud storage as destination dataset
 User can transfer data to Google cloud storage as destination as from following sources dataset:
 
 #. :ref:`table`
-    - Sqlite
-    - Snowflake
-    - Bigquery
+
+    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+       :language: python
+       :start-after: [START database]
+       :end-before: [END database]
 
 #. :ref:`file`
-    - AWS S3
-    - Google cloud storage
-    - Local
-    - SFTP
+
+    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+       :language: python
+       :start-after: [START filelocation]
+       :end-before: [END filelocation]
 
 Following transfer modes are supported:
 
@@ -27,8 +30,6 @@ Following transfer modes are supported:
        :start-after: [START transfer_non_native_s3_to_gs]
        :end-before: [END transfer_non_native_s3_to_gs]
 
-2. Transfer using native approach
-3. Transfer using third-party platform
 
 Examples
 ########
@@ -47,15 +48,18 @@ Transfer from Google Cloud storage as source dataset
 User can transfer data from Google cloud storage the following destination dataset:
 
 #. :ref:`table`
-    - Sqlite
-    - Snowflake
-    - Bigquery
+
+    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+       :language: python
+       :start-after: [START database]
+       :end-before: [END database]
 
 #. :ref:`file`
-    - AWS S3
-    - Google cloud storage
-    - Local
-    - SFTP
+
+    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+       :language: python
+       :start-after: [START filelocation]
+       :end-before: [END filelocation]
 
 Following transfer modes are supported:
 
@@ -67,8 +71,7 @@ Following transfer modes are supported:
        :start-after: [START transfer_non_native_gs_to_s3]
        :end-before: [END transfer_non_native_gs_to_s3]
 
-2. Transfer using native approach
-3. Transfer using third-party platform
+2. Transfer using third-party platform
 
 Examples
 ########
