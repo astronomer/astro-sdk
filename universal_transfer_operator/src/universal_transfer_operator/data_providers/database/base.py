@@ -191,6 +191,7 @@ class DatabaseDataProvider(DataProviders[Table]):
     def write(self, source_ref: FileStream | pd.DataFrame) -> str:
         """
         Write the data from local reference location or dataframe to the database dataset or filesystem dataset.
+
         :param source_ref: Stream of data to be loaded into output table or a pandas dataframe.
         """
         # `source_ref` can be a dataframe for all the filetypes we can create a dataframe for like -
@@ -467,9 +468,9 @@ class DatabaseDataProvider(DataProviders[Table]):
     ):
         """
         Creates the schema and table from dataframe
+
         :param table: Table to create
-        :param file: File path and conn_id for object stores
-        :param normalize_config: pandas json_normalize params config
+        :param dataframe: dataframe object to be used as a source of data
         :param columns_names_capitalization:  determines whether to convert all columns to lowercase/uppercase
         :param if_exists:  Overwrite file if exists
         :param use_native_support: Use native support for data transfer if available on the destination

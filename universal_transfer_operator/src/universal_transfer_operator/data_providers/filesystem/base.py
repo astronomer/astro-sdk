@@ -116,6 +116,7 @@ class BaseFilesystemProviders(DataProviders[File]):
     def write(self, source_ref: FileStream | pd.DataFrame) -> str:
         """
         Write the data from local reference location or a dataframe to the filesystem dataset or database dataset
+
         :param source_ref: Source FileStream object which will be used to read data
         """
         return self.write_using_smart_open(source_ref=source_ref)
