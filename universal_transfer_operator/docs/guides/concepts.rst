@@ -181,6 +181,10 @@ Steps:
 
 This is a faster way for datasets of larger size as there is only one network call involved and usually the bandwidth between vendors is high. Also, there is no requirement for memory/processing power of the worker node, since data never gets on the node. There is significant performance improvement due to native transfers.
 
+.. note::
+   Native implementation is in progress and will be added in upcoming releases.
+
+
 .. _third_party:
 
 Transfer using third-party tool
