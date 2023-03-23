@@ -45,7 +45,7 @@ The Universal Transfer Operator supports two :ref:`dataset` specializations: :re
 Tables
 ------
 
-A Table Dataset refers to a table in a database or a data warehouse like Postgres, Snowflake, etc. that stores data. They can be used in Universal Transfer Operator as input dataset or output datasets.
+A Table Dataset refers to a table in a database or a data warehouse like Postgres, Snowflake, etc. that stores data. They can be used in Universal Transfer Operator as input dataset or output datasets. The supported databases can be found at :ref:`supported_databases`.
 
 There are two types of tables:
 
@@ -74,8 +74,8 @@ There are two types of tables:
 
 Metadata
 ~~~~~~~~
-Metadata is used to give additional information to access a SQL Table.
-For example, a user can detail the Google Bigquery schema and database for a table. Although these parameters can change name depending on the database, we have normalised the :class:`~universal_transfer_operator.datasets.table.Metadata` class to name their schema and database.
+Metadata gives additional information to access a SQL Table, if necessary and supported by the database used.
+For example, a user can detail the Google Bigquery dataset and project for a table. Although these parameters can change name depending on the database, we have normalised the :class:`~universal_transfer_operator.datasets.table.Metadata` to offer a generic interface for them. The Universal transform operator names the top-level container of tables schema.  The term ``schema`` is consistent with Snowflake and Postgres, for instance, but it maps to a BigQuery dataset. Users can also define ``databases`` within the Metadata, which are containers of schemas. This terminology is consistent with Snowflake and Postgres but maps to a Google project in the case Google Bigquery.
 
 .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
    :language: python
@@ -87,7 +87,7 @@ For example, a user can detail the Google Bigquery schema and database for a tab
 Files
 -----
 
-The File Dataset represents a file located on a storage mechanism such as S3, GCS, etc. This is a very common type of Dataset in data pipelines, often used as a source of data or as an output for analysis.
+The File Dataset represents a file located on a storage mechanism such as S3, GCS, etc. This is a very common type of Dataset in data pipelines, often used as a source of data or as an output for analysis. The supported files can be found at :ref:`file_location`.
 
 There are two types of files:
 
@@ -134,6 +134,7 @@ Another type of API Dataset is used to send data to SaaS applications using a RE
 
 How Universal Transfer Operator Works
 -------------------------------------
+.. to edit figure below refer - https://drive.google.com/file/d/1Ih0SRnMvgKTQHLJaW9k21jutjEiyacRz/view?usp=sharing
 .. figure:: /images/approach.png
 
 With universal transfer operator, users can perform data transfers using the following transfer modes:
@@ -142,6 +143,8 @@ With universal transfer operator, users can perform data transfers using the fol
    :language: python
    :start-after: [START TransferMode]
    :end-before: [END TransferMode]
+
+.. _non_native:
 
 Non-native transfer
 -------------------
@@ -162,8 +165,11 @@ Following is an example of non-native transfers between Google cloud storage and
    :end-before: [END transfer_non_native_gs_to_sqlite]
 
 
+.. _native:
+
 Improving bottlenecks by using native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. to edit figure below refer - https://drive.google.com/file/d/1Ih0SRnMvgKTQHLJaW9k21jutjEiyacRz/view?usp=sharing
 .. figure:: /images/approach.png
 
 Some of the datasets on cloud like Bigquery and Snowflake support native transfer to ingest data from cloud storage directly. Using this we can ingest data much quicker and without any involvement of the worker node.
@@ -174,6 +180,8 @@ Steps:
 #. Destination dataset request source dataset for data.
 
 This is a faster way for datasets of larger size as there is only one network call involved and usually the bandwidth between vendors is high. Also, there is no requirement for memory/processing power of the worker node, since data never gets on the node. There is significant performance improvement due to native transfers.
+
+.. _third_party:
 
 Transfer using third-party tool
 -------------------------------

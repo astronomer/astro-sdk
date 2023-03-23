@@ -15,13 +15,14 @@ also takes advantage of any existing fast and direct high-speed endpoints, such 
 S3 files efficiently into Snowflake. Universal transfer operator also supports the transfers using third-party
 platforms like Fivetran.
 
+.. to edit figure below refer - https://drive.google.com/file/d/1Ih0SRnMvgKTQHLJaW9k21jutjEiyacRz/view?usp=sharing
 .. figure:: /images/approach.png
 
 There are three modes to transfer data using of the ``universal_transfer_operator``.
 
-1. Transfer using non-native approach
-2. Transfer using native approach
-3. Transfer using third-party platform
+1. :ref:`non_native`
+2. :ref:`native`
+3. :ref:`third_party`
 
 More details on how transfer works can be found at :ref:`transfer_working`.
 

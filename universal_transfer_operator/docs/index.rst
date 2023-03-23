@@ -25,7 +25,8 @@ Welcome to universal-transfer-operator's documentation!
    :caption: Transfer examples:
    :glob:
 
-   universal_transfer_operator/supported_transfers/*
+   universal_transfer_operator/supported_transfers/databases/*
+   universal_transfer_operator/supported_transfers/files/*
 
 
 .. toctree::

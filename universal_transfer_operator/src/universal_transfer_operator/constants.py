@@ -14,6 +14,7 @@ class Location(Enum):
     LOCAL = "local"
     GS = "gs"  # Google Cloud Storage
     S3 = "s3"  # Amazon S3
+    SFTP = "sftp"
     SQLITE = "sqlite"
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
@@ -27,6 +28,7 @@ class FileLocation(Enum):
     LOCAL = "local"
     GS = "gs"  # Google Cloud Storage
     S3 = "s3"  # Amazon S3
+    SFTP = "sftp"
     # [END filelocation]
 
     def __repr__(self):
