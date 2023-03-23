@@ -4,7 +4,7 @@ Google Bigquery
 
 Transfer to Google Bigquery as destination dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-User can transfer data to Google Bigquery as destination as from following sources dataset:
+User can transfer data to Google Bigquery from following sources:
 
 #. :ref:`table`
 
