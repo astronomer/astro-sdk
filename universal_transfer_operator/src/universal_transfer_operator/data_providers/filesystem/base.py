@@ -123,8 +123,13 @@ class BaseFilesystemProviders(DataProviders[File]):
 
     def write_using_smart_open(self, source_ref: DataStream | pd.DataFrame) -> str:
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
-        mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
+        mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
+
         destination_file = self.dataset.path
+        # check if destination dataset is folder or file pattern
+        if self.dataset.is_pattern():
+            destination_file = os.path.join(self.dataset.path, os.path.basename(source_ref.actual_filename))
+
         with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
             # `source_ref` can be a dataframe for all the filetypes we can create a dataframe for like -
             # CSV, JSON, NDJSON, and Parquet or SQL Tables. This gives us the option to perform various
