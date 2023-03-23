@@ -193,6 +193,10 @@ class DatabaseDataProvider(DataProviders[Table]):
         Write the data from local reference location to the dataset.
         :param source_ref: Stream of data to be loaded into output table.
         """
+        # `source_ref` can be a dataframe for all the filetypes we can create a dataframe for like -
+        # CSV, JSON, NDJSON, and Parquet or SQL Tables. This gives us the option to perform various
+        # functions on the data on the fly, like filtering or changing the file format altogether. For other
+        # files whose content cannot be converted to dataframe like - zip or image, we get a Filestream object.
         if isinstance(source_ref, FileStream):
             return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
         return self.load_dataframe_to_table(input_dataframe=source_ref, output_table=self.dataset)

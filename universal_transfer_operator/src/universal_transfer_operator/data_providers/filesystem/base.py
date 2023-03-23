@@ -125,6 +125,10 @@ class BaseFilesystemProviders(DataProviders[File]):
         mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
         destination_file = self.dataset.path
         with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
+            # `source_ref` can be a dataframe for all the filetypes we can create a dataframe for like -
+            # CSV, JSON, NDJSON, and Parquet or SQL Tables. This gives us the option to perform various
+            # functions on the data on the fly, like filtering or changing the file format altogether. For other
+            # files whose content cannot be converted to dataframe like - zip or image, we get a Filestream object.
             if isinstance(source_ref, FileStream):
                 stream.write(source_ref.remote_obj_buffer.read())
             elif isinstance(source_ref, pd.DataFrame):
