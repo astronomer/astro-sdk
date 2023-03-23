@@ -121,11 +121,11 @@ class SFTPDataProvider(BaseFilesystemProviders):
     def write_using_smart_open(self, source_ref: FileStream | pd.DataFrame):
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
         if isinstance(source_ref, FileStream):
-            return self.write_file_using_smart_open(source_ref=source_ref)
+            return self.write_from_file(source_ref=source_ref)
         elif isinstance(source_ref, pd.DataFrame):
-            return self.write_dataframe_using_smart_open(source_ref=source_ref)
+            return self.write_from_dataframe(source_ref=source_ref)
 
-    def write_file_using_smart_open(self, source_ref: FileStream) -> str:
+    def write_from_file(self, source_ref: FileStream) -> str:
         """Write the remote object i/o buffer to the dataset using smart open
         :param source_ref: FileStream object of source dataset
         :return: File path that is the used for write pattern
@@ -136,7 +136,7 @@ class SFTPDataProvider(BaseFilesystemProviders):
             stream.write(source_ref.remote_obj_buffer.read())
         return self.dataset.path
 
-    def write_dataframe_using_smart_open(self, source_ref: pd.DataFrame) -> str:
+    def write_from_dataframe(self, source_ref: pd.DataFrame) -> str:
         """Write the dataframe to the SFTP dataset using smart open
         :param source_ref: FileStream object of source dataset
         :return: File path that is the used for write pattern
