@@ -185,13 +185,13 @@ class DatabaseDataProvider(DataProviders[Table]):
         return Location(source_connection_type) in self.transfer_mapping
 
     def read(self) -> Iterator[pd.DataFrame]:
-        """Read the dataset and write to local reference location"""
+        """Read database dataset and convert them to dataframes"""
         yield self.export_table_to_pandas_dataframe()
 
     def write(self, source_ref: FileStream | pd.DataFrame) -> str:
         """
-        Write the data from local reference location to the dataset.
-        :param source_ref: Stream of data to be loaded into output table.
+        Write the data from local reference location or dataframe to the database dataset or filesystem dataset.
+        :param source_ref: Stream of data to be loaded into output table or a pandas dataframe.
         """
         # `source_ref` can be a dataframe for all the filetypes we can create a dataframe for like -
         # CSV, JSON, NDJSON, and Parquet or SQL Tables. This gives us the option to perform various

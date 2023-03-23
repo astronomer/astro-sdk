@@ -68,11 +68,14 @@ class DataProviders(ABC, Generic[DatasetType]):
         return Location(source_connection_type) in self.transfer_mapping
 
     def read(self) -> Iterator[pd.DataFrame] | Iterator[FileStream]:
-        """Read the dataset and write to local reference location"""
+        """Read from filesystem dataset or databases dataset and write to local reference locations or dataframes"""
         raise NotImplementedError
 
-    def write(self, source_ref) -> str:  # type: ignore
-        """Write the data from local reference location to the dataset"""
+    def write(self, source_ref: pd.DataFrame | FileStream) -> str:  # type: ignore
+        """Write the data from local reference location or a dataframe to the database dataset or filesystem dataset
+
+        :param source_ref: Stream of data to be loaded into output table or a pandas dataframe.
+        """
         raise NotImplementedError
 
     @property

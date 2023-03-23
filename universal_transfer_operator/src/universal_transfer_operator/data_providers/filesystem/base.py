@@ -86,7 +86,7 @@ class BaseFilesystemProviders(DataProviders[File]):
         return Location(source_connection_type) in self.transfer_mapping
 
     def read(self) -> Iterator[FileStream]:
-        """ ""Read the dataset and write to local reference location"""
+        """Read the remote or local file dataset and returns i/o buffers"""
         return self.read_using_smart_open()
 
     def read_using_smart_open(self) -> Iterator[FileStream]:
@@ -115,7 +115,7 @@ class BaseFilesystemProviders(DataProviders[File]):
 
     def write(self, source_ref: FileStream | pd.DataFrame) -> str:
         """
-        Write the data from local reference location to the dataset
+        Write the data from local reference location or a dataframe to the filesystem dataset or database dataset
         :param source_ref: Source FileStream object which will be used to read data
         """
         return self.write_using_smart_open(source_ref=source_ref)
