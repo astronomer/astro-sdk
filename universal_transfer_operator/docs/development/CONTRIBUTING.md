@@ -17,7 +17,7 @@ report a bug, open an issue! We'd love all and any contributions. If you have qu
 We'd also love PRs. If you're thinking of a large PR, we advise opening up an issue first to talk about it,
 though! Look at the links below if you're not sure how to open a PR.
 
-If you have other questions, use [Github Discussions](https://github.com/astronomer/astro-sdk/discussions).
+If you have other questions, use github discussions of this repository
 
 
 # Creating a local development

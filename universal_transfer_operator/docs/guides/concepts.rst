@@ -19,7 +19,8 @@ A dataset is defined by a Uniform Resource Identifier (URI):
 
     example_dataset = Dataset("s3://dataset-bucket/example.csv")
 
-The Universal Transfer Operator supports two `Dataset` specializations: `Tables` and `Files`, which enrich the original Airflow `Dataset` concept, for instance, by allowing uses to associate Airflow connections to them. Examples:
+
+The Universal Transfer Operator supports two :ref:`dataset` specializations: :ref:`table` and :ref:`file`, which enrich the original Airflow :ref:`dataset` concept, for instance, by allowing uses to associate Airflow connections to them. Examples:
 
 #. :ref:`table` as a Dataset
 

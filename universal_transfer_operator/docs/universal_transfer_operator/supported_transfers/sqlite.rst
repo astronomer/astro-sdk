@@ -8,14 +8,14 @@ User can transfer data to Sqlite as destination as from following sources datase
 
 #. :ref:`table`
 
-    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+    .. literalinclude:: ../../../src/universal_transfer_operator/constants.py
        :language: python
        :start-after: [START database]
        :end-before: [END database]
 
 #. :ref:`file`
 
-    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+    .. literalinclude:: ../../../src/universal_transfer_operator/constants.py
        :language: python
        :start-after: [START filelocation]
        :end-before: [END filelocation]
@@ -25,7 +25,7 @@ Following transfer modes are supported:
 1. Transfer using non-native approach
     Following is an example of non-native transfers between google bigquery to Sqlite using non-native transfers:
 
-    .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+    .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
        :language: python
        :start-after: [START transfer_non_native_bigquery_to_sqlite]
        :end-before: [END transfer_non_native_bigquery_to_sqlite]
@@ -38,7 +38,7 @@ Examples
     - Non-native
         Following is an example of non-native transfers between Google Bigquery to Sqlite using non-native transfers:
 
-            .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+            .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
                :language: python
                :start-after: [START transfer_non_native_bigquery_to_sqlite]
                :end-before: [END transfer_non_native_bigquery_to_sqlite]
@@ -47,7 +47,7 @@ Examples
     - Non-native
         Following is an example of non-native transfers between GCS to Sqlite using non-native transfers:
 
-            .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+            .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
                :language: python
                :start-after: [START transfer_non_native_gs_to_sqlite]
                :end-before: [END transfer_non_native_gs_to_sqlite]
@@ -56,7 +56,7 @@ Examples
     - Non-native
         Following is an example of non-native transfers between AWS S3 to Sqlite using non-native transfers:
 
-            .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+            .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
                :language: python
                :start-after: [START transfer_non_native_s3_to_sqlite]
                :end-before: [END transfer_non_native_s3_to_sqlite]
@@ -68,14 +68,14 @@ User can transfer data from Sqlite the following destination dataset:
 
 #. :ref:`table`
 
-    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+    .. literalinclude:: ../../../src/universal_transfer_operator/constants.py
        :language: python
        :start-after: [START database]
        :end-before: [END database]
 
 #. :ref:`file`
 
-    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+    .. literalinclude:: ../../../src/universal_transfer_operator/constants.py
        :language: python
        :start-after: [START filelocation]
        :end-before: [END filelocation]

@@ -25,7 +25,8 @@ Welcome to universal-transfer-operator's documentation!
    :caption: Transfer examples:
    :glob:
 
-   universal_transfer_operator/*
+   universal_transfer_operator/supported_transfers/*
+
 
 .. toctree::
    :maxdepth: 2

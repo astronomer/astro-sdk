@@ -8,14 +8,14 @@ User can transfer data to Google cloud storage as destination as from following 
 
 #. :ref:`table`
 
-    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+    .. literalinclude:: ../../../src/universal_transfer_operator/constants.py
        :language: python
        :start-after: [START database]
        :end-before: [END database]
 
 #. :ref:`file`
 
-    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+    .. literalinclude:: ../../../src/universal_transfer_operator/constants.py
        :language: python
        :start-after: [START filelocation]
        :end-before: [END filelocation]
@@ -25,7 +25,7 @@ Following transfer modes are supported:
 1. Transfer using non-native approach
     Following is an example of non-native transfers between AWS S3 and Google cloud storage using non-native transfers:
 
-    .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+    .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
        :language: python
        :start-after: [START transfer_non_native_s3_to_gs]
        :end-before: [END transfer_non_native_s3_to_gs]
@@ -37,7 +37,7 @@ Examples
     - Non-native
         Following is an example of non-native transfers between AWS S3 to Google cloud storage using non-native transfers:
 
-            .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+            .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
                :language: python
                :start-after: [START transfer_non_native_s3_to_gs]
                :end-before: [END transfer_non_native_s3_to_gs]
@@ -49,14 +49,14 @@ User can transfer data from Google cloud storage the following destination datas
 
 #. :ref:`table`
 
-    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+    .. literalinclude:: ../../../src/universal_transfer_operator/constants.py
        :language: python
        :start-after: [START database]
        :end-before: [END database]
 
 #. :ref:`file`
 
-    .. literalinclude:: ../../src/universal_transfer_operator/constants.py
+    .. literalinclude:: ../../../src/universal_transfer_operator/constants.py
        :language: python
        :start-after: [START filelocation]
        :end-before: [END filelocation]
@@ -66,7 +66,7 @@ Following transfer modes are supported:
 1. Transfer using non-native approach
     Following is an example of non-native transfers between Google cloud storage and AWS S3 using non-native transfers:
 
-    .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+    .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
        :language: python
        :start-after: [START transfer_non_native_gs_to_s3]
        :end-before: [END transfer_non_native_gs_to_s3]
@@ -79,7 +79,7 @@ Examples
     - Non-native
         Following is an example of non-native transfers between Google cloud storage to AWS S3 using non-native transfers:
 
-            .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+            .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
                :language: python
                :start-after: [START transfer_non_native_gs_to_s3]
                :end-before: [END transfer_non_native_gs_to_s3]
@@ -88,7 +88,7 @@ Examples
     - Non-native
         Following is an example of non-native transfers between Google cloud storage to Sqlite using non-native transfers:
 
-            .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+            .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
                :language: python
                :start-after: [START transfer_non_native_gs_to_sqlite]
                :end-before: [END transfer_non_native_gs_to_sqlite]
@@ -97,7 +97,7 @@ Examples
     - Non-native
         Following is an example of non-native transfers between Google cloud storage to Snowflake using non-native transfers:
 
-            .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+            .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
                :language: python
                :start-after: [START transfer_non_native_gs_to_snowflake]
                :end-before: [END transfer_non_native_gs_to_snowflake]
@@ -106,7 +106,7 @@ Examples
     - Non-native
         Following is an example of non-native transfers between Google cloud storage to Google Bigquery using non-native transfers:
 
-            .. literalinclude:: ../../example_dags/example_universal_transfer_operator.py
+            .. literalinclude:: ../../../example_dags/example_universal_transfer_operator.py
                :language: python
                :start-after: [START transfer_non_native_gs_to_bigquery]
                :end-before: [END transfer_non_native_gs_to_bigquery]
