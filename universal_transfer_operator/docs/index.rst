@@ -4,7 +4,7 @@
    contain the root ``toctree`` directive.
 
 Welcome to the Universal Transfer Operator documentation!
-=======================================================
+=========================================================
 
 .. toctree::
    :maxdepth: 2
