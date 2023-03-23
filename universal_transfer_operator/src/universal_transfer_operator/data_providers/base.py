@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import io
 from abc import ABC
-from typing import Generic, TypeVar
+from pathlib import Path
+from typing import Generic, Iterator, TypeVar
 
 import attr
+import pandas as pd
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import Location
@@ -12,6 +15,13 @@ from universal_transfer_operator.datasets.table import Table
 from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
 DatasetType = TypeVar("DatasetType", File, Table)
+
+
+@attr.define
+class FileStream:
+    remote_obj_buffer: io.IOBase
+    actual_filename: Path
+    actual_file: File
 
 
 class DataProviders(ABC, Generic[DatasetType]):
@@ -57,11 +67,11 @@ class DataProviders(ABC, Generic[DatasetType]):
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
-    def read(self):
+    def read(self) -> Iterator[pd.DataFrame] | Iterator[FileStream]:
         """Read the dataset and write to local reference location"""
         raise NotImplementedError
 
-    def write(self, source_ref):
+    def write(self, source_ref) -> str:  # type: ignore
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
 

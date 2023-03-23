@@ -9,7 +9,8 @@ import smart_open
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, FileStream
+from universal_transfer_operator.data_providers.base import FileStream
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.integrations.base import TransferIntegrationOptions
 

@@ -23,9 +23,8 @@ from universal_transfer_operator.constants import (
     Location,
     TransferMode,
 )
-from universal_transfer_operator.data_providers.base import DataProviders
+from universal_transfer_operator.data_providers.base import DataProviders, FileStream
 from universal_transfer_operator.data_providers.filesystem import resolve_file_path_pattern
-from universal_transfer_operator.data_providers.filesystem.base import FileStream
 from universal_transfer_operator.datasets.dataframe.pandas import PandasDataframe
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
@@ -189,15 +188,14 @@ class DatabaseDataProvider(DataProviders[Table]):
         """Read the dataset and write to local reference location"""
         yield self.export_table_to_pandas_dataframe()
 
-    def write(self, source_ref: FileStream | pd.DataFrame):
+    def write(self, source_ref: FileStream | pd.DataFrame) -> str:
         """
         Write the data from local reference location to the dataset.
         :param source_ref: Stream of data to be loaded into output table.
         """
         if isinstance(source_ref, FileStream):
             return self.load_file_to_table(input_file=source_ref.actual_file, output_table=self.dataset)
-        elif isinstance(source_ref, pd.DataFrame):
-            return self.load_dataframe_to_table(input_dataframe=source_ref, output_table=self.dataset)
+        return self.load_dataframe_to_table(input_dataframe=source_ref, output_table=self.dataset)
 
     @property
     def openlineage_dataset_namespace(self) -> str:
@@ -507,7 +505,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         columns_names_capitalization: ColumnCapitalization = "original",
         **kwargs,
-    ):
+    ) -> str:
         """
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
@@ -539,6 +537,7 @@ class DatabaseDataProvider(DataProviders[Table]):
             if_exists="append",
             chunk_size=chunk_size,
         )
+        return self.get_table_qualified_name(output_table)
 
     def load_dataframe_to_table(
         self,
@@ -547,7 +546,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         columns_names_capitalization: ColumnCapitalization = "original",
-    ):
+    ) -> str:
         """
         Load content of dataframe in output_table.
 
@@ -572,6 +571,7 @@ class DatabaseDataProvider(DataProviders[Table]):
             chunk_size=chunk_size,
             if_exists=if_exists,
         )
+        return self.get_table_qualified_name(output_table)
 
     def load_file_to_table_using_pandas(
         self,

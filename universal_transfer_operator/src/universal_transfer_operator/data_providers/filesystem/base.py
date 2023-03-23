@@ -12,7 +12,7 @@ import smart_open
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import FileType, Location
-from universal_transfer_operator.data_providers.base import DataProviders
+from universal_transfer_operator.data_providers.base import DataProviders, FileStream
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.file.types import create_file_type
 from universal_transfer_operator.universal_transfer_operator import TransferIntegrationOptions
@@ -23,13 +23,6 @@ from universal_transfer_operator.utils import get_dataset_connection_type
 class TempFile:
     tmp_file: Path | None
     actual_filename: Path
-
-
-@attr.define
-class FileStream:
-    remote_obj_buffer: io.IOBase
-    actual_filename: Path
-    actual_file: File
 
 
 class BaseFilesystemProviders(DataProviders[File]):
@@ -120,14 +113,14 @@ class BaseFilesystemProviders(DataProviders[File]):
             remote_obj_buffer.seek(0)
             return remote_obj_buffer
 
-    def write(self, source_ref: FileStream | pd.DataFrame):
+    def write(self, source_ref: FileStream | pd.DataFrame) -> str:
         """
         Write the data from local reference location to the dataset
         :param source_ref: Source FileStream object which will be used to read data
         """
         return self.write_using_smart_open(source_ref=source_ref)
 
-    def write_using_smart_open(self, source_ref: FileStream | pd.DataFrame):
+    def write_using_smart_open(self, source_ref: FileStream | pd.DataFrame) -> str:
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
         mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
         destination_file = self.dataset.path
