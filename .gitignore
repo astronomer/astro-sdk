@@ -67,3 +67,8 @@ sql-cli/tests/.airflow/dags/*
 
 sql-cli/build/
 *.egg-info/
+
+# universal transfer operator sphinx-related
+/universal_transfer_operator/docs/_build/
+/universal_transfer_operator/docs/_build/*
+/universal_transfer_operator/docs/autoapi/

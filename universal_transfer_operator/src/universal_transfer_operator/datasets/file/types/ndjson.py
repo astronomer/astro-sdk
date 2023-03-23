@@ -10,19 +10,21 @@ from universal_transfer_operator.datasets.dataframe.pandas import (
     PandasDataframe,
     convert_columns_names_capitalization,
 )
-from universal_transfer_operator.datasets.file.types.base import FileType
+from universal_transfer_operator.datasets.file.types.base import FileTypes
 
 
-class NDJsonFileType(FileType):
+class NDJsonFileTypes(FileTypes):
     """Concrete implementation to handle ndjson file type"""
 
     def export_to_dataframe(self, stream, columns_names_capitalization="original", **kwargs):
-        """read ndjson file from one of the supported locations and return dataframe
+        """
+        Read ndjson file from one of the supported locations and return dataframe
+
         :param stream: file stream object
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         """
-        df = NDJsonFileType.flatten(self.normalize_config, stream, **kwargs)
+        df = NDJsonFileTypes.flatten(self.normalize_config, stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
         )
@@ -30,7 +32,9 @@ class NDJsonFileType(FileType):
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:  # skipcq PYL-R0201
-        """Write ndjson file to one of the supported locations
+        """
+        Write ndjson file to one of the supported locations
+
         :param df: pandas dataframe
         :param stream: file stream object
         """
@@ -44,13 +48,10 @@ class NDJsonFileType(FileType):
     def flatten(normalize_config: dict | None, stream: io.TextIOWrapper, **kwargs) -> pd.DataFrame:
         """
         Flatten the nested ndjson/json.
+
         :param normalize_config: parameters in dict format of pandas json_normalize() function.
             https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
         :param stream: io.TextIOWrapper object for the file
-        :type normalize_config: dict
-        :type stream: io.TextIOWrapper
-        :return: return dataframe containing the loaded data
-        :rtype: `pandas.DataFrame`
         """
         normalize_config = normalize_config or {}
         nrows = kwargs.get("nrows", float("inf"))

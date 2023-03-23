@@ -48,6 +48,7 @@ with DAG(
     start_date=datetime(2022, 1, 1),
     catchup=False,
 ) as dag:
+    # [START fivetran_transfer_with_setup]
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_with_connector_id",
         source_dataset=File(path=f"{s3_bucket}/uto/", conn_id="aws_default"),
@@ -55,7 +56,9 @@ with DAG(
         transfer_mode=TransferMode.THIRDPARTY,
         transfer_params=FiveTranOptions(conn_id="fivetran_default", connector_id="filing_muppet"),
     )
+    # [END fivetran_transfer_with_setup]
 
+    # [START fivetran_transfer_without_setup]
     transfer_fivetran_without_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_without_connector_id",
         source_dataset=File(path=f"{s3_bucket}/uto/", conn_id="aws_default"),
@@ -74,6 +77,8 @@ with DAG(
             connector=Connector(
                 service="s3",
                 config=connector_config,
+                connector_id=None,
+                connect_card_config={"connector_val": "test_connector"},
             ),
             destination=Destination(
                 service="snowflake",
@@ -83,3 +88,4 @@ with DAG(
             ),
         ),
     )
+    # [END fivetran_transfer_without_setup]

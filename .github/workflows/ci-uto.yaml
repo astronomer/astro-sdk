@@ -77,6 +77,24 @@ jobs:
       - name: Run type check
         run: nox -s type_check
 
+  Build-Docs:
+    if: github.event.action != 'labeled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('universal_transfer_operator/pyproject.toml') }}
+      - run: pip3 install nox
+      - run: nox -s build_docs
+
   Run-UTO-tests-unit-tests:
     if: >-
       github.event_name == 'push' ||

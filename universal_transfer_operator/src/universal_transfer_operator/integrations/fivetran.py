@@ -15,9 +15,11 @@ from universal_transfer_operator.integrations.base import TransferIntegration, T
 @attr.define
 class Group:
     """
-    Fivetran group details
+    Fivetran group details.
+
     :param name: The name of the group within Fivetran account.
-    :param group_id : Group id in fivetran system
+    :param group_id: Group id in fivetran system
+
     """
 
     name: str
@@ -35,12 +37,12 @@ class Destination:
     """
     Fivetran destination details
 
-    :param destination_id: The unique identifier for the destination within the Fivetran system
     :param service: services as per https://fivetran.com/docs/rest-api/destinations/config
-    :param region: Data processing location. This is where Fivetran will operate and run computation on data.
-    :param time_zone_offset: Determines the time zone for the Fivetran sync schedule.
-    :param run_setup_tests: Specifies whether setup tests should be run automatically.
     :param config: Configuration as per destination specified at https://fivetran.com/docs/rest-api/destinations/config
+    :param destination_id: The unique identifier for the destination within the Fivetran system
+    :param time_zone_offset: Determines the time zone for the Fivetran sync schedule.
+    :param region: Data processing location. This is where Fivetran will operate and run computation on data.
+    :param run_setup_tests: Specifies whether setup tests should be run automatically.
     """
 
     service: str
@@ -70,14 +72,14 @@ class Connector:
      Defaults to True.
     :param sync_frequency: The connector sync frequency in minutes Enum: "5" "15" "30" "60" "120" "180" "360" "480"
      "720" "1440". Default to "5"
-    :param daily_sync_time: Defines the sync start time when the sync frequency is already set or being set by the
-    current request to 1440.
+    :param daily_sync_time: Defines the sync start time when the sync frequency is already set or being set by
+     the current request to 1440.
     :param schedule_type: Define the schedule type
     :param connect_card_config: Connector card configuration
     :param trust_certificates: Specifies whether we should trust the certificate automatically. The default value is
      FALSE. If a certificate is not trusted automatically,
     :param trust_fingerprints: Specifies whether we should trust the SSH fingerprint automatically. The default value
-    is FALSE.
+     is FALSE.
     :param run_setup_tests: Specifies whether the setup tests should be run automatically. The default value is TRUE.
     """
 
@@ -103,6 +105,20 @@ class Connector:
 
 @attr.define
 class FiveTranOptions(TransferIntegrationOptions):
+    """
+    FiveTran load options.
+
+    :param conn_id: Connection id of Fivetran
+    :param connector_id: The unique identifier for the connector within the Fivetran system
+    :param retry_limit: Retry limit. Defaults to 3
+    :param retry_delay: Retry delay
+    :param poll_interval: Polling interval. Defaults to 15 seconds
+    :param schedule_type: Define the schedule type
+    :param connector: Connector in FiveTran
+    :param group: Group in FiveTran
+    :param destination: Destination in Fivetran
+    """
+
     conn_id: str = field(default="fivetran_default")
     connector_id: str | None = field(default="")
     retry_limit: int = 3
@@ -121,9 +137,7 @@ class FiveTranOptions(TransferIntegrationOptions):
 
 
 class FivetranIntegration(TransferIntegration):
-    """
-    Fivetran integration to transfer datasets using Fivetran APIs.
-    """
+    """Fivetran integration to transfer datasets using Fivetran APIs."""
 
     api_user_agent = "airflow_provider_fivetran/1.1.3"
     api_protocol = "https"
@@ -155,7 +169,16 @@ class FivetranIntegration(TransferIntegration):
     def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> Any:
         """
         Loads data from source dataset to the destination using ingestion config
+
+        :param source_dataset: Source dataset
+        :param destination_dataset: Destination dataset
         """
+        if not source_dataset:
+            raise ValueError("Source dataset is not specified.")
+
+        if not destination_dataset:
+            raise ValueError("Destination dataset is not specified.")
+
         fivetran_hook = self.hook
 
         # Check if connector_id is passed and check if it exists and do the transfer.
@@ -202,6 +225,8 @@ class FivetranIntegration(TransferIntegration):
     def check_for_connector_id(self, fivetran_hook: FivetranHook) -> bool:
         """
         Ensures connector configuration has been completed successfully and is in a functional state.
+
+        :param fivetran_hook: Fivetran hook
         """
         connector_id = self.transfer_params.connector_id
         if connector_id is None:
@@ -213,6 +238,9 @@ class FivetranIntegration(TransferIntegration):
     def check_group_details(self, fivetran_hook: FivetranHook, group_id: str | None) -> bool:
         """
         Check if group_id is exists.
+
+        :param fivetran_hook: Fivetran hook
+        :param group_id: Group id in fivetran system
         """
 
         if group_id is None:
@@ -232,6 +260,8 @@ class FivetranIntegration(TransferIntegration):
     def create_group(self, fivetran_hook: FivetranHook) -> str:
         """
         Creates the group based on group name passed
+
+        :param fivetran_hook: Fivetran hook
         """
         endpoint = self.api_path_groups
         group_dict = self.transfer_params.group
@@ -249,6 +279,9 @@ class FivetranIntegration(TransferIntegration):
     def check_destination_details(self, fivetran_hook: FivetranHook, destination_id: str | None) -> bool:
         """
         Check if destination_id is exists.
+
+        :param fivetran_hook: Fivetran hook
+        :param destination_id: The unique identifier for the destination within the Fivetran system
         """
         if destination_id is None:
             logging.warning(
@@ -267,6 +300,9 @@ class FivetranIntegration(TransferIntegration):
     def create_destination(self, fivetran_hook: FivetranHook, group_id: str) -> dict:
         """
         Creates the destination based on destination configuration passed
+
+        :param fivetran_hook: Fivetran hook
+        :param group_id: Group id in fivetran system
         """
         endpoint = self.api_path_destinations
         destination_dict = self.transfer_params.destination
@@ -292,6 +328,9 @@ class FivetranIntegration(TransferIntegration):
     def create_connector(self, fivetran_hook: FivetranHook, group_id: str) -> str:
         """
         Creates the connector based on connector configuration passed
+
+        :param fivetran_hook: Fivetran hook
+        :param group_id: Group id in fivetran system
         """
         endpoint = self.api_path_connectors
         connector_dict = self.transfer_params.connector
@@ -324,6 +363,9 @@ class FivetranIntegration(TransferIntegration):
     def run_connector_setup_tests(self, fivetran_hook: FivetranHook, connector_id: str):
         """
         Runs the setup tests for an existing connector within your Fivetran account.
+
+        :param fivetran_hook: Fivetran hook
+        :param connector_id: The unique identifier for the connector within the Fivetran system
         """
         endpoint = self.api_path_connectors + connector_id + "/test"
         connector_dict = self.transfer_params.connector

@@ -12,20 +12,12 @@ else:
 
 class Location(Enum):
     LOCAL = "local"
-    HTTP = "http"
-    HTTPS = "https"
     GS = "gs"  # Google Cloud Storage
-    GOOGLE_DRIVE = "gdrive"
     S3 = "s3"  # Amazon S3
-    WASB = "wasb"  # Azure Blob Storage
-    WASBS = "wasbs"  # Azure Blob Storage
-    POSTGRES = "postgres"
-    POSTGRESQL = "postgres"
+    SFTP = "sftp"
     SQLITE = "sqlite"
-    DELTA = "delta"
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
-    REDSHIFT = "redshift"
 
     def __repr__(self):
         return f"{self}"
@@ -34,13 +26,9 @@ class Location(Enum):
 class FileLocation(Enum):
     # [START filelocation]
     LOCAL = "local"
-    HTTP = "http"
-    HTTPS = "https"
     GS = "gs"  # Google Cloud Storage
-    GOOGLE_DRIVE = "gdrive"
     S3 = "s3"  # Amazon S3
-    WASB = "wasb"  # Azure Blob Storage
-    WASBS = "wasbs"  # Azure Blob Storage
+    SFTP = "sftp"
     # [END filelocation]
 
     def __repr__(self):
@@ -81,13 +69,9 @@ class FileType(Enum):
 
 class Database(Enum):
     # [START database]
-    POSTGRES = "postgres"
-    POSTGRESQL = "postgres"
     SQLITE = "sqlite"
-    DELTA = "delta"
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
-    REDSHIFT = "redshift"
     # [END database]
 
     def __repr__(self):
