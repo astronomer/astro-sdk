@@ -134,7 +134,7 @@ class SFTPDataProvider(BaseFilesystemProviders):
         complete_url = self.get_complete_url(self.dataset.path, source_ref.actual_file.path)
         with smart_open.open(complete_url, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())
-        return complete_url
+        return self.dataset.path
 
     def write_dataframe_using_smart_open(self, source_ref: pd.DataFrame) -> str:
         """Write the source data from dataframe to the dataset using smart open
@@ -145,7 +145,7 @@ class SFTPDataProvider(BaseFilesystemProviders):
         complete_url = self.get_complete_url(self.dataset.path, "")
         with smart_open.open(complete_url, mode=mode, transport_params=self.transport_params) as stream:
             self.dataset.type.create_from_dataframe(stream=stream, df=source_ref)
-        return complete_url
+        return self.dataset.path
 
     @property
     def openlineage_dataset_namespace(self) -> str:
