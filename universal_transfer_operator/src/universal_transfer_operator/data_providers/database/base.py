@@ -185,7 +185,7 @@ class DatabaseDataProvider(DataProviders[Table]):
         return Location(source_connection_type) in self.transfer_mapping
 
     def read(self) -> Iterator[pd.DataFrame]:
-        """Read database dataset and convert them to dataframes"""
+        """Convert a Table into a Pandas DataFrame"""
         yield self.export_table_to_pandas_dataframe()
 
     def write(self, source_ref: DataStream | pd.DataFrame) -> str:
