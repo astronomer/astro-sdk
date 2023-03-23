@@ -2,7 +2,7 @@ from contextlib import nullcontext as does_not_raise
 from unittest import mock
 
 import pandas as pd
-import pytest as pytest
+import pytest
 
 from astro import settings
 from astro.dataframes.pandas import PandasDataframe
