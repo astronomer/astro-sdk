@@ -216,7 +216,6 @@ def load_data_in_datasets(
     :param dp_name: name of data_provider class
     :param local_file_path: data that needs to be loaded in dataset
     """
-    # dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
     if isinstance(dp, DatabaseDataProvider):
         dp.create_schema_if_needed(dataset_object.metadata.schema)
         if local_file_path:
@@ -240,7 +239,6 @@ def delete_dataset(
     :param dp_name: name of data_provider class
     :param local_file_path: data that needs to be loaded in dataset
     """
-    # DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
     if isinstance(dp, DatabaseDataProvider):
         dp.drop_table(dataset_object)
     elif isinstance(dp, BaseFilesystemProviders) and local_file_path:
