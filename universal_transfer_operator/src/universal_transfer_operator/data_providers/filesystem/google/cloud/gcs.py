@@ -53,11 +53,12 @@ class GCSDataProvider(BaseFilesystemProviders):
             impersonation_chain=self.google_impersonation_chain,
         )
 
-    def delete(self):
+    def delete(self, path: str | None = None):
         """
         Delete a file/object if they exists
         """
-        url = urlparse(self.dataset.path)
+        path = self.dataset.path if path is None else path
+        url = urlparse(path)
         self.hook.delete(bucket_name=url.netloc, object_name=url.path.lstrip("/"))
 
     @property
@@ -79,9 +80,11 @@ class GCSDataProvider(BaseFilesystemProviders):
         paths = [urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes]
         return paths
 
-    def check_if_exists(self) -> bool:
+    def check_if_exists(self, path: str | None = None) -> bool:
         """Return true if the dataset exists"""
-        return self.hook.exists(bucket_name=self.bucket_name, object_name=self.blob_name)
+        path = self.dataset.path if path is None else path
+        url = urlparse(path)
+        return self.hook.exists(bucket_name=url.netloc, object_name=url.path.lstrip("/"))
 
     @contextmanager
     def read_using_hook(self) -> Iterator[list[TempFile]]:

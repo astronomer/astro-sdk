@@ -55,15 +55,17 @@ class LocalDataProvider(BaseFilesystemProviders):
         """
         return str(urlparse(self.dataset.path).path)
 
-    def delete(self):
+    def delete(self, path: str | None = None):
         """
         Delete a file/object if they exists
         """
-        os.remove(self.dataset.path)
+        path = self.dataset.path if path is None else path
+        os.remove(path)
 
-    def check_if_exists(self) -> bool:
+    def check_if_exists(self, path: str | None = None) -> bool:
         """Return true if the dataset exists"""
-        return exists(self.dataset.path)
+        path = self.dataset.path if path is None else path
+        return exists(path)
 
     def write_using_smart_open(self, source_ref: DataStream | pd.DataFrame) -> str:
         """Write the source data from remote object i/o buffer to the dataset using smart open"""

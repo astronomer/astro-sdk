@@ -60,7 +60,7 @@ class BaseFilesystemProviders(DataProviders[File]):
         """Resolve patterns in path"""
         raise NotImplementedError
 
-    def delete(self):
+    def delete(self, path: str):  # type: ignore
         """
         Delete a file/object if they exists
         """

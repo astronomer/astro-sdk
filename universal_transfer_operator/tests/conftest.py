@@ -14,8 +14,10 @@ from google.api_core.exceptions import NotFound
 from utils.test_utils import create_unique_str
 
 from universal_transfer_operator.constants import TransferMode
-from universal_transfer_operator.data_providers import DataProviders, create_dataprovider
+from universal_transfer_operator.data_providers import create_dataprovider
+from universal_transfer_operator.data_providers.database.base import DatabaseDataProvider
 from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders
+from universal_transfer_operator.data_providers.filesystem.sftp import SFTPDataProvider
 from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Table
 
@@ -28,7 +30,7 @@ DATASET_NAME_TO_CONN_ID = {
     "BigqueryDataProvider": "google_cloud_default",
     "S3DataProvider": "aws_default",
     "GCSDataProvider": "google_cloud_default",
-    "LocalDataProvider": None,
+    "LocalDataProvider": "",
     "SFTPDataProvider": "sftp_conn",
 }
 DATASET_NAME_TO_PROVIDER_TYPE = {
@@ -126,7 +128,7 @@ def set_table_missing_values(table: Table, dataset_name: str) -> Table:
     """
     Set missing values of table dataset
     """
-    conn_id = DATASET_NAME_TO_CONN_ID[dataset_name]
+    conn_id: str = DATASET_NAME_TO_CONN_ID[dataset_name]
     table = table or Table(conn_id=conn_id)
 
     if not table.conn_id:
@@ -157,26 +159,41 @@ def populate_file(src_file_path: str, dataset_provider: BaseFilesystemProviders,
     :param dp_name: name of data provider
     :return:
     """
-    src_file_object = dataset_provider._convert_remote_file_to_byte_stream(src_file_path)
-    mode = "wb" if dataset_provider.read_as_binary(src_file_path) else "w"
+    folder, _, files = os.walk(src_file_path).__next__()
+    for file in files:
+        file_path = folder + file
+        src_file_object = dataset_provider._convert_remote_file_to_byte_stream(file_path)
+        mode = "wb" if dataset_provider.read_as_binary(file_path) else "w"
 
-    # Currently, we are passing the credentials to sftp server via URL - sftp://username:password@localhost, we are
-    # populating the credentials in the URL if the server destination is SFTP.
-    path = dataset_provider.dataset.path
-    if dp_name == "SFTPDataProvider":
-        original_url = urlparse(path)
-        cred_url = urlparse(dataset_provider.get_uri())
-        url_netloc = f"{cred_url.netloc}/{original_url.netloc}"
-        url_path = original_url.path
-        cred_url = cred_url._replace(netloc=url_netloc, path=url_path)
-        path = urlunparse(cred_url)
+        # Currently, we are passing the credentials to sftp server via URL - sftp://username:password@localhost, we are
+        # populating the credentials in the URL if the server destination is SFTP.
+        path = dataset_provider.dataset.path
+        if dp_name == "SFTPDataProvider" and isinstance(dataset_provider, SFTPDataProvider):
+            original_url = urlparse(path)
+            cred_url = urlparse(dataset_provider.get_uri())
+            url_netloc = f"{cred_url.netloc}/{original_url.netloc}"
+            url_path = original_url.path
+            cred_url = cred_url._replace(netloc=url_netloc, path=url_path)
+            path = urlunparse(cred_url)
 
-    with smart_open.open(path, mode=mode, transport_params=dataset_provider.transport_params) as stream:
-        stream.write(src_file_object.read())
-        stream.flush()
+        # Checking for folder if it is a folder we want the file name to come from the source of files.
+        if is_dir(path):
+            path = path + file
+
+        with smart_open.open(path, mode=mode, transport_params=dataset_provider.transport_params) as stream:
+            stream.write(src_file_object.read())
+            stream.flush()
 
 
-def set_missing_values(dataset_object: [File, Table], dp_name: str) -> [File, Table]:
+def is_dir(path: str) -> bool:
+    """Check if a given path is dir or an absolute path to a file. This is different from os.is_dir()
+    because we just look at the str
+    """
+    end_str: str = path.split("/")[-1]
+    return end_str.find(".") == -1
+
+
+def set_missing_values(dataset_object: File | Table, dp_name: str) -> File | Table:
     """Set missing values for datasets"""
     dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
     if dataset_type == "database":
@@ -187,7 +204,10 @@ def set_missing_values(dataset_object: [File, Table], dp_name: str) -> [File, Ta
 
 
 def load_data_in_datasets(
-    dataset_object: [File, Table], dp: DataProviders, dp_name: str, local_file_path: str
+    dataset_object: File | Table,
+    dp: BaseFilesystemProviders | DatabaseDataProvider,
+    dp_name: str,
+    local_file_path: str,
 ):
     """
     Load data in datasets
@@ -196,17 +216,22 @@ def load_data_in_datasets(
     :param dp_name: name of data_provider class
     :param local_file_path: data that needs to be loaded in dataset
     """
-    dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
-    if dataset_type == "database":
+    # dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
+    if isinstance(dp, DatabaseDataProvider):
         dp.create_schema_if_needed(dataset_object.metadata.schema)
         if local_file_path:
             dp.load_file_to_table(File(local_file_path), dataset_object)
-    elif dataset_type == "file":
+    elif isinstance(dp, BaseFilesystemProviders):
         if local_file_path:
             populate_file(src_file_path=local_file_path, dataset_provider=dp, dp_name=dp_name)
 
 
-def delete_dataset(dataset_object: [File, Table], dp: DataProviders, dp_name: str, local_file_path: str):
+def delete_dataset(
+    dataset_object: File | Table,
+    dp: BaseFilesystemProviders | DatabaseDataProvider,
+    dp_name: str,
+    local_file_path: str,
+):
     """
     Delete dataset
 
@@ -215,12 +240,13 @@ def delete_dataset(dataset_object: [File, Table], dp: DataProviders, dp_name: st
     :param dp_name: name of data_provider class
     :param local_file_path: data that needs to be loaded in dataset
     """
-    dataset_type = DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
-    if dataset_type == "database":
+    # DATASET_NAME_TO_PROVIDER_TYPE[dp_name]
+    if isinstance(dp, DatabaseDataProvider):
         dp.drop_table(dataset_object)
-    elif dataset_type == "file" and local_file_path:
+    elif isinstance(dp, BaseFilesystemProviders) and local_file_path:
         try:
-            dp.delete()
+            for path in dp.paths:
+                dp.delete(path=path)
         except (FileNotFoundError, NotFound):
             pass
 
