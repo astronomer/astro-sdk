@@ -140,3 +140,18 @@ class WASBLocation(BaseFileLocation):
 
         cred_dict = {f"fs.azure.account.key.{account_name}.blob.core.windows.net": access_key}
         return cred_dict
+
+    @property
+    def databricks_uri(self) -> str:
+        """
+        Return a Databricks compatible WASB URI, including the Azure storage account host.
+        Example: wasb://astro-sdk@astrosdk.blob.core.windows.net/homes.csv
+
+        :return: self.path, including the Azure storage account host
+        """
+        new_path = self.path
+        parsed_uri = urlparse(self.path)
+        if "@" not in parsed_uri.netloc:
+            new_netloc = parsed_uri.netloc + "@" + self.hook.get_conn().account_name
+            new_path = self.path.replace(parsed_uri.netloc, new_netloc)
+        return new_path
