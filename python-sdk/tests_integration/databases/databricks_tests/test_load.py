@@ -84,7 +84,7 @@ def test_delta_load_file_gcs(database_table_fixture):
 @pytest.mark.parametrize(
     "remote_files_fixture",
     [
-        {"provider": "azure", "file_create": False},
+        {"provider": "azure", "file_create": True},
     ],
     indirect=True,
     ids=["azure_blob_storage"],
@@ -101,8 +101,10 @@ def test_delta_load_file_gcs(database_table_fixture):
     ids=["delta"],
 )
 def test_delta_load_file_azure_wasb(database_table_fixture, remote_files_fixture):
-    file_ = File(path=remote_files_fixture[0], conn_id="wasb_conn_with_sas_token")
+    file_ = File(path=remote_files_fixture[0], conn_id="wasb_conn_with_access_key")
     database, table = database_table_fixture
+    assert file_.exists()
+    assert not database.table_exists(table)
     database.load_file_to_table(
         input_file=file_,
         output_table=table,

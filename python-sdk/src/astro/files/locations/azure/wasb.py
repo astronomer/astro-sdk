@@ -122,24 +122,21 @@ class WASBLocation(BaseFileLocation):
 
     def databricks_auth_settings(self) -> dict:
         """
-        Required settings to transfer files in/to Databricks.
-
-        Reference:
-        https://docs.databricks.com/external-data/wasb-blob.html
+        Required settings to transfer files in/to Databricks. Currently relies on storage account access key,
+        as described in:
+        https://docs.databricks.com/storage/azure-storage.html
 
         :return: A dictionary of settings keys to settings values
         """
-        parsed_url = urlparse(self.path)
-        container_name = parsed_url.netloc
+        urlparse(self.path)
         account_name = self.hook.get_conn().account_name
+
         try:
-            sas_token = self.hook.get_connection(conn_id=self.conn_id).extra_dejson["sas_token"]
+            access_key = self.hook.get_connection(conn_id=self.conn_id).extra_dejson["shared_access_key"]
         except KeyError:
             raise WASBLocationException(
-                "The connection extras must define `sas_token` for transfers from BlobStorage to Databricks using WASB"
+                "The connection extras must define `shared_access_key` for transfers from BlobStorage to Databricks"
             )
 
-        cred_dict = {
-            f"fs.azure.sas.{container_name}.{account_name}.blob.core.windows.net": sas_token,
-        }
+        cred_dict = {f"fs.azure.account.key.{account_name}.blob.core.windows.net": access_key}
         return cred_dict
