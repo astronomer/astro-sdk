@@ -123,7 +123,7 @@ def test_read_write_methods_of_datasets_with_pattern(src_dataset_fixture, dst_da
      /data/pattern_transfer/ contains three files - sample_1.csv, sample_2.csv and sample_3.csv
     """
     src_dp, _ = src_dataset_fixture
-    dst_dp, dataset_object = dst_dataset_fixture
+    dst_dp, _ = dst_dataset_fixture
     result = []
     for source_data in src_dp.read():
         result.append(dst_dp.write(source_data))
