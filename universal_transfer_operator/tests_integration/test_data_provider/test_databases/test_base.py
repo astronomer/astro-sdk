@@ -90,7 +90,11 @@ def test_read_write_methods_of_datasets(src_dataset_fixture, dst_dataset_fixture
     output_df = export_to_dataframe(dst_dp)
     input_df = pd.read_csv(f"{str(CWD)}/../../data/sample.csv")
 
-    assert result == [dataset_object.name if isinstance(dataset_object, Table) else dataset_object.path]
+    assert result == [
+        dst_dp.get_table_qualified_name(dataset_object)
+        if isinstance(dataset_object, Table)
+        else dataset_object.path
+    ]
     assert output_df.equals(input_df)
 
 
