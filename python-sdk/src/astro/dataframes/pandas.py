@@ -22,14 +22,7 @@ class PandasDataframe(DataFrame):
         if df_size < (settings.MAX_DATAFRAME_MEMORY_FOR_XCOM_DB * 1024):
             logger.info("Dataframe size: %s bytes. Storing it in Airflow's metadata DB", df_size)
             return {"data": self.to_json()}
-        else:
-            if settings.DATAFRAME_STORAGE_CONN_ID is None:
-                raise AstroSDKConfigError(
-                    "Dataframe size exceeds allowed limit for storing in Airflow's metadata DB. "
-                    "Airflow config variable AIRFLOW__ASTRO_SDK__XCOM_STORAGE_CONN_ID needs to "
-                    "be set for remote storage of the dataframe."
-                )
-
+        elif settings.DATAFRAME_STORAGE_CONN_ID is not None:
             # Avoid cyclic dependency
             from astro.utils.dataframe import convert_dataframe_to_file
 
@@ -40,6 +33,12 @@ class PandasDataframe(DataFrame):
                 settings.DATAFRAME_STORAGE_URL,
             )
             return convert_dataframe_to_file(self).to_json()
+
+        raise AstroSDKConfigError(
+            "Dataframe size exceeds allowed limit for storing in Airflow's metadata DB. "
+            "Airflow config variable AIRFLOW__ASTRO_SDK__XCOM_STORAGE_CONN_ID needs to "
+            "be set for remote storage of the dataframe."
+        )
 
     @staticmethod
     def deserialize(data: dict, version: int):
