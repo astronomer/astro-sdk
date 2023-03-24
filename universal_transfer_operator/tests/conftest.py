@@ -198,7 +198,7 @@ def is_dir(path: str) -> bool:
     """Check if a given path is dir or an absolute path to a file. This is different from os.is_dir()
     because we just look at the str
     """
-     return not pathlib.PosixPath(path).suffix
+    return not pathlib.PosixPath(path).suffix
 
 
 def set_missing_values(dataset_object: File | Table, dp_name: str) -> File | Table:
