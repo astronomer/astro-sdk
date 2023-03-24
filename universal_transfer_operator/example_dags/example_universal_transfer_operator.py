@@ -1,4 +1,5 @@
 import os
+import pathlib
 from datetime import datetime
 
 from airflow import DAG
@@ -10,6 +11,9 @@ from universal_transfer_operator.universal_transfer_operator import UniversalTra
 
 s3_bucket = os.getenv("S3_BUCKET", "s3://astro-sdk-test")
 gcs_bucket = os.getenv("GCS_BUCKET", "gs://uto-test")
+
+CWD = pathlib.Path(__file__).parent
+DATA_DIR = str(CWD) + "/../../data/"
 
 # [START dataset_file]
 input_file = File(path=f"{gcs_bucket}/uto/", conn_id="google_cloud_default")
@@ -134,3 +138,9 @@ with DAG(
         destination_dataset=Table(name="uto_bigquery_to_sqlite_table", conn_id="sqlite_default"),
     )
     # [END transfer_non_native_bigquery_to_sqlite]
+
+    transfer_non_native_local_to_sftp = UniversalTransferOperator(
+        task_id="transfer_non_native_local_to_sftp",
+        source_dataset=File(path=f"{DATA_DIR}sample.csv", filetype=FileType.CSV),
+        destination_dataset=File(path="sftp://upload/sample.csv", conn_id="sftp_conn", filetype=FileType.CSV),
+    )
