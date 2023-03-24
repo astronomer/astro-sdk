@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import pathlib
 from copy import deepcopy
 from urllib.parse import urlparse, urlunparse
 
@@ -161,7 +162,13 @@ def populate_file(src_file_path: str, dataset_provider: BaseFilesystemProviders,
     :param dp_name: name of data provider
     :return:
     """
-    folder, _, files = os.walk(src_file_path).__next__()
+    if os.path.isfile(src_file_path):
+        local_path = pathlib.Path(src_file_path)
+        folder: str = f"{local_path.parent}/"
+        files: list[str] = [local_path.name]
+    else:
+        folder, _, files = os.walk(src_file_path).__next__()
+
     for file in files:
         file_path = folder + file
         src_file_object = dataset_provider._convert_remote_file_to_byte_stream(file_path)

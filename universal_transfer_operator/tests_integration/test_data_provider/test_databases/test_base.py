@@ -1,3 +1,4 @@
+import os
 import pathlib
 from urllib.parse import urlparse, urlunparse
 
@@ -93,12 +94,17 @@ def test_read_write_methods_of_datasets(src_dataset_fixture, dst_dataset_fixture
     assert output_df.equals(input_df)
 
 
+# Creating a temp dir for below test, since it's a pattern test, we need to control the files
+# that are treated as input.
+os.mkdir(f"/tmp/{dataset_name}/")
+
+
 @pytest.mark.parametrize(
     "src_dataset_fixture",
     [
         {
             "name": "LocalDataProvider",
-            "object": File(path="/tmp/"),
+            "object": File(path=f"/tmp/{dataset_name}/"),
             "local_file_path": f"{str(CWD)}/../../data/pattern_transfer/",
         }
     ],
