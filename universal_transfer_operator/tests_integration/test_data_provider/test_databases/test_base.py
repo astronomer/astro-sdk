@@ -130,6 +130,7 @@ def test_read_write_methods_of_datasets_with_pattern(src_dataset_fixture, dst_da
     assert dst_dp.check_if_exists("sftp://upload/sample_1.csv")
     assert dst_dp.check_if_exists("sftp://upload/sample_2.csv")
     assert dst_dp.check_if_exists("sftp://upload/sample_3.csv")
+    assert dst_dp.check_if_exists("sftp://upload/some_image.png")
 
 
 def export_to_dataframe(data_provider) -> pd.DataFrame:
