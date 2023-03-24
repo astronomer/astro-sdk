@@ -54,11 +54,12 @@ class S3DataProvider(BaseFilesystemProviders):
             extra_args=self.s3_extra_args,
         )
 
-    def delete(self):
+    def delete(self, path: str | None = None):
         """
         Delete a file/object if they exists
         """
-        url = urlparse(self.dataset.path)
+        path = self.dataset.path if path is None else path
+        url = urlparse(path)
         self.hook.delete_objects(bucket=url.netloc, keys=url.path.lstrip("/"))
 
     @property
@@ -80,9 +81,10 @@ class S3DataProvider(BaseFilesystemProviders):
         paths = [urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes]
         return paths
 
-    def check_if_exists(self) -> bool:
+    def check_if_exists(self, path: str | None = None) -> bool:
         """Return true if the dataset exists"""
-        return self.hook.check_for_key(key=self.dataset.path)
+        path = self.dataset.path if path is None else path
+        return self.hook.check_for_key(key=path)
 
     @contextmanager
     def read_using_hook(self) -> Iterator[list[TempFile]]:

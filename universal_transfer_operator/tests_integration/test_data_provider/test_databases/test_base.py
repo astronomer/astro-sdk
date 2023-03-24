@@ -1,3 +1,4 @@
+import os
 import pathlib
 from urllib.parse import urlparse, urlunparse
 
@@ -11,6 +12,8 @@ from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Table
 
 CWD = pathlib.Path(__file__).parent
+
+dataset_name = create_unique_str(10)
 
 
 @pytest.mark.parametrize(
@@ -27,22 +30,22 @@ CWD = pathlib.Path(__file__).parent
         },
         {
             "name": "S3DataProvider",
-            "object": File(path=f"s3://tmp9/{create_unique_str(10)}.csv"),
+            "object": File(path=f"s3://tmp9/{dataset_name}.csv"),
             "local_file_path": f"{str(CWD)}/../../data/sample.csv",
         },
         {
             "name": "GCSDataProvider",
-            "object": File(path=f"gs://uto-test/{create_unique_str(10)}.csv"),
+            "object": File(path=f"gs://uto-test/{dataset_name}.csv"),
             "local_file_path": f"{str(CWD)}/../../data/sample.csv",
         },
         {
             "name": "LocalDataProvider",
-            "object": File(path=f"/tmp/{create_unique_str(10)}.csv"),
+            "object": File(path=f"/tmp/{dataset_name}.csv"),
             "local_file_path": f"{str(CWD)}/../../data/sample.csv",
         },
         {
             "name": "SFTPDataProvider",
-            "object": File(path=f"sftp://upload/{create_unique_str(10)}.csv"),
+            "object": File(path=f"sftp://upload/{dataset_name}.csv"),
             "local_file_path": f"{str(CWD)}/../../data/sample.csv",
         },
     ],
@@ -52,22 +55,25 @@ CWD = pathlib.Path(__file__).parent
 @pytest.mark.parametrize(
     "dst_dataset_fixture",
     [
+        {"name": "SqliteDataProvider", "object": Table(name=dataset_name)},
+        {"name": "BigqueryDataProvider", "object": Table(name=dataset_name)},
+        {"name": "SnowflakeDataProvider", "object": Table(name=dataset_name)},
         {
-            "name": "SqliteDataProvider",
+            "name": "S3DataProvider",
+            "object": File(path=f"s3://tmp9/{dataset_name}.csv"),
         },
-        {
-            "name": "BigqueryDataProvider",
-        },
-        {
-            "name": "SnowflakeDataProvider",
-        },
-        {"name": "S3DataProvider", "object": File(path=f"s3://tmp9/{create_unique_str(10)}.csv")},
         {
             "name": "GCSDataProvider",
-            "object": File(path=f"gs://uto-test/{create_unique_str(10)}.csv"),
+            "object": File(path=f"gs://uto-test/{dataset_name}.csv"),
         },
-        {"name": "LocalDataProvider", "object": File(path=f"/tmp/{create_unique_str(10)}.csv")},
-        {"name": "SFTPDataProvider", "object": File(path=f"sftp://upload/{create_unique_str(10)}.csv")},
+        {
+            "name": "LocalDataProvider",
+            "object": File(path=f"/tmp/{dataset_name}.csv"),
+        },
+        {
+            "name": "SFTPDataProvider",
+            "object": File(path=f"sftp://upload/{dataset_name}.csv"),
+        },
     ],
     indirect=True,
     ids=lambda dp: dp["name"],
@@ -77,13 +83,64 @@ def test_read_write_methods_of_datasets(src_dataset_fixture, dst_dataset_fixture
     Test datasets read and write methods of all datasets
     """
     src_dp, _ = src_dataset_fixture
-    dst_dp, _ = dst_dataset_fixture
+    dst_dp, dataset_object = dst_dataset_fixture
+    result = []
     for source_data in src_dp.read():
-        dst_dp.write(source_data)
+        result.append(dst_dp.write(source_data))
     output_df = export_to_dataframe(dst_dp)
     input_df = pd.read_csv(f"{str(CWD)}/../../data/sample.csv")
 
+    assert result == [
+        dst_dp.get_table_qualified_name(dataset_object)
+        if isinstance(dataset_object, Table)
+        else dataset_object.path
+    ]
     assert output_df.equals(input_df)
+
+
+# Creating a temp dir for below test, since it's a pattern test, we need to control the files
+# that are treated as input.
+os.mkdir(f"/tmp/{dataset_name}/")
+
+
+@pytest.mark.parametrize(
+    "src_dataset_fixture",
+    [
+        {
+            "name": "LocalDataProvider",
+            "object": File(path=f"/tmp/{dataset_name}/"),
+            "local_file_path": f"{str(CWD)}/../../data/pattern_transfer/",
+        }
+    ],
+    indirect=True,
+    ids=lambda dp: dp["name"],
+)
+@pytest.mark.parametrize(
+    "dst_dataset_fixture",
+    [
+        {
+            "name": "SFTPDataProvider",
+            "object": File(path="sftp://upload/"),
+        },
+    ],
+    indirect=True,
+    ids=lambda dp: dp["name"],
+)
+def test_read_write_methods_of_datasets_with_pattern(src_dataset_fixture, dst_dataset_fixture):
+    """
+    Test datasets read and write methods when a directory is passed. Expected all the files created are returned as
+     result of write() method.
+     /data/pattern_transfer/ contains three files - sample_1.csv, sample_2.csv and sample_3.csv
+    """
+    src_dp, _ = src_dataset_fixture
+    dst_dp, _ = dst_dataset_fixture
+    result = []
+    for source_data in src_dp.read():
+        result.append(dst_dp.write(source_data))
+    assert dst_dp.check_if_exists("sftp://upload/sample_1.csv")
+    assert dst_dp.check_if_exists("sftp://upload/sample_2.csv")
+    assert dst_dp.check_if_exists("sftp://upload/sample_3.csv")
+    assert dst_dp.check_if_exists("sftp://upload/some_image.png")
 
 
 def export_to_dataframe(data_provider) -> pd.DataFrame:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from functools import cached_property
 from urllib.parse import ParseResult, urlparse, urlunparse
 
@@ -44,15 +45,17 @@ class SFTPDataProvider(BaseFilesystemProviders):
         """Return an instance of the SFTPHook Airflow hook."""
         return SFTPHook(ssh_conn_id=self.dataset.conn_id)
 
-    def delete(self):
+    def delete(self, path: str | None = None):
         """
         Delete a file/object if they exists
         """
-        self.hook.delete_file(path=self.dataset.path.replace("sftp://", "/"))
+        path = self.dataset.path if path is None else path
+        self.hook.delete_file(path=path.replace("sftp://", "/"))
 
-    def check_if_exists(self):
+    def check_if_exists(self, path: str | None = None):
         """Return true if the dataset exists"""
-        return self.hook.path_exists(self.dataset.path.replace("sftp://", "/"))
+        path = self.dataset.path if path is None else path
+        return self.hook.path_exists(path.replace("sftp://", "/"))
 
     @property
     def paths(self) -> list[str]:
@@ -131,10 +134,13 @@ class SFTPDataProvider(BaseFilesystemProviders):
         :return: File path that is the used for write pattern
         """
         mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
-        complete_url = self.get_complete_url(self.dataset.path, source_ref.actual_file.path)
+        destination_file = self.dataset.path
+        if self.dataset.is_pattern():
+            destination_file = os.path.join(self.dataset.path, os.path.basename(source_ref.actual_filename))
+        complete_url = self.get_complete_url(destination_file, source_ref.actual_file.path)
         with smart_open.open(complete_url, mode=mode, transport_params=self.transport_params) as stream:
             stream.write(source_ref.remote_obj_buffer.read())
-        return self.dataset.path
+        return destination_file
 
     def write_from_dataframe(self, source_ref: pd.DataFrame) -> str:
         """Write the dataframe to the SFTP dataset using smart open

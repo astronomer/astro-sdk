@@ -60,7 +60,7 @@ class BaseFilesystemProviders(DataProviders[File]):
         """Resolve patterns in path"""
         raise NotImplementedError
 
-    def delete(self):
+    def delete(self, path: str):  # type: ignore
         """
         Delete a file/object if they exists
         """
@@ -123,17 +123,41 @@ class BaseFilesystemProviders(DataProviders[File]):
 
     def write_using_smart_open(self, source_ref: DataStream | pd.DataFrame) -> str:
         """Write the source data from remote object i/o buffer to the dataset using smart open"""
-        mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
-        destination_file = self.dataset.path
-        with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
+        if isinstance(source_ref, DataStream):
             # `source_ref` can be a dataframe for all the filetypes we can create a dataframe for like -
             # CSV, JSON, NDJSON, and Parquet or SQL Tables. This gives us the option to perform various
             # functions on the data on the fly, like filtering or changing the file format altogether. For other
             # files whose content cannot be converted to dataframe like - zip or image, we get a DataStream object.
-            if isinstance(source_ref, DataStream):
-                stream.write(source_ref.remote_obj_buffer.read())
-            elif isinstance(source_ref, pd.DataFrame):
-                self.dataset.type.create_from_dataframe(stream=stream, df=source_ref)
+            return self.write_from_file(source_ref)
+        else:
+            return self.write_from_dataframe(source_ref)
+
+    def write_from_file(self, source_ref: DataStream) -> str:
+        """Write the remote object i/o buffer to the dataset using smart open
+        :param source_ref: DataStream object of source dataset
+        :return: File path that is the used for write pattern
+        """
+        mode = "wb" if self.read_as_binary(source_ref.actual_file.path) else "w"
+
+        destination_file = self.dataset.path
+        # check if destination dataset is folder or file pattern
+        if self.dataset.is_pattern():
+            destination_file = os.path.join(self.dataset.path, os.path.basename(source_ref.actual_filename))
+
+        with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
+            stream.write(source_ref.remote_obj_buffer.read())
+        return destination_file
+
+    def write_from_dataframe(self, source_ref: pd.DataFrame) -> str:
+        """Write the dataframe to the SFTP dataset using smart open
+        :param source_ref: DataStream object of source dataset
+        :return: File path that is the used for write pattern
+        """
+        mode = "wb" if self.read_as_binary(self.dataset.path) else "w"
+
+        destination_file = self.dataset.path
+        with smart_open.open(destination_file, mode=mode, transport_params=self.transport_params) as stream:
+            self.dataset.type.create_from_dataframe(stream=stream, df=source_ref)
         return destination_file
 
     def read_as_binary(self, file: str) -> bool:
