@@ -46,7 +46,9 @@ def test_databricks_auth_settings_fails_due_to_missing_sas_token(remote_files_fi
     location = WASBLocation(path=remote_files_fixture[0], conn_id="wasb_default")
     with pytest.raises(WASBLocationException) as err:
         location.databricks_auth_settings()
-    expected = "The connection extras must define `sas_token` for transfers from BlobStorage to Databricks using WASB"
+    expected = (
+        "The connection extras must define `shared_access_key` for transfers from BlobStorage to Databricks"
+    )
     assert expected in str(err.value)
 
 
@@ -58,6 +60,6 @@ def test_databricks_auth_settings_fails_due_to_missing_sas_token(remote_files_fi
 )
 def test_databricks_auth_settings_succeeds(remote_files_fixture):
     """Test get_size() of for Blob Storage file."""
-    location = WASBLocation(path=remote_files_fixture[0], conn_id="wasb_conn_with_sas_token")
-    key = "fs.azure.sas.astro-sdk.astrosdk.blob.core.windows.net"
+    location = WASBLocation(path=remote_files_fixture[0], conn_id="wasb_conn_with_access_key")
+    key = "fs.azure.account.key.astrosdk.blob.core.windows.net"
     assert key in location.databricks_auth_settings()

@@ -152,6 +152,7 @@ class WASBLocation(BaseFileLocation):
         new_path = self.path
         parsed_uri = urlparse(self.path)
         if "@" not in parsed_uri.netloc:
-            new_netloc = parsed_uri.netloc + "@" + self.hook.get_conn().account_name
+            account_name = self.hook.get_conn().account_name
+            new_netloc = f"{parsed_uri.netloc}@{account_name}.blob.core.windows.net"
             new_path = self.path.replace(parsed_uri.netloc, new_netloc)
         return new_path
