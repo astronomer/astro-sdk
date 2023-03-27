@@ -99,6 +99,12 @@ connections:
     description: null
     extra:
       connection_string: $AZURE_WASB_CONN_STRING
+  - conn_id: wasb_conn_with_access_key
+    conn_type: wasb
+    host: astrosdk.blob.core.windows.net
+    description: null
+    extra:
+      shared_access_key: $AZURE_WASB_ACCESS_KEY
   - conn_id: gcp_conn_project
     conn_type: google_cloud_platform
     description: null

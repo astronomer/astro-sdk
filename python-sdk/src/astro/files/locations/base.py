@@ -160,6 +160,15 @@ class BaseFileLocation(ABC):
         except OSError:
             return False
 
+    @property
+    def databricks_uri(self) -> str:
+        """
+        Return a Databricks compatible URI. In most scenarios, it will be self.path. An exception is Microsoft WASB.
+
+        :return: self.path
+        """
+        return self.path
+
     def databricks_auth_settings(self) -> dict:
         """
         Required settings to upload this file into databricks. Only needed for cloud storage systems
