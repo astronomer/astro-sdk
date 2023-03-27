@@ -114,8 +114,12 @@ def _create_load_file_pyspark_file(
     ):
         databricks_options.autoloader_load_options["cloudFiles.allowOverwrites"] = "true"
 
+    if input_file.location.location_type in (FileLocation.WASB, FileLocation.WASBS):
+        data_source = input_file.location.databricks_uri
+    else:
+        data_source = input_file.path
     file_path = generate_file(
-        data_source_path=str(dbfs_file_path) if dbfs_file_path else input_file.location.databricks_uri,
+        data_source_path=str(dbfs_file_path) if dbfs_file_path else data_source,
         table_name=delta_table.name,
         source_type=str(input_file.location.location_type),
         output_file_path=Path(output_file.name),

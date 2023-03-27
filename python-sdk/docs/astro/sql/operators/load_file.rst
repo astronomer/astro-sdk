@@ -197,10 +197,14 @@ Supported native transfers
      - Redshift
      - https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html
      - https://docs.aws.amazon.com/redshift/latest/dg/c-getting-started-using-spectrum-create-role.html
-   * - Azure
+   * - Azure Blob Storage (WASB)
      - Snowflake
      - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
      - https://docs.snowflake.com/en/user-guide/data-load-azure-config.html
+   * - Azure Blob Storage (WASB)
+     - Databricks
+     - Use a WASB connection which defines ``host`` and ``extras.shared_access_key``
+     - https://docs.databricks.com/storage/azure-storage.html#access-azure-data-lake-storage-gen2-or-blob-storage-using-the-account-key
 
 .. note::
    For loading from S3 to Redshift database, although Redshift allows the below two options for authorization, **we
