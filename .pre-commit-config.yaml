@@ -71,7 +71,7 @@ repos:
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.257'
+    rev: 'v0.0.259'
     hooks:
       - id: ruff
         args:
