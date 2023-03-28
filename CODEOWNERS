@@ -1,7 +1,7 @@
 # Order is important; the last matching pattern takes the most
 # precedence.
 
-*               @pankajastro @feluelle @tatiana @utkarsharma2
-python-sdk/     @dimberman @tatiana @utkarsharma2 @sunank200 @pankajastro @pankajkoti @feluelle
-sql-cli/        @dimberman @tatiana @pankajastro @pankajkoti @feluelle
+*               @pankajastro @tatiana @utkarsharma2
+python-sdk/     @dimberman @tatiana @utkarsharma2 @sunank200 @pankajastro @pankajkoti
+sql-cli/        @dimberman @tatiana @pankajastro @pankajkoti
 universal_transfer_operator/     @sunank200 @utkarsharma2 @rajaths010494 @phanikumv
