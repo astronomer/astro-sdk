@@ -214,6 +214,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if self.sql.endswith(".sql"):
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
+        self.op_kwargs.pop("sql", None)
 
     def move_function_params_into_sql_params(self, context: dict) -> None:
         """
