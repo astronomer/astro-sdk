@@ -315,17 +315,19 @@ def test_transform_astro_data_team(database_table_fixture, sample_dag):
         temp_file.flush()
 
         with sample_dag:
-            table_from_inline_sql = aql.transform(
-               conn_id="sqlite_default",
-               task_id="table_from_inline_sql",
-            )(query)(sql=sample_query)
+            aql.transform(
+                conn_id="sqlite_default",
+                task_id="table_from_inline_sql",
+            )(
+                query
+            )(sql=sample_query)
 
-            table_from_sql_file = aql.transform(
+            aql.transform(
                 conn_id="sqlite_default",
                 task_id="table_from_sql_file",
-            )(query)(sql=temp_file.name)
-
-            table_from_inline_sql >> table_from_sql_file
+            )(
+                query
+            )(sql=temp_file.name)
 
         test_utils.run_dag(sample_dag)
 
