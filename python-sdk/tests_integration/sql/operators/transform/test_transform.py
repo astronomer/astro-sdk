@@ -1,5 +1,6 @@
 import os
 import pathlib
+import tempfile
 
 import pandas as pd
 import pytest
@@ -272,6 +273,61 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
     expected_target_table.name = "test_is_True"
     database.drop_table(expected_target_table)
     assert not database.table_exists(expected_target_table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+            ),
+            "table": Table(conn_id="sqlite_default"),
+        },
+    ],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_transform_astro_data_team(database_table_fixture, sample_dag):
+    """Test case that represents a usage from the Astronomer Data team.
+    aql.ransform is used both receiving a SQL string and also as a file path."""
+    _, imdb_table = database_table_fixture
+
+    def query(sql: str) -> Table:
+        """
+        Takes sql or sql file path and returns result as a Table.
+
+        """
+        return sql
+
+    sample_query = f"""
+        SELECT title, rating
+        FROM {imdb_table.name}
+        WHERE genre1=='Animation'
+        ORDER BY rating desc
+        LIMIT 5;
+    """
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".sql") as temp_file:
+        temp_file.write(sample_query)
+        temp_file.flush()
+
+        with sample_dag:
+            table_from_inline_sql = aql.transform(
+               conn_id="sqlite_default",
+               task_id="table_from_inline_sql",
+            )(query)(sql=sample_query)
+
+            table_from_sql_file = aql.transform(
+                conn_id="sqlite_default",
+                task_id="table_from_sql_file",
+            )(query)(sql=temp_file.name)
+
+            table_from_inline_sql >> table_from_sql_file
+
+        test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.integration
