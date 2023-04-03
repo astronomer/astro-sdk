@@ -41,6 +41,10 @@ When you run the example DAG given below, by setting the environment variables d
        :start-after: [START howto_example_dag_calculate_popular_movies]
        :end-before: [END howto_example_dag_calculate_popular_movies]
 
-Then you would see the Openlineage facets on Marquez/OpenLineage UI
+Then you would see the Openlineage facets on Marquez/OpenLineage UI under ``default`` namespace
 
-.. image:: img/openlineage/openlineage_facets.png
+.. image:: img/openlineage/openlineage_1.png
+
+Lineage from the task can be viewed by clicking on ``calculate_popular_movies.load_file``
+
+.. image:: img/openlineage/openlineage_2.png
