@@ -2,7 +2,7 @@
   astro
 </h1>
   <h3 align="center">
-  workflows made easy<br><br>
+  workflows made easy <br><br>
 </h3>
 
 [![Python versions](https://img.shields.io/pypi/pyversions/astro-sdk-python.svg)](https://pypi.org/pypi/astro-sdk-python)
