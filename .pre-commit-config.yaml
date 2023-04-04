@@ -46,7 +46,7 @@ repos:
       - id: python-check-mock-methods
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.4.2
+    rev: v1.5.1
     hooks:
       - id: forbid-crlf
       - id: remove-crlf
@@ -56,7 +56,7 @@ repos:
         exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 23.3.0
     hooks:
       - id: black
         # Exclude auto-generated example files from being changed
@@ -71,7 +71,7 @@ repos:
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.259'
+    rev: 'v0.0.260'
     hooks:
       - id: ruff
         args:
