@@ -1,3 +1,4 @@
+# [START howto_example_dag_calculate_popular_movies]
 from datetime import datetime
 
 from airflow import DAG
@@ -32,3 +33,5 @@ with DAG(
         input_table=imdb_movies,
         output_table=Table(name="top_animation"),
     )
+
+# [END howto_example_dag_calculate_popular_movies]

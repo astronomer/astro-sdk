@@ -127,13 +127,15 @@ or by updating Airflow's configuration
    [astro_sdk]
    auto_add_inlets_outlets = True
 
+.. _openlineage_emit_temp_table:
+
 Configuring to emit temp table event in openlineage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Astro SDK has ability to create temporary tables see: :ref:`table`.
 
-By default, we emit the temporary tables event in openlienage.
+By default, we emit the temporary tables event in openlineage.
 
-This might be not that useful for some users who do not want to emit such event in openlienage. Such users can set the following config to ``False`` to disable it.
+This might be not that useful for some users who do not want to emit such event in openlineage. Such users can set the following config to ``False`` to disable it.
 
 .. code-block:: shell
 

@@ -9,7 +9,7 @@ specification that systems can use to interoperate with lineage metadata.
 
 .. seealso::
 
-    `Enabling OpenLineage in Apache Airflow <https://openlineage.io/integration/apache-airflow/>`__
+    `Enabling OpenLineage in Apache Airflow <https://openlineage.io/docs/integrations/airflow/usage>`__
 
 
 Configure the OpenLineage and Astro Python SDK Integration
@@ -22,62 +22,36 @@ specify a namespace where the lineage events will be stored using the ``OPENLINE
 A user may choose to send or not, the source code to the OpenLineage then user can specify an environment variable
 ``OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE`` set with either ``True`` or ``False``. By default it will be set to ``True``.
 
+By default, we emit the temporary tables event in openlineage. This might be not that useful for some users who do not
+want to emit such event in openlineage. Such users can set the following config to ``False`` to disable it. More details can be found at :ref:`openlineage_emit_temp_table`.
+
+
+.. note::
+    Disclaimer: Users need to trigger the DAG from the webserver. ``airflow dags tests`` would not work with open lineage.
+
+Users can validate the openlineage in Marquez UI. Instruction to set up Marquez locally can be found `here <https://marquezproject.ai/quickstart>`__
+
 For example, to send OpenLineage events to a local instance of Marquez with the dev namespace, use:
 
 .. code-block:: ini
 
     AIRFLOW__LINEAGE__BACKEND=openlineage.lineage_backend.OpenLineageBackend
-    OPENLINEAGE_URL=http://localhost:5000
-    OPENLINEAGE_NAMESPACE="dev"
+    OPENLINEAGE_URL=http://localhost:3000
+    OPENLINEAGE_NAMESPACE="default"
+    AIRFLOW__ASTRO_SDK__OPENLINEAGE_EMIT_TEMP_TABLE_EVENT=False
 
 
 When you run the example DAG given below, by setting the environment variables described above,
 
-.. code-block:: python
+.. literalinclude:: ../../example_dags/calculate_popular_movies.py
+       :language: python
+       :start-after: [START howto_example_dag_calculate_popular_movies]
+       :end-before: [END howto_example_dag_calculate_popular_movies]
 
-    import os
-    import pandas as pd
-    import time
+Then you would see the Openlineage facets on Marquez/OpenLineage UI under ``default`` namespace
 
-    from datetime import datetime, timedelta
+.. image:: img/openlineage/openlineage_1.png
 
-    from airflow.decorators import dag
-    from astro.table import Metadata, Table
+Lineage from the task can be viewed by clicking on ``calculate_popular_movies.load_file``
 
-    variable_list = [["a", "b", "c"], ["AA", "BB", "CC"]]
-    dfList = pd.DataFrame(variable_list, columns=["COL_A", "COL_B", "COL_C"])
-
-
-    @aql.dataframe(columns_names_capitalization="original")
-    def aggregate_data(df: pd.DataFrame):
-        new_df = df
-        new_df.columns = new_df.columns.str.lower()
-        return new_df
-
-
-    @dag(
-        start_date=datetime(2021, 1, 1),
-        max_active_runs=1,
-        schedule_interval="@daily",
-        default_args={
-            "email_on_failure": False,
-            "retries": 0,
-            "retry_delay": timedelta(minutes=5),
-        },
-        catchup=False,
-    )
-    def example_simple_dataframe():
-        aggregate_data(
-            dfList,
-            output_table=Table(
-                name="aggregated_adoptions_" + str(int(time.time())),
-                metadata=Metadata(
-                    schema=os.environ["SCHEMA"], database=os.environ["DATABASE"]
-                ),
-                conn_id="sqlite_default",
-            ),
-        )
-
-Then you would see the Openlineage facets on Marquez/OpenLineage UI
-
-.. image:: img/openlineage/openlineage_facets.png
+.. image:: img/openlineage/openlineage_2.png
