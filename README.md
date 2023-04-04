@@ -110,7 +110,6 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 | MySql           |
 | MSSQL           |
 
-
 | File types |
 |------------|
 | CSV        |
