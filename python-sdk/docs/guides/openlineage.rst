@@ -22,8 +22,14 @@ specify a namespace where the lineage events will be stored using the ``OPENLINE
 A user may choose to send or not, the source code to the OpenLineage then user can specify an environment variable
 ``OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE`` set with either ``True`` or ``False``. By default it will be set to ``True``.
 
+By default, we emit the temporary tables event in openlineage. This might be not that useful for some users who do not
+want to emit such event in openlineage. Such users can set the following config to ``False`` to disable it. More details can be found at :ref:`openlineage_emit_temp_table`.
+
+
 .. note::
     Disclaimer: Users need to trigger the DAG from the webserver. ``airflow dags tests`` would not work with open lineage.
+
+Users can validate the openlineage in Marquez UI. Instruction to set up Marquez locally can be found `here <https://marquezproject.ai/quickstart>`__
 
 For example, to send OpenLineage events to a local instance of Marquez with the dev namespace, use:
 
@@ -33,6 +39,7 @@ For example, to send OpenLineage events to a local instance of Marquez with the 
     OPENLINEAGE_URL=http://localhost:3000
     OPENLINEAGE_NAMESPACE="default"
     AIRFLOW__ASTRO_SDK__OPENLINEAGE_EMIT_TEMP_TABLE_EVENT=False
+
 
 When you run the example DAG given below, by setting the environment variables described above,
 
