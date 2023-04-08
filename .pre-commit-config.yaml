@@ -116,3 +116,7 @@ repos:
       entry: python-sdk/dev/scripts/pre_commit_context_typing_compat.py
       language: python
       pass_filenames: false
+    - id: sync-readme
+      name: Update readme file with supported Databases, file location and file types
+      entry: python-sdk/dev/scripts/pre_commit_readme_sync.py
+      language: python
