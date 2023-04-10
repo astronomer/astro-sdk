@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import annotations
 
-import importlib
+import importlib.util
 from pathlib import Path
 from typing import Any, Callable, Literal, Sequence
 
