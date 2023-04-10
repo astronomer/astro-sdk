@@ -72,17 +72,17 @@ def get_table(
     assert len(headings) == num_columns
 
     # Compute the table cell data
-    columns: list[list[str]] = [[] for i in range(num_columns)]
+    columns: list[list[str]] = [[] for _ in range(num_columns)]
     for record in records:
-        for i, field in enumerate(fields):
-            columns[i].append(evaluate_field(record, field))
+        for index, field in enumerate(fields):
+            columns[index].append(evaluate_field(record, field))
 
     # Fill out any missing alignment characters.
     extended_align: list[tuple[TABLE_ALIGNMENT, TABLE_ALIGNMENT]] = alignment if alignment is not None else []
     if len(extended_align) > num_columns:
         extended_align = extended_align[0:num_columns]
     elif len(extended_align) < num_columns:
-        extended_align += [("^", "<") for i in range(num_columns - len(extended_align))]
+        extended_align += [("^", "<") for _ in range(num_columns - len(extended_align))]
 
     heading_align, cell_align = (x for x in zip(*extended_align))
 
@@ -90,13 +90,15 @@ def get_table(
     heading_widths = [max(len(head), 2) for head in headings]
     column_widths = [max(x) for x in zip(field_widths, heading_widths)]
 
-    _ = " | ".join(["{:" + a + str(w) + "}" for a, w in zip(heading_align, column_widths)])
-    heading_template = "| " + _ + " |"
-    _ = " | ".join(["{:" + a + str(w) + "}" for a, w in zip(cell_align, column_widths)])
-    row_template = "| " + _ + " |"
+    header_data = " | ".join(["{:" + a + str(w) + "}" for a, w in zip(heading_align, column_widths)])
+    heading_template = "| " + header_data + " |"
+    row_data = " | ".join(["{:" + a + str(w) + "}" for a, w in zip(cell_align, column_widths)])
+    row_template = "| " + row_data + " |"
 
-    _ = " | ".join([left_rule[a] + "-" * (w - 2) + right_rule[a] for a, w in zip(cell_align, column_widths)])
-    ruling = "| " + _ + " |"
+    ruling_data = " | ".join(
+        [left_rule[a] + "-" * (w - 2) + right_rule[a] for a, w in zip(cell_align, column_widths)]
+    )
+    ruling = "| " + ruling_data + " |"
 
     result = []
     result.append(heading_template.format(*headings).rstrip() + "\n")
