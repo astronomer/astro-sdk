@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Callable, Literal, Sequence
+
+TABLE_ALIGNMENT = Literal["<", ">", "^"]
 
 SOURCES_ROOT = Path(__file__).parents[2]
 PROJECT_ROOT = Path(__file__).parents[3]
@@ -28,19 +30,24 @@ left_rule = {"<": ":", "^": ":", ">": "-"}
 right_rule = {"<": "-", "^": ":", ">": ":"}
 
 
-def evalute_field(record, field_spec):
+def evaluate_field(record: list[Any], field_spec: Callable | str | int) -> str:
     """
     Evaluate a field of a record using the type of the field_spec as a guide.
     """
-    if type(field_spec) is int:
+    if isinstance(field_spec, int):
         return str(record[field_spec])
-    elif type(field_spec) is str:
+    elif isinstance(field_spec, str):
         return str(getattr(record, field_spec))
     else:
         return str(field_spec(record))
 
 
-def get_table(records, fields, headings, alignment=None):
+def get_table(
+    records: list[list[str]],
+    fields: list,
+    headings: list[str],
+    alignment: list[tuple[TABLE_ALIGNMENT, TABLE_ALIGNMENT]] | None = None,
+):
     """
     Generate a Doxygen-flavor Markdown table from records.
 
@@ -65,13 +72,13 @@ def get_table(records, fields, headings, alignment=None):
     assert len(headings) == num_columns
 
     # Compute the table cell data
-    columns = [[] for i in range(num_columns)]
+    columns: list[list[str]] = [[] for i in range(num_columns)]
     for record in records:
         for i, field in enumerate(fields):
-            columns[i].append(evalute_field(record, field))
+            columns[i].append(evaluate_field(record, field))
 
     # Fill out any missing alignment characters.
-    extended_align = alignment if alignment is not None else []
+    extended_align: list[tuple[TABLE_ALIGNMENT, TABLE_ALIGNMENT]] = alignment if alignment is not None else []
     if len(extended_align) > num_columns:
         extended_align = extended_align[0:num_columns]
     elif len(extended_align) < num_columns:
