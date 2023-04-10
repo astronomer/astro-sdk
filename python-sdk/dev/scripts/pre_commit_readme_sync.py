@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Sequence
 
 SOURCES_ROOT = Path(__file__).parents[2]
+PROJECT_ROOT = Path(__file__).parents[3]
 ASTRO_ROOT = SOURCES_ROOT / "src" / "astro"
-README_PATH = SOURCES_ROOT / ".." / "README.md"
+README_PATH = PROJECT_ROOT / "README.md"
 
 HEADING = "## Supported technologies"
 
