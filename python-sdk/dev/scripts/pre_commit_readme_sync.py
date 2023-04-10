@@ -42,7 +42,7 @@ def evaluate_field(record: list[Any], field_spec: Callable | str | int) -> str:
         return str(field_spec(record))
 
 
-def get_table(
+def get_table(  # noqa: C901
     records: list[list[str]],
     fields: list,
     headings: list[str],
@@ -69,7 +69,8 @@ def get_table(
             '^' = Center (default for column headings)
     """
     num_columns = len(fields)
-    assert len(headings) == num_columns
+    if len(headings) != num_columns:
+        raise ValueError("Number of heading and columns do not match.")
 
     # Compute the table cell data
     columns: list[list[str]] = [[] for _ in range(num_columns)]
@@ -100,10 +101,7 @@ def get_table(
     )
     ruling = "| " + ruling_data + " |"
 
-    result = []
-    result.append(heading_template.format(*headings).rstrip() + "\n")
-    result.append(ruling.rstrip() + "\n")
-
+    result = [heading_template.format(*headings).rstrip() + "\n", ruling.rstrip() + "\n"]
     for row in zip(*columns):
         result.append(row_template.format(*row).rstrip() + "\n")
     return result
@@ -156,7 +154,7 @@ def render_markdown_file(constant_names: list):
         fp.writelines(new_file)
 
 
-def main(argv: Sequence[str] | None = None):
+def main(_: Sequence[str] | None = None):
     render_markdown_file(
         constant_names=["FileLocation", "FileType", "Database"],
     )
