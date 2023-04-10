@@ -7,7 +7,7 @@ from typing import Sequence
 
 SOURCES_ROOT = Path(__file__).parents[2]
 ASTRO_ROOT = SOURCES_ROOT / "src" / "astro"
-README_PATH = SOURCES_ROOT / ".." / "README.md"
+README_PATH = SOURCES_ROOT.parents[1] / "README.md"
 
 HEADING = "## Supported technologies"
 
