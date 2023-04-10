@@ -118,9 +118,9 @@ def render_md_table(constants, constant_name) -> str:
     )
 
 
-def get_line_numbers_of_section(file_path: str, heading: str):
+def get_line_numbers_of_section(file_path: Path, heading: str):
     """Get line number of a section. where a section starts with a heading end before next heading"""
-    with open(file_path) as fp:
+    with file_path.open() as fp:
         lines = fp.readlines()
     count = 1
     start = -1
@@ -143,13 +143,13 @@ def render_markdown_file(constant_names: list):
         table.extend(render_md_table(mod, constant))
         table.append("\n")
 
-    start, end = get_line_numbers_of_section(str(README_PATH), HEADING)
+    start, end = get_line_numbers_of_section(README_PATH, HEADING)
 
     if start < 0:
         ValueError(f"Heading '{HEADING}' not found in file {str(README_PATH)}")
 
     new_file = []
-    with open(README_PATH) as fp:
+    with README_PATH.open() as fp:
         lines = fp.readlines()
         new_file = lines[: start + 1] + table + lines[end:]
     with open(README_PATH, "w") as fp:
