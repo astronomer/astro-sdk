@@ -60,7 +60,6 @@ def get_table(records, fields, headings, alignment=None):
             '>' = Right align
             '^' = Center (default for column headings)
     """
-
     num_columns = len(fields)
     assert len(headings) == num_columns
 
