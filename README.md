@@ -100,31 +100,38 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 ## Supported technologies
 
-| Databases       |
-|-----------------|
-| Google BigQuery |
-| Postgres        |
-| Snowflake       |
-| SQLite          |
-| Amazon Redshift |
-| MySql           |
-| MSSQL           |
+| FileLocation |
+| :----------- |
+| local        |
+| http         |
+| https        |
+| gs           |
+| gdrive       |
+| s3           |
+| wasb         |
+| wasbs        |
+| azure        |
+| sftp         |
+| ftp          |
 
-| File types |
-|------------|
-| CSV        |
-| JSON       |
-| NDJSON     |
-| Parquet    |
+| FileType |
+| :------- |
+| csv      |
+| json     |
+| ndjson   |
+| parquet  |
 
-| File stores |
-|------------ |
-| Amazon S3   |
-| Filesystem  |
-| Google GCS  |
-| Google Drive|
-| SFTP        |
-| FTP         |
+| Database  |
+| :-------- |
+| postgres  |
+| sqlite    |
+| delta     |
+| bigquery  |
+| snowflake |
+| redshift  |
+| mssql     |
+| duckdb    |
+| mysql     |
 
 ## Available operations
 

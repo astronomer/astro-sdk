@@ -6,7 +6,7 @@ ci:
 default_stages: [commit, push]
 default_language_version:
   # force all unspecified python hooks to run python3
-  python: python3
+  python: python3.9
 minimum_pre_commit_version: "1.20.0"
 repos:
   - repo: meta
@@ -116,3 +116,8 @@ repos:
       entry: python-sdk/dev/scripts/pre_commit_context_typing_compat.py
       language: python
       pass_filenames: false
+    - id: sync-readme
+      name: Update readme file with supported Databases, file location and file types
+      entry: python-sdk/dev/scripts/pre_commit_readme_sync.py
+      language: python
+      files: python-sdk/src/astro/constants.py
