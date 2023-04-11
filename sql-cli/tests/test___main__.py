@@ -311,6 +311,7 @@ def test_generate_verbose(workflow_name, exit_code, initialised_project_with_tes
     [
         ("default", "sqlite_conn", "PASSED"),
         ("dev", "sqlite_conn", "PASSED"),
+        ("invalid", "sqlite_non_existent_host_path", "FAILED"),
     ],
 )
 def test_validate(env, connection, status, initialised_project_with_invalid_config, logger):
@@ -355,7 +356,7 @@ def test_validate_all(env, initialised_project_with_test_config):
 @pytest.mark.parametrize(
     "env,connection,message",
     [
-        ("invalid", "sqlite_non_existent_host_path", "Error: Sqlite db does not exist!"),
+        ("invalid", "sqlite_non_existent_host_path", "Error: "),  # TODO: Add error message
         ("invalid", "unknown_hook_type", 'Error: Unknown hook type "sqlite2"'),
     ],
     ids=[

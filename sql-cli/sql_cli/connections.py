@@ -31,12 +31,6 @@ def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:
     if connection["conn_type"] == "sqlite" and not os.path.isabs(connection["host"]):
         # Try resolving with data directory
         resolved_host = data_dir / connection["host"]
-        if not resolved_host.is_file():
-            log.error(
-                "The relative file path %s was resolved into %s but it does not exist.",
-                connection["host"],
-                resolved_host,
-            )
         connection["host"] = resolved_host.as_posix()
 
     connection_kwargs = connection_schema.load(connection)
@@ -68,7 +62,7 @@ def validate_connections(connections: list[Connection], connection_id: str | Non
 def _is_valid(connection: Connection) -> tuple[bool, str]:
     # Sqlite automatically creates the file if it does not exist,
     # but our users might not expect that. They are referencing a database they expect to exist.
-    if connection.conn_type == "sqlite" and not Path(connection.host).is_file():
-        return False, "Sqlite db does not exist!"
+    if connection.conn_type == "sqlite":
+        connection.extra_dejson.setdefault("mode", "rw")
 
     return connection.test_connection()
