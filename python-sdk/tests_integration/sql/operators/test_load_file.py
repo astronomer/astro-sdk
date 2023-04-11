@@ -358,6 +358,7 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
         assert test_df.shape == input_df.shape
         assert test_df.sort_values("sell").equals(input_df.sort_values("sell"))
         print(input_df)
+        print(input_df)
 
     with sample_dag:
         loaded_df = load_file(
