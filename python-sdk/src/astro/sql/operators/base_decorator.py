@@ -55,7 +55,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.response_size = self.op_kwargs.pop("response_size", response_size)
 
         self.op_args: dict[str, Table | pd.DataFrame] = {}
-        self.session = session
+        self.session = self.op_kwargs.pop("session", session)
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
         # has 10 dataframes as upstream tasks and it crashes the worker
