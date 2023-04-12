@@ -129,8 +129,7 @@ class BaseDatabase(ABC):
                 stacklevel=2,
             )
             sql = kwargs.get("sql_statement")  # type: ignore
-        sql = session.pre_queries + [sql] + session.post_queries
-        sql = ";".join(sql)
+        sql = session.merge_pre_and_post_queries(sql)
         # We need to autocommit=True to make sure the query runs. This is done exclusively for SnowflakeDatabase's
         # truncate method to reflect changes.
         if isinstance(sql, str):

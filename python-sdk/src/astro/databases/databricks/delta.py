@@ -21,6 +21,7 @@ from astro.databases.databricks.load_options import DeltaLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.options import LoadOptions
+from astro.session import Session
 from astro.table import BaseTable, Metadata
 
 
@@ -162,6 +163,7 @@ class DeltaDatabase(BaseDatabase):
         statement: str,
         target_table: BaseTable,
         parameters: dict | None = None,
+        session=Session(),
     ) -> None:
         """
         Create a Delta table from a SQL SELECT statement.
@@ -196,6 +198,7 @@ class DeltaDatabase(BaseDatabase):
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
         handler: Callable | None = None,
+        session: Session = Session(),
         **kwargs,
     ) -> Any:
         """
@@ -210,6 +213,7 @@ class DeltaDatabase(BaseDatabase):
         hook = DatabricksSqlHook(
             databricks_conn_id=self.conn_id,
         )
+        sql = session.merge_pre_and_post_queries(sql)
         return hook.run(sql, parameters=parameters, handler=handler)
 
     def table_exists(self, table: BaseTable) -> bool:
