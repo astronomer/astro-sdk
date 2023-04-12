@@ -29,6 +29,7 @@ from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.options import LoadOptions
+from astro.session import Session
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.table import BaseTable, Metadata
 from astro.utils.compat.functools import cached_property
@@ -102,6 +103,7 @@ class BaseDatabase(ABC):
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
         handler: Callable | None = None,
+        session: Session = Session(),
         **kwargs,
     ) -> Any:
         """
@@ -110,6 +112,7 @@ class BaseDatabase(ABC):
         Whenever possible, this method should be implemented using Airflow Hooks,
         since this will simplify the integration with Async operators.
 
+        :param session: an astro Session variable that informs the pre and post query queries.
         :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         :param autocommit: Optional autocommit flag
@@ -126,7 +129,8 @@ class BaseDatabase(ABC):
                 stacklevel=2,
             )
             sql = kwargs.get("sql_statement")  # type: ignore
-
+        sql = session.pre_queries + [sql] + session.post_queries
+        sql = ";".join(sql)
         # We need to autocommit=True to make sure the query runs. This is done exclusively for SnowflakeDatabase's
         # truncate method to reflect changes.
         if isinstance(sql, str):
@@ -328,10 +332,12 @@ class BaseDatabase(ABC):
         statement: str,
         target_table: BaseTable,
         parameters: dict | None = None,
+        session: Session = Session(),
     ) -> None:
         """
         Export the result rows of a query statement into another table.
 
+        :param session: an astro Session variable that informs the pre and post query queries.
         :param statement: SQL query statement
         :param target_table: Destination table where results will be recorded.
         :param parameters: (Optional) parameters to be used to render the SQL query
@@ -339,7 +345,7 @@ class BaseDatabase(ABC):
         statement = self._create_table_statement.format(
             self.get_table_qualified_name(target_table), statement
         )
-        self.run_sql(statement, parameters)
+        self.run_sql(sql=statement, parameters=parameters, session=session)
 
     def drop_table(self, table: BaseTable) -> None:
         """

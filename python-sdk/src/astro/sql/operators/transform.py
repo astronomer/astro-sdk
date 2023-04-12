@@ -57,6 +57,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
             statement=self.sql,
             target_table=self.output_table,
             parameters=self.parameters,
+            session=self.session,
         )
         # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(
