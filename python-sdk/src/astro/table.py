@@ -178,6 +178,13 @@ class BaseTable:
             isinstance(self, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
         )
 
+    def serialize(self) -> dict[str, Any]:
+        return {"name": self.name, "temp": self.temp, "conn_id": self.conn_id, "metadata": self.metadata}
+
+    @staticmethod
+    def deserialize(data: dict[str, Any], version: int):
+        return Table(name=data["name"], temp=data["temp"], conn_id=data["conn_id"], metadata=data["metadata"])
+
 
 @define(slots=False)
 class TempTable(BaseTable):
