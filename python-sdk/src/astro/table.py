@@ -179,11 +179,22 @@ class BaseTable:
         )
 
     def serialize(self) -> dict[str, Any]:
-        return {"name": self.name, "temp": self.temp, "conn_id": self.conn_id, "metadata": self.metadata}
+        return {
+            "name": self.name,
+            "temp": self.temp,
+            "conn_id": self.conn_id,
+            "metadata.schema": self.metadata.schema,
+            "metadata.database": self.metadata.database,
+        }
 
     @staticmethod
     def deserialize(data: dict[str, Any], version: int):
-        return Table(name=data["name"], temp=data["temp"], conn_id=data["conn_id"], metadata=data["metadata"])
+        return Table(
+            name=data["name"],
+            temp=data["temp"],
+            conn_id=data["conn_id"],
+            metadata=Metadata(schema=data["metadata.schema"], database=data["metadata.database"]),
+        )
 
 
 @define(slots=False)
