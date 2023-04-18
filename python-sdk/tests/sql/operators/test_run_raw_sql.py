@@ -58,7 +58,7 @@ def test_run_sql_calls_pandas_dataframe_handler(run_sql, results_as_pandas_dataf
 
 @mock.patch("astro.databases.base.BaseDatabase.connection")
 def test_run_sql_calls_with_query_tag(run_sql, sample_dag):
-    from astro.session import Session
+    from astro.session_modification import SessionModifier
 
     run_sql.execute.return_value = []
     with sample_dag:
@@ -66,7 +66,7 @@ def test_run_sql_calls_with_query_tag(run_sql, sample_dag):
         @aql.run_raw_sql(
             results_format="pandas_dataframe",
             conn_id="sqlite_default",
-            session=Session(pre_queries=["ALTER team_1", "ALTER team_2"]),
+            session=SessionModifier(pre_queries=["ALTER team_1", "ALTER team_2"]),
         )
         def dummy_method():
             return "SELECT 1+1"

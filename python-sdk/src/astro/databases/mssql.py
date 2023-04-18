@@ -12,7 +12,7 @@ from sqlalchemy.sql import ClauseElement
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.options import LoadOptions
-from astro.session import Session
+from astro.session_modifier import SessionModifier
 from astro.settings import MSSQL_SCHEMA
 from astro.table import BaseTable, Metadata
 from astro.utils.compat.functools import cached_property
@@ -145,7 +145,7 @@ class MssqlDatabase(BaseDatabase):
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
         handler: Callable | None = None,
-        session: Session = Session(),
+        session_modifier: SessionModifier = SessionModifier(),
         **kwargs,
     ) -> Any:
         """
@@ -169,7 +169,7 @@ class MssqlDatabase(BaseDatabase):
             )
             sql = kwargs.get("sql_statement")  # type: ignore
 
-        sql = session.merge_pre_and_post_queries(sql)
+        sql = session_modifier.merge_pre_and_post_queries(sql)
         autocommit = kwargs.get("autocommit", False)
 
         # We need to set autocommit=True for specific queries
@@ -203,7 +203,7 @@ class MssqlDatabase(BaseDatabase):
         statement: str,
         target_table: BaseTable,
         parameters: dict | None = None,
-        session: Session = Session(),
+        session_modifier: SessionModifier = SessionModifier(),
     ) -> None:
         """
         Export the result rows of a query statement into another table.

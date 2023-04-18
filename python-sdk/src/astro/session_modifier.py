@@ -4,7 +4,7 @@ from airflow.exceptions import AirflowException
 from sqlalchemy.sql import ClauseElement
 
 
-class Session:
+class SessionModifier:
     """
     A series of options that will allow users to determine session variables.
     These session variables will relate to queries
