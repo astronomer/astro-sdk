@@ -185,7 +185,47 @@ class BaseTable:
             "conn_id": self.conn_id,
             "metadata.schema": self.metadata.schema,
             "metadata.database": self.metadata.database,
+            "columns": [self.serialize_cols(column) for column in self.columns],
         }
+
+    @staticmethod
+    def serialize_cols(col: Column):
+        columns_object_attr = [
+            "key",
+            "primary_key",
+            "nullable",
+            "default",
+            "server_default",
+            "index",
+            "unique",
+            "system",
+            "doc",
+            "onupdate",
+            "autoincrement",
+            "info",
+            "comment",
+            "type",
+        ]
+        col_dict = {}
+        for attr_name in columns_object_attr:
+            attr_value = getattr(col, attr_name)
+            if attr_name == "type":
+                col_dict[attr_name] = str(type(attr_value).__name__)
+                continue
+            if isinstance(attr_value, str):
+                col_dict[attr_name] = attr_value
+            elif attr_value:
+                col_dict[attr_name] = attr_value
+        return col_dict
+
+    @staticmethod
+    def deserialize_cols(col: dict):
+        import importlib
+
+        t = importlib.import_module("sqlalchemy.sql.sqltypes")
+        col["type_"] = getattr(t, col["type"])()
+        col.pop("type")
+        return Column(**col)
 
     @staticmethod
     def deserialize(data: dict[str, Any], version: int):
@@ -194,6 +234,7 @@ class BaseTable:
             temp=data["temp"],
             conn_id=data["conn_id"],
             metadata=Metadata(schema=data["metadata.schema"], database=data["metadata.database"]),
+            columns=[BaseTable.deserialize_cols(column) for column in data["columns"]],
         )
 
 
