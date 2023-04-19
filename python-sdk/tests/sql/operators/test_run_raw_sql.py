@@ -3,6 +3,7 @@ from unittest import mock
 
 import pandas
 import pytest
+from airflow.operators.python import get_current_context
 
 from astro import sql as aql
 
@@ -98,6 +99,23 @@ def test_run_sql_called_handler(run_sql, results_as_pandas_dataframe, sample_dag
         def dummy_method():
             return "SELECT 1+1"
 
+        dummy_method()
+    test_utils.run_dag(sample_dag)
+
+
+def test_run_sql_parameters(sample_dag):
+    """
+    Test that run_sql can access Airflow parameters
+    """
+
+    @aql.run_raw_sql(conn_id="sqlite_default")
+    def dummy_method(ds=None, execution_date=None):
+        context = get_current_context()
+        assert ds == context["ds"]
+        assert execution_date == context["execution_date"]
+        return "SELECT 1+1"
+
+    with sample_dag:
         dummy_method()
     test_utils.run_dag(sample_dag)
 

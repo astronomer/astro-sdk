@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Sequence, cast
+from typing import Any, Callable, Mapping, Sequence, cast
 
 import jinja2
 import pandas as pd
@@ -9,6 +9,8 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
+from airflow.utils.context import context_merge
+from airflow.utils.operator_helpers import KeywordParameters
 from sqlalchemy.sql.functions import Function
 
 from astro.airflow.datasets import kwargs_with_datasets
@@ -156,14 +158,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         # parameter. Hence, it's not covered in templated fields of class Table.
         self.output_table = self.render_template(self.output_table, context)
 
-        # Get SQL from function and render templates in the SQL String
-        self.read_sql_from_function()
         self.move_function_params_into_sql_params(context)
         self.translate_jinja_to_sqlalchemy_template(context)
 
-        # if there is no SQL to run we raise an error
-        if self.sql == "" or not self.sql:
-            raise AirflowException("There's no SQL to run")
         return context
 
     def render_template_fields(
@@ -184,8 +181,21 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     def execute(self, context: Context) -> None:
         context = self._enrich_context(context)
 
+        context_merge(context, self.op_kwargs)
+
+        self.op_kwargs = self.determine_kwargs(context)  # type: ignore
+        # Get SQL from function and render templates in the SQL String
+        self.read_sql_from_function()
+
+        # if there is no SQL to run we raise an error
+        if self.sql == "" or not self.sql:
+            raise AirflowException("There's no SQL to run")
+
         # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
+
+    def determine_kwargs(self, context: Mapping[str, Any]) -> Mapping[str, Any]:
+        return KeywordParameters.determine(self.python_callable, self.op_args, context).serializing()
 
     def create_output_table_if_needed(self) -> None:
         """

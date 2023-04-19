@@ -7,6 +7,7 @@ import pytest
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from airflow.models.xcom import BaseXCom
+from airflow.operators.python import get_current_context
 from airflow.utils import timezone
 
 import astro.sql as aql
@@ -169,6 +170,20 @@ def test_dataframe_from_file(sample_dag):
     with sample_dag:
         validate_file(df=File(path=str(CWD) + "/../../data/homes2.csv"))
         validate_file(File(path=str(CWD) + "/../../data/homes2.csv"))
+    test_utils.run_dag(sample_dag)
+
+
+def test_dataframe_from_file_with_parameters(sample_dag):
+    @aql.dataframe
+    def validate_file_and_context(df: pandas.DataFrame, ds=None, execution_date=None):  # skipcq: PY-D0003
+        context = get_current_context()
+        assert len(df) == 5
+        assert "sell" in df.columns
+        assert ds == context["ds"]
+        assert execution_date == context["execution_date"]
+
+    with sample_dag:
+        validate_file_and_context(df=File(path=str(CWD) + "/../../data/homes2.csv"))
     test_utils.run_dag(sample_dag)
 
 

@@ -49,8 +49,8 @@ def _find_first_table_from_op_kwargs(
     """
     kwargs = [
         op_kwargs[kwarg.name].resolve(context)
-        if isinstance(op_kwargs[kwarg.name], XComArg)
-        else op_kwargs[kwarg.name]
+        if isinstance(op_kwargs.get(kwarg.name), XComArg)
+        else op_kwargs.get(kwarg.name)
         for kwarg in inspect.signature(python_callable).parameters.values()
     ]
     tables = [kwarg for kwarg in kwargs if isinstance(kwarg, BaseTable)]

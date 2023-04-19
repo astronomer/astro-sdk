@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import inspect
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
+from airflow.utils.context import context_merge
+from airflow.utils.operator_helpers import KeywordParameters
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.dataframes.pandas import PandasDataframe
@@ -169,6 +171,9 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.columns_names_capitalization,
             self.log,
         )
+        context_merge(context, self.op_kwargs)
+
+        self.op_kwargs = self.determine_kwargs(context)  # type: ignore
 
         function_output = self.python_callable(*self.op_args, **self.op_kwargs)
         function_output = self._convert_column_capitalization_for_output(
@@ -217,6 +222,9 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 columns_names_capitalization=columns_names_capitalization,
             )
         return function_output
+
+    def determine_kwargs(self, context: Mapping[str, Any]) -> Mapping[str, Any]:
+        return KeywordParameters.determine(self.python_callable, self.op_args, context).serializing()
 
     def get_openlineage_facets_on_complete(self, task_instance):  # skipcq: PYL-W0613
         """
