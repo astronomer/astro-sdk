@@ -3,7 +3,6 @@ from datetime import datetime
 from unittest import mock
 
 import pytest
-import sqlalchemy
 from airflow.models import DAG
 
 from astro.sql import get_value_list
@@ -165,9 +164,5 @@ def test_openlineage_emit_temp_table_event():
 def test_serialization__deserialization():
     table = Table(
         conn_id="postgres_conn",
-        columns=[
-            sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
-        ],
     )
     Table.deserialize(table.serialize(), 1)
