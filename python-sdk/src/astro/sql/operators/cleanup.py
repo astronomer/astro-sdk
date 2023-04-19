@@ -215,11 +215,11 @@ class CleanupOperator(AstroSQLBaseOperator):
 
     @staticmethod
     def _get_executor_from_job_id(job_id: int) -> str | None:
-        from airflow.jobs.base_job import BaseJob
+        from airflow.jobs.job import Job
         from airflow.utils.session import create_session
 
         with create_session() as session:
-            job = session.get(BaseJob, job_id)
+            job = session.get(Job, job_id)
         return job.executor_class if job else None
 
     def get_all_task_outputs(self, context: Context) -> list[BaseTable]:

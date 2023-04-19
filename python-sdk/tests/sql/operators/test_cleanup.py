@@ -6,8 +6,9 @@ import pytest
 from airflow import DAG, AirflowException
 from airflow.executors.local_executor import LocalExecutor
 from airflow.executors.sequential_executor import SequentialExecutor
-from airflow.jobs.backfill_job import BackfillJob
-from airflow.jobs.scheduler_job import SchedulerJob
+from airflow.jobs.backfill_job_runner import BackfillJobRunner
+from airflow.jobs.job import Job
+from airflow.jobs.scheduler_job_runner import SchedulerJobRunner
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.operators.bash import BashOperator
@@ -116,10 +117,11 @@ def test_single_worker_mode_backfill(executor_in_job, executor_in_cfg, expected_
     dr = DagRun(dag_id=dag.dag_id)
 
     with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_cfg}):
-        job = BackfillJob(dag=dag, executor=executor_in_job)
+        job = Job(executor=executor_in_job)
         session = Session()
         session.add(job)
         session.flush()
+        BackfillJobRunner(job=job, dag=dag)
 
         dr.creating_job_id = job.id
         assert CleanupOperator._is_single_worker_mode(dr) == expected_val
@@ -128,24 +130,26 @@ def test_single_worker_mode_backfill(executor_in_job, executor_in_cfg, expected_
 
 
 @pytest.mark.parametrize(
-    "executor_in_cfg,expected_val",
+    "executor_in_job,executor_in_cfg,expected_val",
     [
-        ("LocalExecutor", False),
-        ("SequentialExecutor", True),
-        ("CeleryExecutor", False),
+        (SequentialExecutor(), "LocalExecutor", True),
+        (LocalExecutor(), "LocalExecutor", False),
+        (None, "LocalExecutor", False),
+        (None, "SequentialExecutor", True),
     ],
 )
-def test_single_worker_mode_scheduler_job(executor_in_cfg, expected_val):
+def test_single_worker_mode_scheduler_job(executor_in_job, executor_in_cfg, expected_val):
     """Test that if we run Scheduler Job it should be marked as single worker node"""
     dag = DAG("test_single_worker_mode_scheduler_job", start_date=datetime(2022, 1, 1))
     dr = DagRun(dag_id=dag.dag_id)
 
     with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_cfg}):
         # Scheduler Job in Airflow sets executor from airflow.cfg
-        job = SchedulerJob()
+        job = Job(executor=executor_in_job)
         session = Session()
         session.add(job)
         session.flush()
+        SchedulerJobRunner(job=job)
 
         dr.creating_job_id = job.id
         assert CleanupOperator._is_single_worker_mode(dr) == expected_val
