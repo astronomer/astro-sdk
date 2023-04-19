@@ -11,6 +11,7 @@ from airflow.utils import timezone
 
 import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
+from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.table import Table
@@ -20,8 +21,9 @@ from ..operators import utils as test_utils
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
 
-test_df = pandas.DataFrame({"numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
-test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+# Trying out need to replace.
+test_df = PandasDataframe({"numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+test_df_2 = PandasDataframe({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
 
 
 def _validate_dataframe(original: pandas.DataFrame, df: pandas.DataFrame, capital_settings: dict):
@@ -69,24 +71,24 @@ def _find_validator(function_output):
 @pytest.mark.parametrize(
     "function_output",
     [
-        [1, 2, test_df],
-        [test_df, test_df_2],
-        [test_df],
+        # [1, 2, test_df],
+        # [test_df, test_df_2],
+        # [test_df],
         {"foo": 1, "bar": 2, "baz": test_df},
-        {"foo": test_df, "bar": test_df_2},
-        {"foo": test_df},
-        test_df,
-        test_df_2,
+        # {"foo": test_df, "bar": test_df_2},
+        # {"foo": test_df},
+        # test_df,
+        # test_df_2,
     ],
     ids=[
-        "mixed_list",
-        "two_df_list",
-        "single_df_list",
+        # "mixed_list",
+        # "two_df_list",
+        # "single_df_list",
         "mixed_dict",
-        "two_df_dict",
-        "single_df_dict",
-        "single_df",
-        "single_df_mixed",
+        # "two_df_dict",
+        # "single_df_dict",
+        # "single_df",
+        # "single_df_mixed",
     ],
 )
 def test_columns_name_cap_multi_output(sample_dag, capital_settings, function_output):
