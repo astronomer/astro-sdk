@@ -52,7 +52,12 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         super().execute(context)
 
         self.handler = self.get_handler()
-        result = self.database_impl.run_sql(sql=self.sql, parameters=self.parameters, handler=self.handler)
+        result = self.database_impl.run_sql(
+            sql=self.sql,
+            parameters=self.parameters,
+            handler=self.handler,
+            query_modifier=self.query_modifier,
+        )
         if self.response_size == -1 and not settings.IS_CUSTOM_XCOM_BACKEND:
             logging.warning(
                 "Using `run_raw_sql` without `response_size` can result in excessive amount of data being recorded "
