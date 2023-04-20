@@ -66,7 +66,7 @@ def test_run_sql_calls_with_query_tag(run_sql, sample_dag):
         @aql.run_raw_sql(
             results_format="pandas_dataframe",
             conn_id="sqlite_default",
-            session=SessionModifier(pre_queries=["ALTER team_1", "ALTER team_2"]),
+            session_modifier=SessionModifier(pre_queries=["ALTER team_1", "ALTER team_2"]),
         )
         def dummy_method():
             return "SELECT 1+1"
