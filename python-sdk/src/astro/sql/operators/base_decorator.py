@@ -14,6 +14,7 @@ from sqlalchemy.sql.functions import Function
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.query_modifier import QueryModifier
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.table import BaseTable, Table
 from astro.utils.compat.typing import Context
@@ -38,6 +39,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         response_limit: int = -1,
         response_size: int = -1,
         sql: str = "",
+        query_modifier: QueryModifier = QueryModifier(),
         **kwargs: Any,
     ):
         self.kwargs = kwargs or {}
@@ -54,6 +56,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.response_size = self.op_kwargs.pop("response_size", response_size)
 
         self.op_args: dict[str, Table | pd.DataFrame] = {}
+        self.query_modifier = self.op_kwargs.pop("query_modifier", query_modifier)
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
         # has 10 dataframes as upstream tasks and it crashes the worker
