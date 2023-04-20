@@ -20,7 +20,7 @@ class AppendOperator(AstroSQLBaseOperator):
     :param target_table: Contains the destination table in which the rows will be appended (templated)
     :param columns: List/Tuple of columns if name of source and target tables are same.
         If the column names in source and target tables are different pass a dictionary
-        of source_table columns names to target_table columns names.
+        of source_table columns names to target_table columns names
         Examples: ``["sell", "list"]`` or ``{"s_sell": "t_sell", "s_list": "t_list"}``
     """
 
