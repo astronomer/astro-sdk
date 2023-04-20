@@ -56,7 +56,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
             sql=self.sql,
             parameters=self.parameters,
             handler=self.handler,
-            session_modifier=self.session_modifier,
+            query_modifier=self.query_modifier,
         )
         if self.response_size == -1 and not settings.IS_CUSTOM_XCOM_BACKEND:
             logging.warning(
