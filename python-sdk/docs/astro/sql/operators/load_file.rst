@@ -118,8 +118,20 @@ Parameters to use when loading a file to a Pandas dataframe
        :start-after: [START load_file_example_6]
        :end-before: [END load_file_example_6]
 
-#. **load_options** - :ref:`load_options`
+#. **load_options** - Use :ref:`load_options` to configure how the SDK loads data from your file to the dataframe.
 
+   .. note::
+
+        If the Astro SDK fails to automatically load data from your file to a dataframe, configure `Link text <link URL>` in :ref:`load_options` manually specify the schema for the dataframe.
+        For example, to load data from a `.csv` file with two columns, `id` and `name`, you would add the following to your code:
+
+        ```
+        dataframe = load_file(
+            input_file=File(path),
+            use_native_support=False,
+            load_options=[PandasLoadOptions(dtype={'id': int, 'name': str})],
+        )
+        ```
 
 Parameters for native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
