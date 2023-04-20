@@ -25,3 +25,5 @@ class SessionModifier:
                     "string SQL statements."
                     "Please turn your SQL statement into a text statement."
                 )
+            else:
+                return sql

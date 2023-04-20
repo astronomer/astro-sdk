@@ -58,7 +58,7 @@ def test_run_sql_calls_pandas_dataframe_handler(run_sql, results_as_pandas_dataf
 
 @mock.patch("astro.databases.base.BaseDatabase.connection")
 def test_run_sql_calls_with_query_tag(run_sql, sample_dag):
-    from astro.session_modification import SessionModifier
+    from astro.session_modifier import SessionModifier
 
     run_sql.execute.return_value = []
     with sample_dag:
