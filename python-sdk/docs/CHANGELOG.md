@@ -7,15 +7,16 @@
 
 Example:
 ```python
-    from astro.query_modifier import QueryModifier
+from astro.query_modifier import QueryModifier
 
-    @aql.run_raw_sql(
-        results_format="pandas_dataframe",
-        conn_id="sqlite_default",
-        query_modifier=QueryModifier(pre_queries=["ALTER team_1", "ALTER team_2"]),
-    )
-    def dummy_method():
-        return "SELECT 1+1"
+
+@aql.run_raw_sql(
+    results_format="pandas_dataframe",
+    conn_id="sqlite_default",
+    query_modifier=QueryModifier(pre_queries=["ALTER team_1", "ALTER team_2"]),
+)
+def dummy_method():
+    return "SELECT 1+1"
 ```
 
 ## 1.5.2
