@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.6.0a1
+
+## Feature
+- Add `query_modifier` to `raw_sql` which users can use to define SQL statements to be run before and after the main query statement [#1898](https://github.com/astronomer/astro-sdk/pull/1898)
+
+Example:
+```python
+    from astro.query_modifier import QueryModifier
+
+    @aql.run_raw_sql(
+        results_format="pandas_dataframe",
+        conn_id="sqlite_default",
+        query_modifier=QueryModifier(pre_queries=["ALTER team_1", "ALTER team_2"]),
+    )
+    def dummy_method():
+        return "SELECT 1+1"
+```
+
 ## 1.5.2
 
 ### Improvements
