@@ -36,3 +36,5 @@ Parameters
     #. Pandas Dataframe - If you expect query result to be converted to ``Pandas Dataframe`` we can pass ``results_format=='pandas_dataframe'``
 
 * **fail_on_empty** - Sometimes the handler function can raise an exception when the data is not returned by the database and we try to run ``fetchall()``. We can make sure that the handler function doesn't raise an exception by passing ``fail_on_empty==False``. The default value for this parameter is ``True``.
+
+* **query_modifier** - The query_modifier allows you to create both pre_queries and post_queries across multiple statements. An example of where this would be useful is if you want to add query tags to a snowflake statement you can set ``session_modifier.pre_queries = ["ALTER SESSION SET QUERY_TAG=<my-query-tag>]``, which will ensure that any query run will contain this query tag.
