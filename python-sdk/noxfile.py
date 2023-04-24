@@ -100,6 +100,7 @@ def test_examples_by_dependency(session: nox.Session, extras):
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
 
+    session.run("airflow", "db", "reset", env=env)
     session.run("airflow", "db", "init", env=env)
 
     # Since pytest is not installed in the nox session directly, we need to set `external=true`.
