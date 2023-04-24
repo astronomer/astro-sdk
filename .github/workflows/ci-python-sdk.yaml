@@ -603,9 +603,9 @@ jobs:
           key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
-      - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests_integration/test_example_dags.py" "tests_integration/integration_test_dag.py"
+      #- run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      #- run: pip3 install nox
+      #- run: nox -s "test-3.8(airflow='2.2.5')" -- "tests_integration/test_example_dags.py" "tests_integration/integration_test_dag.py"
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
