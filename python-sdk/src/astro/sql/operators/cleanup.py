@@ -218,7 +218,7 @@ class CleanupOperator(AstroSQLBaseOperator):
     @staticmethod
     def _get_executor_from_job_id(job_id: int) -> str | None:
         if version.parse(airflow_version) >= version.parse("2.6"):
-            from airflow.jobs.job import Job as Job
+            from airflow.jobs.job import Job
         else:
             from airflow.jobs.base_job import BaseJob as Job
         from airflow.utils.session import create_session

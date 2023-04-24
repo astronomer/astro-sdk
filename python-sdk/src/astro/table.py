@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 import string
-from typing import Any
+from typing import Any, ClassVar
 
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
@@ -50,6 +50,7 @@ class BaseTable:
     """
 
     template_fields = ("name",)
+    version: ClassVar[int] = 1
 
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
@@ -188,6 +189,8 @@ class BaseTable:
 
     @staticmethod
     def deserialize(data: dict[str, Any], version: int):
+        if version > 1:
+            raise TypeError(f"version > {BaseTable.version}")
         return Table(
             name=data["name"],
             temp=data["temp"],

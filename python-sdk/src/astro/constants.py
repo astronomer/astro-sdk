@@ -50,7 +50,7 @@ class FileType(Enum):
         }
 
     @staticmethod
-    def deserialize(data: dict[str, Any], version: int):
+    def deserialize(data: dict[str, Any], _: int):
         return FileType(data["value"])
 
 
