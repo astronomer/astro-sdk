@@ -99,7 +99,9 @@ def test_error_raised_with_blocking_op_executors(
         cleanup_task.execute({"dag_run": dr})
 
 
-@pytest.mark.skipif(airflow_version >= "2.6")
+@pytest.mark.skipif(
+    airflow_version >= "2.6", reason="BackfillJobRunner and Job classes are only available in airflow >= 2.6"
+)
 @pytest.mark.parametrize(
     "executor_in_job,executor_in_cfg,expected_val",
     [
@@ -130,7 +132,7 @@ def test_single_worker_mode_backfill(executor_in_job, executor_in_cfg, expected_
         session.rollback()
 
 
-@pytest.mark.skipif(airflow_version < "2.6")
+@pytest.mark.skipif(airflow_version < "2.6", reason="BackfillJob class is not available in airflow < 2.6")
 @pytest.mark.parametrize(
     "executor_in_job,executor_in_cfg,expected_val",
     [
@@ -159,7 +161,10 @@ def test_single_worker_mode_backfill_airflow_2_5(executor_in_job, executor_in_cf
         session.rollback()
 
 
-@pytest.mark.skipif(airflow_version >= "2.6")
+@pytest.mark.skipif(
+    airflow_version >= "2.6",
+    reason="SchedulerJobRunner and Job classes are only available in airflow >= 2.6.0",
+)
 @pytest.mark.parametrize(
     "executor_in_job,executor_in_cfg,expected_val",
     [
@@ -191,16 +196,16 @@ def test_single_worker_mode_scheduler_job(executor_in_job, executor_in_cfg, expe
         session.rollback()
 
 
-@pytest.mark.skipif(airflow_version < "2.6")
+@pytest.mark.skipif(airflow_version < "2.6", reason="SchedulerJob class is not available in airflow < 2.6")
 @pytest.mark.parametrize(
-    "executor_in_job,executor_in_cfg,expected_val",
+    "executor_in_job,expected_val",
     [
         ("LocalExecutor", False),
         ("SequentialExecutor", True),
         ("CeleryExecutor", False),
     ],
 )
-def test_single_worker_mode_scheduler_job_airflow_2_5(executor_in_job, executor_in_cfg, expected_val):
+def test_single_worker_mode_scheduler_job_airflow_2_5(executor_in_cfg, expected_val):
     """Test that if we run Scheduler Job it should be marked as single worker node"""
     from airflow.jobs.scheduler_job import SchedulerJob
 
@@ -209,7 +214,7 @@ def test_single_worker_mode_scheduler_job_airflow_2_5(executor_in_job, executor_
 
     with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_cfg}):
         # Scheduler Job in Airflow sets executor from airflow.cfg
-        job = SchedulerJob(executor=executor_in_job)
+        job = SchedulerJob()
         session = Session()
         session.add(job)
         session.flush()
