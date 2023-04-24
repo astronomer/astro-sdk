@@ -183,8 +183,7 @@ class BaseTable:
             "name": self.name,
             "temp": self.temp,
             "conn_id": self.conn_id,
-            "metadata.schema": self.metadata.schema,
-            "metadata.database": self.metadata.database,
+            "metadata": {"schema": self.metadata.schema, "database": self.metadata.database},
         }
 
     @staticmethod
@@ -193,7 +192,7 @@ class BaseTable:
             name=data["name"],
             temp=data["temp"],
             conn_id=data["conn_id"],
-            metadata=Metadata(schema=data["metadata.schema"], database=data["metadata.database"]),
+            metadata=Metadata(**data["metadata"]),
         )
 
 
