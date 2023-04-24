@@ -205,14 +205,14 @@ def test_single_worker_mode_scheduler_job(executor_in_job, executor_in_cfg, expe
         ("CeleryExecutor", False),
     ],
 )
-def test_single_worker_mode_scheduler_job_airflow_2_5(executor_in_cfg, expected_val):
+def test_single_worker_mode_scheduler_job_airflow_2_5(executor_in_job, expected_val):
     """Test that if we run Scheduler Job it should be marked as single worker node"""
     from airflow.jobs.scheduler_job import SchedulerJob
 
     dag = DAG("test_single_worker_mode_scheduler_job", start_date=datetime(2022, 1, 1))
     dr = DagRun(dag_id=dag.dag_id)
 
-    with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_cfg}):
+    with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_job}):
         # Scheduler Job in Airflow sets executor from airflow.cfg
         job = SchedulerJob()
         session = Session()
