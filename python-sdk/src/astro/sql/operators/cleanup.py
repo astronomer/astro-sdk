@@ -4,6 +4,7 @@ import time
 from datetime import timedelta
 from typing import Any
 
+from airflow import __version__ as airflow_version
 from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -215,7 +216,10 @@ class CleanupOperator(AstroSQLBaseOperator):
 
     @staticmethod
     def _get_executor_from_job_id(job_id: int) -> str | None:
-        from airflow.jobs.job import Job
+        if airflow_version.__version__ >= "2.6":
+            from airflow.jobs.job import Job as Job
+        else:
+            from airflow.jobs.base_job import BaseJob as Job
         from airflow.utils.session import create_session
 
         with create_session() as session:
