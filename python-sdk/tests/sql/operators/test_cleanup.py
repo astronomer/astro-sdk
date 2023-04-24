@@ -12,6 +12,7 @@ from airflow.operators.bash import BashOperator
 from airflow.settings import Session
 from airflow.utils.state import State
 from airflow.utils.timezone import datetime
+from packaging import version
 
 from astro.constants import Database
 from astro.files import File
@@ -100,7 +101,8 @@ def test_error_raised_with_blocking_op_executors(
 
 
 @pytest.mark.skipif(
-    airflow_version >= "2.6", reason="BackfillJobRunner and Job classes are only available in airflow >= 2.6"
+    version.parse(airflow_version) < version.parse("2.6.0rc1"),
+    reason="BackfillJobRunner and Job classes are only available in airflow >= 2.6",
 )
 @pytest.mark.parametrize(
     "executor_in_job,executor_in_cfg,expected_val",
@@ -132,7 +134,10 @@ def test_single_worker_mode_backfill(executor_in_job, executor_in_cfg, expected_
         session.rollback()
 
 
-@pytest.mark.skipif(airflow_version < "2.6", reason="BackfillJob class is not available in airflow < 2.6")
+@pytest.mark.skipif(
+    version.parse(airflow_version) >= version.parse("2.6.0"),
+    reason="BackfillJob class is not available in airflow < 2.6",
+)
 @pytest.mark.parametrize(
     "executor_in_job,executor_in_cfg,expected_val",
     [
@@ -162,7 +167,7 @@ def test_single_worker_mode_backfill_airflow_2_5(executor_in_job, executor_in_cf
 
 
 @pytest.mark.skipif(
-    airflow_version >= "2.6",
+    version.parse(airflow_version) < version.parse("2.6.0"),
     reason="SchedulerJobRunner and Job classes are only available in airflow >= 2.6.0",
 )
 @pytest.mark.parametrize(
@@ -196,7 +201,10 @@ def test_single_worker_mode_scheduler_job(executor_in_job, executor_in_cfg, expe
         session.rollback()
 
 
-@pytest.mark.skipif(airflow_version < "2.6", reason="SchedulerJob class is not available in airflow < 2.6")
+@pytest.mark.skipif(
+    version.parse(airflow_version) >= version.parse("2.6.0rc1"),
+    reason="SchedulerJob class is not available in airflow < 2.6",
+)
 @pytest.mark.parametrize(
     "executor_in_job,expected_val",
     [

@@ -9,6 +9,7 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
+from packaging import version
 
 try:
     # Airflow >= 2.3
@@ -216,7 +217,7 @@ class CleanupOperator(AstroSQLBaseOperator):
 
     @staticmethod
     def _get_executor_from_job_id(job_id: int) -> str | None:
-        if airflow_version.__version__ >= "2.6":
+        if version.parse(airflow_version) >= version.parse("2.6"):
             from airflow.jobs.job import Job as Job
         else:
             from airflow.jobs.base_job import BaseJob as Job
