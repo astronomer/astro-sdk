@@ -10,53 +10,6 @@ from astro.exceptions import AstroSDKConfigError
 
 logger = logging.getLogger(__name__)
 
-serializers = [
-    DataFrame
-]  # this can be a type or a fully qualified str. Str can be used to prevent circular imports
-deserializers = DataFrame
-
-__version__ = 1  # required
-
-
-def serialize(o: DataFrame):
-    # Store in the metadata DB if Dataframe < 100 kb
-    df_size = DataFrame.memory_usage(deep=True).sum()
-    if df_size < (settings.MAX_DATAFRAME_MEMORY_FOR_XCOM_DB * 1024):
-        logger.info("Dataframe size: %s bytes. Storing it in Airflow's metadata DB", df_size)
-        return {"data": DataFrame.to_json()}
-    elif settings.DATAFRAME_STORAGE_CONN_ID is not None:
-        # Avoid cyclic dependency
-        from astro.utils.dataframe import convert_dataframe_to_file
-
-        logger.info(
-            "Dataframe size: %s bytes. Storing it in Remote Storage (conn_id: %s | URL: %s)",
-            df_size,
-            settings.DATAFRAME_STORAGE_CONN_ID,
-            settings.DATAFRAME_STORAGE_URL,
-        )
-        return convert_dataframe_to_file(o).to_json()
-
-    raise AstroSDKConfigError(
-        "Dataframe size exceeds allowed limit for storing in Airflow's metadata DB. "
-        "Airflow config variable AIRFLOW__ASTRO_SDK__XCOM_STORAGE_CONN_ID needs to "
-        "be set for remote storage of the dataframe."
-    )
-
-
-def deserialize(data: dict, version: int):
-    if version > 1:
-        raise TypeError(f"version > {PandasDataframe.version}")
-    if isinstance(data, dict) and data.get("class", "") == "File":
-        # Avoid cyclic dependency
-        from astro.files import File
-
-        file = File.from_json(data)
-        if file.is_dataframe:
-            logger.info("Retrieving file from %s using %s conn_id ", file.path, file.conn_id)
-            return file.export_to_dataframe()
-        return file
-    return read_json(data["data"])
-
 
 class PandasDataframe(DataFrame):
     """Pandas-compatible dataframe class that can be serialized and deserialized into XCom by Airflow 2.5"""

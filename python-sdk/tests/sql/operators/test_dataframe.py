@@ -11,7 +11,6 @@ from airflow.utils import timezone
 
 import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
-from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.table import Table
@@ -22,8 +21,8 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
 
 # Trying out need to replace.
-test_df = PandasDataframe({"numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
-test_df_2 = PandasDataframe({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+test_df = pandas.DataFrame({"numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
 
 
 def _validate_dataframe(original: pandas.DataFrame, df: pandas.DataFrame, capital_settings: dict):
