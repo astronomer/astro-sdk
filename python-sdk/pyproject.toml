@@ -61,7 +61,7 @@ google = [
     "smart-open[gcs]>=5.2.1"
 ]
 snowflake = [
-    "apache-airflow-providers-snowflake",
+    "apache-airflow-providers-snowflake==4.0.5rc1",
     "snowflake-sqlalchemy>=1.2.0",
     "snowflake-connector-python[pandas]<3.0.0",
     # pinning snowflake-connector-python[pandas]<3.0.0 due to a conflict in snowflake-connector-python/pyarrow/google
@@ -72,7 +72,7 @@ postgres = [
     "apache-airflow-providers-postgres",
 ]
 amazon = [
-    "apache-airflow-providers-amazon>=5.0.0",
+    "apache-airflow-providers-amazon==8.0.0rc1",
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
@@ -107,11 +107,11 @@ duckdb = [
 ]
 
 all = [
-    "apache-airflow-providers-amazon",
+    "apache-airflow-providers-amazon==8.0.0rc1",
     "apache-airflow-providers-google==10.0.rc1",
     "apache-airflow-providers-ftp",
     "apache-airflow-providers-postgres",
-    "apache-airflow-providers-snowflake",
+    "apache-airflow-providers-snowflake==4.0.5rc1",
     "apache-airflow-providers-sftp",
     "smart-open[all]>=5.2.1",
     "snowflake-connector-python[pandas]<3.0.0",
