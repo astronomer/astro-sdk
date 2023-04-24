@@ -95,7 +95,7 @@ databricks = ["databricks-cli",
     "apache-airflow-providers-databricks==4.1.0rc1"]
 
 mssql = [
-    "apache-airflow-providers-microsoft-mssql==6.0.0rc1",
+    "apache-airflow-providers-microsoft-mssql>=3.2",
 ]
 
 mysql = [
@@ -127,7 +127,7 @@ all = [
     "openlineage-airflow>=0.17.0",
     "apache-airflow-providers-microsoft-azure==6.0.0rc1",
     "azure-storage-blob",
-    "apache-airflow-providers-microsoft-mssql==6.0.0rc1",
+    "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
     "apache-airflow-providers-mysql==5.0.0rc1"
 ]
