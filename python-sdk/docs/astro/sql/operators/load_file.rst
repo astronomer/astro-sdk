@@ -122,7 +122,7 @@ Parameters to use when loading a file to a Pandas dataframe
 
    .. note::
 
-        If the Astro SDK fails to automatically load data from your file to a dataframe, configure `Link text <link URL>` in :ref:`load_options` manually specify the schema for the dataframe.
+        If the Astro SDK fails to automatically load data from your file to a dataframe, configure `dtype <https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html>` in :ref:`load_options` manually specify the schema for the dataframe.
         For example, to load data from a `.csv` file with two columns, `id` and `name`, you would add the following to your code:
 
         ```
