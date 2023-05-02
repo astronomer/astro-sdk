@@ -46,7 +46,7 @@ Pin Python SDK to 1.4.x, so the SQL CLI and Astro CLI are not affected by breaki
 
 ### Features
 
-For more information on the features, please, check their help or access: https://docs.astronomer.io/astro/cli/sql-cli.html
+For more information on the features, please, check their help or access: https://github.com/astronomer/docs/blob/06572ea9a50fb37055a3f3d1959e3559926ba2ca/astro/cli/sql-cli.md
 
 1. Deployment to Astro Cloud
 
