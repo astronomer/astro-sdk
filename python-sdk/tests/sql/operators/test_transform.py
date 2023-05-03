@@ -37,8 +37,9 @@ def test_transform_file_calls_with_query_tag(run_sql, sample_dag):
     from astro.query_modifier import QueryModifier
 
     class MockReturn:
+        _scalar = []
         def scalar(self):
-            return []
+            return self._scalar
 
     run_sql.execute.return_value = MockReturn()
 
