@@ -30,7 +30,7 @@ with DAG(
         output_table=Table(conn_id="sqlite_default"),
     )
     movies_by_genre = top_movies_by_genre(input_df=imdb_movies)
-    with tempfile.NamedTemporaryFile(suffix=".csv") as tmp_file: 
+    with tempfile.NamedTemporaryFile(suffix=".csv") as tmp_file:
         ExportToFileOperator.partial(output_file=File(path=tmp_file.name), task_id="export_movies").expand(
             input_data=movies_by_genre
         )
