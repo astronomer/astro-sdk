@@ -14,7 +14,6 @@ airflow_settings.yaml
 /build/
 /dist/
 **/dist/
-sql-cli/.nox/
 venv
 dumps
 .vscode

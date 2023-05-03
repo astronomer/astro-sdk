@@ -14,7 +14,3 @@ flags:
     paths:
       - python-sdk/src
     carryforward: true
-  SQL-CLI:
-    paths:
-      - sql-cli/sql_cli
-    carryforward: true
