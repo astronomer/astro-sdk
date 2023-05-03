@@ -5,13 +5,16 @@ from astro import sql as aql
 from tests.sql.operators import utils as test_utils
 
 
+class MockReturn:
+    _scalar = []
+
+    def scalar(self):
+        return self._scalar
+
+
 @mock.patch("astro.databases.base.BaseDatabase.connection")
 def test_transform_calls_with_query_tag(run_sql, sample_dag):
     from astro.query_modifier import QueryModifier
-
-    class MockReturn:
-        def scalar(self):
-            return []
 
     run_sql.execute.return_value = MockReturn()
 
@@ -35,11 +38,6 @@ def test_transform_calls_with_query_tag(run_sql, sample_dag):
 @mock.patch("astro.databases.base.BaseDatabase.connection")
 def test_transform_file_calls_with_query_tag(run_sql, sample_dag):
     from astro.query_modifier import QueryModifier
-
-    class MockReturn:
-        _scalar = []
-        def scalar(self):
-            return self._scalar
 
     run_sql.execute.return_value = MockReturn()
 
