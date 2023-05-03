@@ -33,7 +33,7 @@ repos:
           ^python-sdk/tests/benchmark/.*|
           ^python-sdk/tests/utils/.*|
           ^python-sdk/tests/sql/operators/utils.py|
-          ^python-sdk/tests/integration_test_dag.py|
+          ^python-sdk/tests/integration_test_dag.py
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
