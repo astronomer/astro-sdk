@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 import string
-from typing import Any
+from typing import Any, ClassVar
 
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
@@ -50,6 +50,7 @@ class BaseTable:
     """
 
     template_fields = ("name",)
+    version: ClassVar[int] = 1
 
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
@@ -176,6 +177,25 @@ class BaseTable:
         """
         return (not isinstance(self, TempTable)) or (
             isinstance(self, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
+        )
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "temp": self.temp,
+            "conn_id": self.conn_id,
+            "metadata": {"schema": self.metadata.schema, "database": self.metadata.database},
+        }
+
+    @staticmethod
+    def deserialize(data: dict[str, Any], version: int):
+        if version > 1:
+            raise TypeError(f"version > {BaseTable.version}")
+        return Table(
+            name=data["name"],
+            temp=data["temp"],
+            conn_id=data["conn_id"],
+            metadata=Metadata(**data["metadata"]),
         )
 
 

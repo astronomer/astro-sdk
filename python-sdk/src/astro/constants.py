@@ -5,7 +5,7 @@ from enum import Enum
 
 # typing.Literal was only introduced in Python 3.8, and we support Python 3.7
 if sys.version_info >= (3, 8):
-    from typing import Literal
+    from typing import Any, Literal
 else:
     from typing_extensions import Literal
 
@@ -43,6 +43,15 @@ class FileType(Enum):
 
     def __str__(self) -> str:
         return self.value
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "value": self.value,
+        }
+
+    @staticmethod
+    def deserialize(data: dict[str, Any], _: int):
+        return FileType(data["value"])
 
 
 class Database(Enum):
