@@ -7,7 +7,7 @@ aiosignal==1.3.1
 airflow-provider-duckdb==0.1.0
 alembic==1.10.4
 anyio==3.6.2
-apache-airflow==2.4.2
+apache-airflow==2.5.3
 apache-airflow-providers-amazon==8.0.0
 apache-airflow-providers-common-sql==1.4.0
 apache-airflow-providers-databricks==4.1.0
@@ -165,6 +165,7 @@ httpcore==0.17.0
 httplib2==0.22.0
 httpx==0.24.0
 idna==3.4
+importlib-metadata==6.6.0
 inflection==0.5.1
 isodate==0.6.1
 itsdangerous==2.1.2
@@ -249,6 +250,7 @@ redshift-connector==2.0.910
 requests==2.30.0
 requests-oauthlib==1.3.1
 requests-toolbelt==1.0.0
+rfc3339-validator==0.1.4
 rich==13.3.5
 rsa==4.9
 s3fs==2023.4.0
@@ -269,7 +271,6 @@ sqlalchemy-redshift==0.8.14
 SQLAlchemy-Utils==0.41.1
 sqlparse==0.4.4
 sshtunnel==0.4.0
-swagger-ui-bundle==0.0.9
 tabulate==0.9.0
 tenacity==8.2.2
 termcolor==2.3.0
@@ -289,3 +290,4 @@ wheel==0.40.0
 wrapt==1.15.0
 WTForms==3.0.1
 yarl==1.9.2
+zipp==3.15.0

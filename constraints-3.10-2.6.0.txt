@@ -7,7 +7,7 @@ aiosignal==1.3.1
 airflow-provider-duckdb==0.1.0
 alembic==1.10.4
 anyio==3.6.2
-apache-airflow==2.4.2
+apache-airflow==2.6.0
 apache-airflow-providers-amazon==8.0.0
 apache-airflow-providers-common-sql==1.4.0
 apache-airflow-providers-databricks==4.1.0
@@ -23,7 +23,7 @@ apache-airflow-providers-sftp==4.2.4
 apache-airflow-providers-snowflake==4.0.5
 apache-airflow-providers-sqlite==3.3.2
 apache-airflow-providers-ssh==3.6.0
-apispec==3.3.2
+apispec==5.2.2
 argcomplete==3.0.8
 asgiref==3.6.0
 asn1crypto==1.5.1
@@ -92,10 +92,11 @@ et-xmlfile==1.1.0
 exceptiongroup==1.1.1
 filelock==3.12.0
 Flask==2.2.5
-Flask-AppBuilder==4.1.4
+Flask-AppBuilder==4.3.0
 Flask-Babel==2.0.0
 Flask-Caching==2.0.2
 Flask-JWT-Extended==4.4.4
+Flask-Limiter==3.3.0
 Flask-Login==0.6.2
 Flask-Session==0.4.1
 Flask-SQLAlchemy==2.5.1
@@ -165,6 +166,7 @@ httpcore==0.17.0
 httplib2==0.22.0
 httpx==0.24.0
 idna==3.4
+importlib-resources==5.12.0
 inflection==0.5.1
 isodate==0.6.1
 itsdangerous==2.1.2
@@ -174,6 +176,7 @@ json-merge-patch==0.2
 jsonpath-ng==1.5.3
 jsonschema==4.17.3
 lazy-object-proxy==1.9.0
+limits==3.4.0
 linkify-it-py==2.0.2
 lockfile==0.12.2
 looker-sdk==23.6.0
@@ -206,6 +209,7 @@ openlineage-integration-common==0.24.0
 openlineage-python==0.24.0
 openlineage_sql==0.24.0
 openpyxl==3.1.2
+ordered-set==4.1.0
 oscrypto==1.3.0
 packaging==21.3
 pandas==1.5.3
@@ -228,6 +232,7 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.21
 pycryptodomex==3.17
+pydantic==1.10.7
 pydata-google-auth==1.7.0
 Pygments==2.15.1
 PyJWT==2.6.0
@@ -249,7 +254,9 @@ redshift-connector==2.0.910
 requests==2.30.0
 requests-oauthlib==1.3.1
 requests-toolbelt==1.0.0
+rfc3339-validator==0.1.4
 rich==13.3.5
+rich_argparse==1.1.0
 rsa==4.9
 s3fs==2023.4.0
 s3transfer==0.6.0
@@ -269,7 +276,6 @@ sqlalchemy-redshift==0.8.14
 SQLAlchemy-Utils==0.41.1
 sqlparse==0.4.4
 sshtunnel==0.4.0
-swagger-ui-bundle==0.0.9
 tabulate==0.9.0
 tenacity==8.2.2
 termcolor==2.3.0
