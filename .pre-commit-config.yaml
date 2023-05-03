@@ -22,8 +22,6 @@ repos:
       - id: check-yaml
       - id: debug-statements
       - id: end-of-file-fixer
-        # Exclude auto-generated example files from being changed
-        exclude: ^sql-cli/include/base/.airflow/dags
       - id: mixed-line-ending
       - id: trailing-whitespace
       - id: pretty-format-json
@@ -36,8 +34,6 @@ repos:
           ^python-sdk/tests/utils/.*|
           ^python-sdk/tests/sql/operators/utils.py|
           ^python-sdk/tests/integration_test_dag.py|
-          ^sql-cli/tests/test_dag/.*$|
-          ^sql-cli/tests/utils.py
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
@@ -51,16 +47,14 @@ repos:
       - id: forbid-crlf
       - id: remove-crlf
       - id: forbid-tabs
-        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
       - id: remove-tabs
-        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
 
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
       - id: black
-        # Exclude auto-generated example files from being changed
-        exclude: ^sql-cli/include/base/.airflow/dags
         args: ["--config", "./python-sdk/pyproject.toml"]
 
   - repo: https://github.com/asottile/blacken-docs
@@ -84,7 +78,7 @@ repos:
         name: Run codespell to check for common misspellings in files
         language: python
         types: [text]
-        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/modified_constraint_file.txt$|^python-sdk/tests/benchmark/Makefile$|^sql-cli/poetry.lock$|^universal_transfer_operator/tests/modified_constraint_file.txt$
+        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/modified_constraint_file.txt$|^python-sdk/tests/benchmark/Makefile$|^universal_transfer_operator/tests/modified_constraint_file.txt$
   -   repo: https://github.com/pre-commit/mirrors-mypy
       rev: 'v1.2.0'
       hooks:
@@ -92,10 +86,6 @@ repos:
         name: mypy-python-sdk
         additional_dependencies: [types-PyYAML, types-attrs, attrs, types-requests, types-python-dateutil]
         files: "^python-sdk/"
-      - id: mypy
-        name: mypy-sql-cli
-        additional_dependencies: [types-PyYAML, types-requests]
-        files: "^sql-cli/"
       - id: mypy
         name: mypy-uto
         additional_dependencies: [ types-PyYAML, types-requests, types-attrs, attrs ]
@@ -106,8 +96,6 @@ repos:
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
-          # Exclude auto-generated example files from being changed
-          exclude: ^sql-cli/include/base/.airflow/dags
 
   - repo: local
     hooks:
