@@ -1,3 +1,4 @@
+import tempfile
 from datetime import datetime
 
 import pandas as pd
@@ -12,7 +13,7 @@ from astro.table import Table
 @aql.dataframe(columns_names_capitalization="original")
 def top_movies_by_genre(input_df: pd.DataFrame):
     top_movies = []
-    for genre, genre_df in input_df.groupby("genre1"):
+    for _, genre_df in input_df.groupby("genre1"):
         genre_df.sort_values(by="rating", ascending=False)[["title", "rating", "genre1"]].head(5)
         top_movies.append(genre_df)
     return top_movies
@@ -29,6 +30,7 @@ with DAG(
         output_table=Table(conn_id="sqlite_default"),
     )
     movies_by_genre = top_movies_by_genre(input_df=imdb_movies)
-    ExportToFileOperator.partial(output_file=File("/tmp/output.json"), task_id="export_movies").expand(
-        input_data=movies_by_genre
-    )
+    with tempfile.NamedTemporaryFile(suffix=".csv") as tmp_file: 
+        ExportToFileOperator.partial(output_file=File(path=tmp_file.name), task_id="export_movies").expand(
+            input_data=movies_by_genre
+        )
