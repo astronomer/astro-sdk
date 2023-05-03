@@ -80,7 +80,7 @@ It is possible to use [cgo](https://pkg.go.dev/cmd/cgo)  to interact with Python
 
 This strategy involves building an operating system package, which may be native (e.g. .deb for Ubuntu and Debian, or .dmg for MacOS) or not (such as a brew recipe for MacOS).
 
-As of now, there are lots of tools which make this process easy ([Homebrew docs](https://docs.brew.sh/Homebrew-and-Python) and [Debian](https://pi3g.com/2019/04/19/packaging-python-projects-for-debian-raspbian-with-dh-virtualenv/), as examples).
+As of now, there are lots of tools which make this process easy ([Homebrew docs](https://docs.brew.sh/Homebrew-and-Python) and [Debian](https://github.com/spotify/dh-virtualenv), as examples).
 
 In this case, we’d be installing a SQL CLI client in the end-user operating system, and the Astro CLI would invoke this binary.
 
