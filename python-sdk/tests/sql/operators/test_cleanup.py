@@ -101,7 +101,7 @@ def test_error_raised_with_blocking_op_executors(
 
 
 @pytest.mark.skipif(
-    version.parse(airflow_version) < version.parse("2.6.0rc1"),
+    version.parse(airflow_version) < version.parse("2.6.0"),
     reason="BackfillJobRunner and Job classes are only available in airflow >= 2.6",
 )
 @pytest.mark.parametrize(
@@ -202,7 +202,7 @@ def test_single_worker_mode_scheduler_job(executor_in_job, executor_in_cfg, expe
 
 
 @pytest.mark.skipif(
-    version.parse(airflow_version) >= version.parse("2.6.0rc1"),
+    version.parse(airflow_version) >= version.parse("2.6.0"),
     reason="SchedulerJob class is not available in airflow < 2.6",
 )
 @pytest.mark.parametrize(
