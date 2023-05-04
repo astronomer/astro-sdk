@@ -158,6 +158,9 @@ class DeltaDatabase(BaseDatabase):
     def openlineage_dataset_namespace(self) -> str:
         return ""
 
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        return ""
+
     def create_table_from_select_statement(
         self,
         statement: str,
