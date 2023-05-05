@@ -48,11 +48,11 @@ or by updating Airflow's configuration
 Configuring if schemas existence should be checked and if the SDK should create them
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, during ``aql.load_file``, the SDK checks if the schema of the target table exists, and if not, it tries to create it. This type of check can be costly.
+By default, during ``aql.load_file`` and ``aql.transform``, the SDK checks if the schema of the target table exists, and if not, it tries to create it. This type of check can be costly.
 
-The configuration ``AIRFLOW__ASTRO_SDK__LOAD_TABLE_SCHEMA_EXISTS`` allows users to inform the SDK that the schema already exists, skipping this check for all ``load_file`` tasks.
+The configuration ``AIRFLOW__ASTRO_SDK__ASSUME_SCHEMA_EXISTS`` allows users to inform the SDK that the schema already exists, skipping this check for all ``load_file`` and ``transform`` tasks.
 
-The user can also have a more granular control, by defining the ``load_file`` argument ``schema_exists`` on a per-task basis :ref:load_file.
+The user can also have a more granular control, by defining the ``load_file`` argument ``assume_schema_exists`` on a per-task basis :ref:load_file.
 
 Example of how to disable schema existence check using environment variables:
 

@@ -11,7 +11,7 @@ def test_create_schema_if_needed(mock_run_sql, mock_schema_exists):
     create_schema_if_needed method is called when the schema is not available
     """
     db = MssqlDatabase(conn_id="fake_conn_id")
-    db.create_schema_if_needed("non-existing-schema")
+    db.create_schema_if_applicable("non-existing-schema")
     mock_run_sql.assert_called_once_with(
         """
     IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'non-existing-schema')

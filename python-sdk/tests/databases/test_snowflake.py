@@ -236,5 +236,5 @@ def test_load_file_to_table_skips_schema_check():
 
     file_ = File(path=LOCAL_CSV_FILE)
     table = Table(conn_id="fake-conn", metadata=Metadata(schema="abc"))
-    database.load_file_to_table(input_file=file_, output_table=table, schema_exists=True)
+    database.load_file_to_table(input_file=file_, output_table=table, assume_schema_exists=True)
     assert not database.hook.run.call_count

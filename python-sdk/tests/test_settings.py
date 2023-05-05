@@ -14,7 +14,7 @@ def test_settings_load_table_schema_exists_default():
     assert not load_file.schema_exists
 
 
-@patch.dict(os.environ, {"AIRFLOW__ASTRO_SDK__LOAD_TABLE_SCHEMA_EXISTS": "True"})
+@patch.dict(os.environ, {"AIRFLOW__ASTRO_SDK__ASSUME_SCHEMA_EXISTS": "True"})
 def test_settings_load_table_schema_exists_override():
     settings.reload()
     importlib.reload(astro.sql.operators.load_file)

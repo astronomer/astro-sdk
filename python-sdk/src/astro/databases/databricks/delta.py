@@ -22,7 +22,7 @@ from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.options import LoadOptions
 from astro.query_modifier import QueryModifier
-from astro.settings import LOAD_TABLE_SCHEMA_EXISTS
+from astro.settings import ASSUME_SCHEMA_EXISTS
 from astro.table import BaseTable, Metadata
 
 
@@ -124,10 +124,17 @@ class DeltaDatabase(BaseDatabase):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = None,
-        schema_exists: bool = LOAD_TABLE_SCHEMA_EXISTS,
+        assume_schema_exists: bool = ASSUME_SCHEMA_EXISTS,
         databricks_job_name: str = "",
         **kwargs,
     ):
+        load_file_to_delta(
+            input_file=input_file,
+            delta_table=output_table,
+            databricks_job_name=databricks_job_name,
+            delta_load_options=self.load_options,  # type: ignore
+            if_exists=if_exists,
+        )
         """
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
@@ -144,15 +151,8 @@ class DeltaDatabase(BaseDatabase):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
-        :param schema_exists: Declare the table schema already exists and that load_file should not check if it exists
+        :param assume_schema_exists: If True, skips check to see if output_table schema exists
         """
-        load_file_to_delta(
-            input_file=input_file,
-            delta_table=output_table,
-            databricks_job_name=databricks_job_name,
-            delta_load_options=self.load_options,  # type: ignore
-            if_exists=if_exists,
-        )
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
         return ""

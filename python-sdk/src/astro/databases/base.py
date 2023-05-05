@@ -31,9 +31,9 @@ from astro.files.types.base import FileType as FileTypeConstants
 from astro.options import LoadOptions
 from astro.query_modifier import QueryModifier
 from astro.settings import (
+    ASSUME_SCHEMA_EXISTS,
     LOAD_FILE_ENABLE_NATIVE_FALLBACK,
     LOAD_TABLE_AUTODETECT_ROWS_COUNT,
-    LOAD_TABLE_SCHEMA_EXISTS,
     SCHEMA,
 )
 from astro.table import BaseTable, Metadata
@@ -453,7 +453,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
-        schema_exists: bool = LOAD_TABLE_SCHEMA_EXISTS,
+        assume_schema_exists: bool = ASSUME_SCHEMA_EXISTS,
         **kwargs,
     ):
         """
@@ -470,7 +470,7 @@ class BaseDatabase(ABC):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
-        :param schema_exists: Declare the table schema already exists and that load_file should not check if it exists
+        :param assume_schema_exists: If True, do not check if the output table schema it exists or attempt to create it
         """
         normalize_config = normalize_config or {}
         if self.check_for_minio_connection(input_file=input_file):
@@ -480,8 +480,7 @@ class BaseDatabase(ABC):
             )
             use_native_support = False
 
-        if not schema_exists:
-            self.create_schema_if_needed(output_table.metadata.schema)
+        self.create_schema_if_applicable(output_table.metadata.schema, assume_schema_exists)
 
         self.create_table_if_needed(
             file=input_file,
@@ -745,16 +744,19 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_applicable(
+        self, schema: str | None, assume_exists: bool = ASSUME_SCHEMA_EXISTS
+    ) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        :param assume_exists: If assume exists is True, does not check or attempt to create the schema
         """
         # We check if the schema exists first because snowflake will fail on a create schema query even if it
         # doesn't actually create a schema.
-        if schema and not self.schema_exists(schema):
+        if not assume_exists and schema and not self.schema_exists(schema):
             statement = self._create_schema_statement.format(schema)
             self.run_sql(statement)
 
