@@ -95,7 +95,9 @@ class DeltaDatabase(BaseDatabase):
         # Schemas do not need to be created for delta, so we can assume this is true
         return True
 
-    def create_schema_if_needed(self, schema: str | None) -> None:  # skipcq: PYL-W0613
+    def create_schema_if_applicable(
+        self, schema: str | None, assume_exists: bool = ASSUME_SCHEMA_EXISTS
+    ) -> None:  # skipcq: PYL-W0613
         # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 
@@ -128,13 +130,6 @@ class DeltaDatabase(BaseDatabase):
         databricks_job_name: str = "",
         **kwargs,
     ):
-        load_file_to_delta(
-            input_file=input_file,
-            delta_table=output_table,
-            databricks_job_name=databricks_job_name,
-            delta_load_options=self.load_options,  # type: ignore
-            if_exists=if_exists,
-        )
         """
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
@@ -153,6 +148,13 @@ class DeltaDatabase(BaseDatabase):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         :param assume_schema_exists: If True, skips check to see if output_table schema exists
         """
+        load_file_to_delta(
+            input_file=input_file,
+            delta_table=output_table,
+            databricks_job_name=databricks_job_name,
+            delta_load_options=self.load_options,  # type: ignore
+            if_exists=if_exists,
+        )
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
         return ""
