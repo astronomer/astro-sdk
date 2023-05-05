@@ -58,14 +58,14 @@ Example of how to disable schema existence check using environment variables:
 
 .. code:: ini
 
-   AIRFLOW__ASTRO_SDK__LOAD_TABLE_SCHEMA_EXISTS = True
+   AIRFLOW__ASTRO_SDK__ASSUME_SCHEMA_EXISTS = True
 
 Or using Airflow's configuration file:
 
 .. code:: ini
 
    [astro_sdk]
-   load_table_schema_exists = True
+   assume_schema_exists = True
 
 
 Configuring the unsafe dataframe storage
