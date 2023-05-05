@@ -85,6 +85,7 @@ def example_snowflake_partial_table_with_append():
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
             ),
         ),
+        schema_exists=False,  # Skip queries that check if the table schema exist and attempt to create it
     )
 
     homes_data2 = load_file(
@@ -96,6 +97,7 @@ def example_snowflake_partial_table_with_append():
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
             ),
         ),
+        schema_exists=False,
     )
 
     # Define task dependencies

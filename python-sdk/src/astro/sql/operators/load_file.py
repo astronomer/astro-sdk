@@ -47,6 +47,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param schema_exists: Declare the table schema already exists and that load_file should not check if it exists
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -66,6 +67,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         load_options: LoadOptions | list[LoadOptions] | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        schema_exists: bool = False,
         **kwargs,
     ) -> None:
         kwargs.setdefault("task_id", get_unique_task_id("load_file"))
@@ -112,6 +114,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
+        self.schema_exists = schema_exists
         self.load_options_list = LoadOptionsList(load_options)
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
@@ -159,6 +162,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             native_support_kwargs=self.native_support_kwargs,
             columns_names_capitalization=self.columns_names_capitalization,
             enable_native_fallback=self.enable_native_fallback,
+            schema_exists=self.schema_exists,
             databricks_job_name=f"Load data {self.dag_id}_{self.task_id}",
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
