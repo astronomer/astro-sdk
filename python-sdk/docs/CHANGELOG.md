@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0a1
+
+### Feature
+- Allow users to disable schema check and creation on `load_file` [#1922](https://github.com/astronomer/astro-sdk/pull/1922)
+
 ## 1.6.0
 
 ### Feature
