@@ -5,7 +5,7 @@ from astro.databases.mssql import MssqlDatabase
 
 @mock.patch("astro.databases.mssql.MssqlDatabase.schema_exists", return_value=False)
 @mock.patch("astro.databases.mssql.MssqlDatabase.run_sql")
-def test_create_schema_if_needed(mock_run_sql, mock_schema_exists):
+def test_create_schema_if_applicable(mock_run_sql, mock_schema_exists):
     """
     Test that run_sql is called with expected arguments when
     create_schema_if_needed method is called when the schema is not available
@@ -18,6 +18,5 @@ def test_create_schema_if_needed(mock_run_sql, mock_schema_exists):
     BEGIN
         EXEC( 'CREATE SCHEMA non-existing-schema' );
     END
-    """,
-        autocommit=True,
+    """
     )
