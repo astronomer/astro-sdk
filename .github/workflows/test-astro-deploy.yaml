@@ -1,16 +1,10 @@
-name: deploy on astro
+name: "astro deploy"
 on:
-  push:
-    branches: [ 'main', 'release-**' ]
-    paths:
-      - 'python-sdk/**'
-      - '.github/workflows/ci-astro-deploy.yaml'
   pull_request:
     branches: [ 'main', 'release-**' ]
-    paths:
-      - 'python-sdk/**'
-      - '.github/workflows/ci-astro-deploy.yaml'
-      - '*'
+  # Run on PRs from forks
+  pull_request_target:
+    branches: [ 'main' ]
 
 jobs:
   name: deploy
