@@ -82,7 +82,7 @@ def reload():
     """
     Reload settings from environment variable during runtime.
     """
-    global LOAD_TABLE_SCHEMA_EXISTS
+    global LOAD_TABLE_SCHEMA_EXISTS  # skipcq: PYL-W0603
     LOAD_TABLE_SCHEMA_EXISTS = conf.getboolean(SECTION_KEY, "load_table_schema_exists", fallback=False)
 
 
