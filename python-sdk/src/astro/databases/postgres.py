@@ -103,7 +103,7 @@ class PostgresDatabase(BaseDatabase):
         """
         self._assert_not_empty_df(source_dataframe)
 
-        self.create_schema_if_needed(target_table.metadata.schema)
+        self.create_schema_if_applicable(target_table.metadata.schema)
         if not self.table_exists(table=target_table) or if_exists == "replace":
             self.create_table(table=target_table, dataframe=source_dataframe)
 

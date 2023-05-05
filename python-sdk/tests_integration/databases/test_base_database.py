@@ -92,7 +92,7 @@ def test_load_file_to_table_natively(sample_dag, database_table_fixture, remote_
 
 @pytest.mark.integration
 @mock.patch("astro.databases.base.BaseDatabase.drop_table")
-@mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
+@mock.patch("astro.databases.base.BaseDatabase.create_schema_if_applicable")
 @mock.patch("astro.databases.base.BaseDatabase.create_table")
 @mock.patch("astro.databases.base.BaseDatabase.load_file_to_table_natively_with_fallback")
 @mock.patch("astro.databases.base.resolve_file_path_pattern")
