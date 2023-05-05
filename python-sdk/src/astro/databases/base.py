@@ -359,7 +359,7 @@ class BaseDatabase(ABC):
     # Table load methods
     # ---------------------------------------------------------
 
-    def create_schema_and_table_if_needed(
+    def create_table_if_needed(
         self,
         table: BaseTable,
         file: File,
@@ -393,7 +393,6 @@ class BaseDatabase(ABC):
         ):
             return
 
-        self.create_schema_if_needed(table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(table):
             files = resolve_file_path_pattern(
                 file.path,
@@ -474,7 +473,9 @@ class BaseDatabase(ABC):
             )
             use_native_support = False
 
-        self.create_schema_and_table_if_needed(
+        self.create_schema_if_needed(output_table.metadata.schema)
+
+        self.create_table_if_needed(
             file=input_file,
             table=output_table,
             columns_names_capitalization=columns_names_capitalization,
