@@ -22,6 +22,7 @@ from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.options import LoadOptions
 from astro.query_modifier import QueryModifier
+from astro.settings import LOAD_TABLE_SCHEMA_EXISTS
 from astro.table import BaseTable, Metadata
 
 
@@ -123,6 +124,7 @@ class DeltaDatabase(BaseDatabase):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = None,
+        schema_exists: bool = LOAD_TABLE_SCHEMA_EXISTS,
         databricks_job_name: str = "",
         **kwargs,
     ):
@@ -142,7 +144,7 @@ class DeltaDatabase(BaseDatabase):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
-
+        :param schema_exists: Declare the table schema already exists and that load_file should not check if it exists
         """
         load_file_to_delta(
             input_file=input_file,

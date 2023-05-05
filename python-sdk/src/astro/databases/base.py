@@ -30,7 +30,12 @@ from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.options import LoadOptions
 from astro.query_modifier import QueryModifier
-from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
+from astro.settings import (
+    LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+    LOAD_TABLE_AUTODETECT_ROWS_COUNT,
+    LOAD_TABLE_SCHEMA_EXISTS,
+    SCHEMA,
+)
 from astro.table import BaseTable, Metadata
 from astro.utils.compat.functools import cached_property
 
@@ -359,7 +364,7 @@ class BaseDatabase(ABC):
     # Table load methods
     # ---------------------------------------------------------
 
-    def create_schema_and_table_if_needed(
+    def create_table_if_needed(
         self,
         table: BaseTable,
         file: File,
@@ -393,7 +398,6 @@ class BaseDatabase(ABC):
         ):
             return
 
-        self.create_schema_if_needed(table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(table):
             files = resolve_file_path_pattern(
                 file.path,
@@ -449,6 +453,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        schema_exists: bool = LOAD_TABLE_SCHEMA_EXISTS,
         **kwargs,
     ):
         """
@@ -465,6 +470,7 @@ class BaseDatabase(ABC):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+        :param schema_exists: Declare the table schema already exists and that load_file should not check if it exists
         """
         normalize_config = normalize_config or {}
         if self.check_for_minio_connection(input_file=input_file):
@@ -474,7 +480,10 @@ class BaseDatabase(ABC):
             )
             use_native_support = False
 
-        self.create_schema_and_table_if_needed(
+        if not schema_exists:
+            self.create_schema_if_needed(output_table.metadata.schema)
+
+        self.create_table_if_needed(
             file=input_file,
             table=output_table,
             columns_names_capitalization=columns_names_capitalization,
