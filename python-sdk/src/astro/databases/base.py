@@ -448,6 +448,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        schema_exists: bool = False,
         **kwargs,
     ):
         """
@@ -464,6 +465,7 @@ class BaseDatabase(ABC):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+        :param schema_exists: Declare the table schema already exists and that load_file should not check if it exists
         """
         normalize_config = normalize_config or {}
         if self.check_for_minio_connection(input_file=input_file):
@@ -473,7 +475,8 @@ class BaseDatabase(ABC):
             )
             use_native_support = False
 
-        self.create_schema_if_needed(output_table.metadata.schema)
+        if not schema_exists:
+            self.create_schema_if_needed(output_table.metadata.schema)
 
         self.create_table_if_needed(
             file=input_file,
