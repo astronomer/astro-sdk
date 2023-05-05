@@ -1,0 +1,28 @@
+name: deploy on astro
+on:
+  push:
+    branches: [ 'main', 'release-**' ]
+    paths:
+      - 'python-sdk/**'
+      - '.github/workflows/ci-astro-deploy.yaml'
+  pull_request:
+    branches: [ 'main', 'release-**' ]
+    paths:
+      - 'python-sdk/**'
+      - '.github/workflows/ci-astro-deploy.yaml'
+      - '*'
+
+jobs:
+  env:
+    ASTRO_DOCKER_REGISTRY: ${{ secrets.ASTRO_DOCKER_REGISTRY }}
+    ASTRO_ORGANIZATION_ID: ${{ secrets.ASTRO_ORGANIZATION_ID }}
+    ASTRO_DEPLOYMENT_ID: ${{ secrets.ASTRO_DEPLOYMENT_ID }}
+    ASTRO_KEY_ID: ${{ secrets.ASTRO_KEY_ID }}
+    ASTRO_KEY_SECRET: ${{ secrets.ASTRO_KEY_SECRET }}
+    ASTRO_DEPLOYMENT_ID_SINGLE_WORKER: ${{ secrets.ASTRO_DEPLOYMENT_ID_SINGLE_WORKER }}
+    ASTRO_KEY_ID_SINGLE_WORKER: ${{ secrets.ASTRO_KEY_ID_SINGLE_WORKER }}
+    ASTRO_KEY_SECRET_SINGLE_WORKER: ${{ secrets.ASTRO_KEY_SECRET_SINGLE_WORKER }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: cd python-sdk/tests_integration/astro_deploy && bash deploy.sh $ASTRO_DOCKER_REGISTRY $ASTRO_ORGANIZATION_ID $ASTRO_DEPLOYMENT_ID $ASTRO_KEY_ID $ASTRO_KEY_SECRET $ASTRO_DEPLOYMENT_ID_SINGLE_WORKER $ASTRO_KEY_ID_SINGLE_WORKER $ASTRO_KEY_SECRET_SINGLE_WORKER
