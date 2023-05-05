@@ -4,7 +4,6 @@ coverage.xml
 **/.python-version
 python-sdk/integration-tests/test_data*
 python-sdk/test-connections.yaml
-universal_transfer_operator/test-connections.yaml
 .idea
 .env
 airflow_settings.yaml
@@ -57,8 +56,3 @@ python-sdk/tests_integration/astro_deploy/tests
 **/.airflowignore
 
 *.egg-info/
-
-# universal transfer operator sphinx-related
-/universal_transfer_operator/docs/_build/
-/universal_transfer_operator/docs/_build/*
-/universal_transfer_operator/docs/autoapi/

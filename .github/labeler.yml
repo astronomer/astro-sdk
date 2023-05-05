@@ -1,5 +1,0 @@
-product/sql-cli:
-- sql-cli/**/*
-
-product/uto:
-- universal_transfer_operator/**/*
