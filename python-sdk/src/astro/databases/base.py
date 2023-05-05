@@ -30,7 +30,12 @@ from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.options import LoadOptions
 from astro.query_modifier import QueryModifier
-from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
+from astro.settings import (
+    LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+    LOAD_TABLE_AUTODETECT_ROWS_COUNT,
+    LOAD_TABLE_SCHEMA_EXISTS,
+    SCHEMA,
+)
 from astro.table import BaseTable, Metadata
 from astro.utils.compat.functools import cached_property
 
@@ -448,7 +453,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
-        schema_exists: bool = False,
+        schema_exists: bool = LOAD_TABLE_SCHEMA_EXISTS,
         **kwargs,
     ):
         """

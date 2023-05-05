@@ -8,6 +8,7 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.hooks.base import BaseHook
 from airflow.models.xcom_arg import XComArg
 
+from astro import settings
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
@@ -21,7 +22,6 @@ from astro.dataframes.load_options import (
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File, resolve_file_path_pattern
 from astro.options import LoadOptions, LoadOptionsList
-from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.compat.typing import Context
@@ -66,8 +66,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
         native_support_kwargs: dict | None = None,
         load_options: LoadOptions | list[LoadOptions] | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
-        schema_exists: bool = False,
+        enable_native_fallback: bool | None = settings.LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        schema_exists: bool = settings.LOAD_TABLE_SCHEMA_EXISTS,
         **kwargs,
     ) -> None:
         kwargs.setdefault("task_id", get_unique_task_id("load_file"))

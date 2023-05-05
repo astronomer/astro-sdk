@@ -22,6 +22,7 @@ from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.options import LoadOptions
 from astro.query_modifier import QueryModifier
+from astro.settings import LOAD_TABLE_SCHEMA_EXISTS
 from astro.table import BaseTable, Metadata
 
 
@@ -123,7 +124,7 @@ class DeltaDatabase(BaseDatabase):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = None,
-        schema_exists: bool = False,
+        schema_exists: bool = LOAD_TABLE_SCHEMA_EXISTS,
         databricks_job_name: str = "",
         **kwargs,
     ):
