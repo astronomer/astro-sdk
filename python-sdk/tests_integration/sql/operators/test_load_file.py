@@ -1520,7 +1520,7 @@ def test_load_file_snowflake_azure_native_path(sample_dag, database_table_fixtur
 )
 @mock.patch("astro.databases.base.BaseDatabase.load_file_to_table_using_pandas")
 @mock.patch("astro.databases.base.resolve_file_path_pattern")
-@mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
+@mock.patch("astro.databases.base.BaseDatabase.create_schema_if_applicable")
 @mock.patch("astro.databases.base.BaseDatabase.drop_table")
 @mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_table_using_schema_autodetection")
 @mock.patch("astro.databases.base.BaseDatabase.is_native_autodetect_schema_available")
@@ -1528,7 +1528,7 @@ def test_table_creation_and_population_done_via_pandas_path(
     is_native_autodetect_schema_available,
     load_file_to_table_using_pandas,
     resolve_file_path_pattern,
-    create_schema_if_needed,
+    create_schema_if_applicable,
     drop_table,
     create_table_using_schema_autodetection,
     sample_dag,
