@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import tempfile
 from unittest import mock
 
@@ -6,7 +8,7 @@ from tests.sql.operators import utils as test_utils
 
 
 class MockReturn:
-    _scalar = []
+    _scalar: list = []
 
     def scalar(self):
         return self._scalar
@@ -56,3 +58,50 @@ def test_transform_file_calls_with_query_tag(run_sql, sample_dag):
         enriched_query = run_sql.method_calls[1].args[0].text
         assert enriched_query.startswith("ALTER team_1;ALTER team_2;CREATE TABLE IF NOT EXISTS ")
         assert enriched_query.endswith("AS SELECT 1+1")
+
+
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.connection")
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.hook")
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.get_table_qualified_name")
+@mock.patch("airflow.models.taskinstance.XCom")
+@mock.patch("astro.sql.operators.base_decorator.BaseSQLDecoratedOperator.execute")
+def test_transform_with_default_assume_schema_exists(
+    mock_base, mock_xcom, mock_qualified_name, mock_hook, mock_connection, sample_dag
+):
+    mock_connection.execute.return_value = MockReturn()
+
+    with sample_dag:
+
+        @aql.transform(conn_id="snowflake_conn", assume_schema_exists=False)
+        def dummy_method():
+            return "SELECT 1+1"
+
+        dummy_method()
+
+    test_utils.run_dag(sample_dag)
+    expected = (
+        "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;"
+    )
+    assert mock_hook.run.call_args[0][0] == expected
+
+
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.connection")
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.hook")
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.get_table_qualified_name")
+@mock.patch("airflow.models.taskinstance.XCom")
+@mock.patch("astro.sql.operators.base_decorator.BaseSQLDecoratedOperator.execute")
+def test_transform_with_assume_schema_exists_set_true(
+    mock_base, mock_xcom, mock_qualified_name, mock_hook, mock_connection, sample_dag
+):
+    mock_connection.execute.return_value = MockReturn()
+
+    with sample_dag:
+
+        @aql.transform(conn_id="snowflake_conn", assume_schema_exists=True)
+        def dummy_method():
+            return "SELECT 1+1"
+
+        dummy_method()
+
+    test_utils.run_dag(sample_dag)
+    assert not mock_hook.run.called
