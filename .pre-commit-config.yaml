@@ -47,9 +47,9 @@ repos:
       - id: forbid-crlf
       - id: remove-crlf
       - id: forbid-tabs
-        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
       - id: remove-tabs
-        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^universal_transfer_operator/mk/|^universal_transfer_operator/docs/Makefile|^universal_transfer_operator/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
 
   - repo: https://github.com/psf/black
     rev: 23.3.0
@@ -78,7 +78,7 @@ repos:
         name: Run codespell to check for common misspellings in files
         language: python
         types: [text]
-        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/modified_constraint_file.txt$|^python-sdk/tests/benchmark/Makefile$|^universal_transfer_operator/tests/modified_constraint_file.txt$
+        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/modified_constraint_file.txt$|^python-sdk/tests/benchmark/Makefile$
   -   repo: https://github.com/pre-commit/mirrors-mypy
       rev: 'v1.2.0'
       hooks:
@@ -86,10 +86,6 @@ repos:
         name: mypy-python-sdk
         additional_dependencies: [types-PyYAML, types-attrs, attrs, types-requests, types-python-dateutil]
         files: "^python-sdk/"
-      - id: mypy
-        name: mypy-uto
-        additional_dependencies: [ types-PyYAML, types-requests, types-attrs, attrs ]
-        files: "^universal_transfer_operator/"
 
   -   repo: https://github.com/asottile/pyupgrade
       rev: v3.3.2
