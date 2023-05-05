@@ -20,6 +20,8 @@ CWD = pathlib.Path(__file__).parent
 SNOWFLAKE_STORAGE_INTEGRATION_AMAZON = SNOWFLAKE_STORAGE_INTEGRATION_AMAZON or "aws_int_python_sdk"
 SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE or "gcs_int_python_sdk"
 
+LOCAL_CSV_FILE = str(CWD.parent / "data/homes_main.csv")
+
 
 def test_stage_set_name_after():
     stage = SnowflakeStage()
@@ -111,11 +113,10 @@ def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable
 
 
 def test_snowflake_load_options():
-    path = str(CWD) + "/../../data/homes_main.csv"
     database = SnowflakeDatabase(
         conn_id="fake-conn", load_options=SnowflakeLoadOptions(file_options={"foo": "bar"})
     )
-    file = File(path)
+    file = File(path=LOCAL_CSV_FILE)
     with mock.patch(
         "astro.databases.snowflake.SnowflakeDatabase.hook", new_callable=PropertyMock
     ), mock.patch(
@@ -132,9 +133,8 @@ def test_snowflake_load_options():
 
 
 def test_snowflake_load_options_default():
-    path = str(CWD) + "/../../data/homes_main.csv"
     database = SnowflakeDatabase(conn_id="fake-conn", load_options=SnowflakeLoadOptions())
-    file = File(path)
+    file = File(path=LOCAL_CSV_FILE)
     with mock.patch(
         "astro.databases.snowflake.SnowflakeDatabase.hook", new_callable=PropertyMock
     ), mock.patch(
@@ -151,8 +151,7 @@ def test_snowflake_load_options_default():
 
 
 def test_snowflake_load_options_wrong_options():
-    path = str(CWD) + "/../../data/homes_main.csv"
-    file = File(path)
+    file = File(path=LOCAL_CSV_FILE)
     with pytest.raises(ValueError, match="Error: Requires a SnowflakeLoadOptions"):
         database = SnowflakeDatabase(conn_id="fake-conn", load_options=LoadOptions())
         database.load_file_to_table_natively(source_file=file, target_table=Table())
@@ -211,3 +210,31 @@ def test_storage_integrations_params_in_load_options():
         database.load_file_to_table_natively(source_file=file, target_table=table)
 
     assert create_stage.call_args.kwargs["storage_integration"] == "some_integrations"
+
+
+def test_load_file_to_table_by_default_checks_schema():
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    database.run_sql = MagicMock()
+    database.hook = MagicMock()
+    database.create_table_using_schema_autodetection = MagicMock()
+
+    file_ = File(path=LOCAL_CSV_FILE)
+    table = Table(conn_id="fake-conn", metadata=Metadata(schema="abc"))
+    database.load_file_to_table(input_file=file_, output_table=table)
+    expected = (
+        "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;"
+    )
+    assert database.hook.run.call_args_list[0].args[0] == expected
+    assert database.hook.run.call_args_list[0].kwargs["parameters"]["schema_name"] == "abc"
+
+
+def test_load_file_to_table_skips_schema_check():
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    database.run_sql = MagicMock()
+    database.hook = MagicMock()
+    database.create_table_using_schema_autodetection = MagicMock()
+
+    file_ = File(path=LOCAL_CSV_FILE)
+    table = Table(conn_id="fake-conn", metadata=Metadata(schema="abc"))
+    database.load_file_to_table(input_file=file_, output_table=table, schema_exists=True)
+    assert not database.hook.run.call_count

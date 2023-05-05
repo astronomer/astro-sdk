@@ -1,5 +1,54 @@
 # Changelog
 
+## 1.7.0a1
+
+### Feature
+- Allow users to disable schema check and creation on `load_file` [#1922](https://github.com/astronomer/astro-sdk/pull/1922)
+
+## 1.6.0
+
+### Feature
+- Add MySQL support [#1801](https://github.com/astronomer/astro-sdk/pull/1801)
+- Add support to load from Azure blob storage into Databricks [#1561](https://github.com/astronomer/astro-sdk/pull/1561)
+- Add argument  `skip_on_failure` to `CleanupOperator` [#1837](https://github.com/astronomer/astro-sdk/pull/1837) by @scottleechua
+- Add `query_modifier` to `raw_sql`, `transform` and `transform_file`, which allow users to define SQL statements to be run before the main query statement [#1898](https://github.com/astronomer/astro-sdk/pull/1898).
+  Example of how to use this feature can be used to add Snowflake query tags to a SQL statement:
+  ```python
+  from astro.query_modifier import QueryModifier
+
+
+  @aql.run_raw_sql(
+      results_format="pandas_dataframe",
+      conn_id="sqlite_default",
+      query_modifier=QueryModifier(pre_queries=["ALTER team_1", "ALTER team_2"]),
+  )
+  def dummy_method():
+      return "SELECT 1+1"
+  ```
+- Upgrade astro-runtime to 7.4.2 [#1878](https://github.com/astronomer/astro-sdk/pull/1878)
+
+### Bug fix:
+- Raise exception in case larger dataframes than expected are passed to `aql.dataframe` [#1839](https://github.com/astronomer/astro-sdk/pull/1839)
+- Revert breaking change introduced in 1.5.0, re-allowing `aql.transform` to receive `sql filepath [#1879](https://github.com/astronomer/astro-sdk/pull/1879)
+
+### Docs
+- Update open lineage documentation [#1881](https://github.com/astronomer/astro-sdk/pull/1881)
+
+### Misc
+- Support Apache Airflow 2.6 [#1899](https://github.com/astronomer/astro-sdk/pull/1899), with internal serialization changes
+- Add basic `tiltifle` for local dev [#1819](https://github.com/astronomer/astro-sdk/pull/1819)
+
+
+## 1.5.3
+
+### Bug fix:
+
+- Support using SQL operators (`run_raw_sql`, `transform`, `dataframe`) to convert a Pandas dataframe into a table when using a DuckDB in-memory
+database. [#1848](https://github.com/astronomer/astro-sdk/pull/1848).
+- Fix code coverage issues [#1815](https://github.com/astronomer/astro-sdk/pull/1815)
+- Upgrade astro-runtime to 7.4.1 [#1858](https://github.com/astronomer/astro-sdk/pull/1858)
+
+
 ## 1.5.2
 
 ### Improvements

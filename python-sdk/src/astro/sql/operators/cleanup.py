@@ -4,10 +4,12 @@ import time
 from datetime import timedelta
 from typing import Any
 
+from airflow import __version__ as airflow_version
 from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
+from packaging import version
 
 try:
     # Airflow >= 2.3
@@ -215,11 +217,14 @@ class CleanupOperator(AstroSQLBaseOperator):
 
     @staticmethod
     def _get_executor_from_job_id(job_id: int) -> str | None:
-        from airflow.jobs.base_job import BaseJob
+        if version.parse(airflow_version) >= version.parse("2.6"):
+            from airflow.jobs.job import Job
+        else:
+            from airflow.jobs.base_job import BaseJob as Job
         from airflow.utils.session import create_session
 
         with create_session() as session:
-            job = session.get(BaseJob, job_id)
+            job = session.get(Job, job_id)
         return job.executor_class if job else None
 
     def get_all_task_outputs(self, context: Context) -> list[BaseTable]:

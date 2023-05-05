@@ -6,15 +6,7 @@ coverage:
         threshold: 5%
         only_pulls: true
 flags:
-  UTO:
-    paths: #note, accepts globs, not regexes
-      - universal_transfer_operator/src
-    carryforward: true
   PythonSDK:
     paths:
       - python-sdk/src
-    carryforward: true
-  SQL-CLI:
-    paths:
-      - sql-cli/sql_cli
     carryforward: true

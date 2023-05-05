@@ -5,7 +5,7 @@
 =================================================================================
 
 When to use the ``transform_file`` operator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------------
 The ``transform_file`` operator allows you to implement the **T** of an ELT system by running a SQL query from specified SQL file. Each step of the transform pipeline creates a new table from the ``SELECT`` statement and enables tasks to pass those tables as if they were native Python objects.
 
 The ``transform_file`` functions return a ``Table`` object that can be passed to future tasks. This table will be either an auto-generated temporary table, or will overwrite a table given in the ``output_table`` parameter. The ``transform_file`` operator treats values in the double brackets as Airflow jinja templates. You can find more details on templating at :ref:`templating`.
@@ -14,3 +14,8 @@ The ``transform_file`` functions return a ``Table`` object that can be passed to
        :language: python
        :start-after: [START transform_file_example_1]
        :end-before: [END transform_file_example_1]
+
+Parameters
+-----------
+
+* **query_modifier** - The ``query_modifier`` parameter allows you to define statements to run before and after the ``run_raw_sql`` main statement. To associate a Snowflake query tag, for instance, it is possible to use ``query_modifier=QueryModifier(pre_queries=["ALTER SESSION SET QUERY_TAG=<my-query-tag>])``.

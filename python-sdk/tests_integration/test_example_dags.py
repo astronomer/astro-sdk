@@ -45,6 +45,7 @@ def session():
 MIN_VER_DAG_FILE: dict[str, list[str]] = {
     "2.3": ["example_dynamic_task_template.py", "example_bigquery_dynamic_map_task.py"],
     "2.4": ["example_datasets.py"],
+    "2.6.1": ["calculate_popular_movies_by_genre.py"],
 }
 
 # Sort descending based on Versions and convert string to an actual version

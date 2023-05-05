@@ -159,3 +159,10 @@ def test_openlineage_emit_temp_table_event():
     with mock.patch("astro.table.OPENLINEAGE_EMIT_TEMP_TABLE_EVENT", new=False):
         tb = TempTable(name="_tmp_xyz")
         assert tb.openlineage_emit_temp_table_event() is False
+
+
+def test_serialization__deserialization():
+    table = Table(
+        conn_id="postgres_conn",
+    )
+    Table.deserialize(table.serialize(), 1)
