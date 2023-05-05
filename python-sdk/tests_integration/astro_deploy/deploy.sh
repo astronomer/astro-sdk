@@ -48,34 +48,24 @@ ASTRO_ORGANIZATION_ID=$2
 ASTRO_DEPLOYMENT_ID=$3
 ASTRO_KEY_ID=$4
 ASTRO_KEY_SECRET=$5
-ASTRO_DEPLOYMENT_ID_SINGLE_WORKER=$6
-ASTRO_KEY_ID_SINGLE_WORKER=$7
-ASTRO_KEY_SECRET_SINGLE_WORKER=$8
 MASTER_DAG_DOCKERFILE="Dockerfile"
-MASTER_DAG_MUTLI_WORKER_DOCKERFILE="Dockerfile.single_worker"
+# MASTER_DAG_MUTLI_WORKER_DOCKERFILE="Dockerfile.single_worker"
 
 clean
 
 function deploy(){
-    docker_registry_astro=$1
-    organization_id=$2
-    deployment_id=$3
-    key_id=$4
-    key_secret=$5
-    dockerfile=$6
-
     # Build image and deploy
     BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')
-    IMAGE_NAME=${docker_registry_astro}/${organization_id}/${deployment_id}:ci-${BUILD_NUMBER}
-    docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${dockerfile} "${SCRIPT_PATH}"
-    docker login "${docker_registry_astro}" -u "${key_id}" -p "${key_secret}"
+    IMAGE_NAME=${ASTRO_DOCKER_REGISTRY}/${ASTRO_ORGANIZATION_ID}/${ASTRO_DEPLOYMENT_ID}:ci-${BUILD_NUMBER}
+    docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${MASTER_DAG_DOCKERFILE} "${SCRIPT_PATH}"
+    docker login "${ASTRO_DOCKER_REGISTRY}" -u "${ASTRO_KEY_ID}" -p "${ASTRO_KEY_SECRET}"
     docker push "${IMAGE_NAME}"
 
     TOKEN=$( curl --location --request POST "https://auth.astronomer.io/oauth/token" \
         --header "content-type: application/json" \
         --data-raw "{
-            \"client_id\": \"$key_id\",
-            \"client_secret\": \"$key_secret\",
+            \"client_id\": \"$ASTRO_DOCKER_REGISTRY\",
+            \"client_secret\": \"$ASTRO_KEY_SECRET\",
             \"audience\": \"astronomer-ee\",
             \"grant_type\": \"client_credentials\"}" | jq -r '.access_token' )
 
@@ -88,7 +78,7 @@ function deploy(){
             \"query\" : \"mutation imageCreate(\n    \$input: ImageCreateInput!\n) {\n    imageCreate (\n    input: \$input\n) {\n    id\n    tag\n    repository\n    digest\n    env\n    labels\n    deploymentId\n  }\n}\",
             \"variables\" : {
                 \"input\" : {
-                    \"deploymentId\" : \"$deployment_id\",
+                    \"deploymentId\" : \"$ASTRO_DEPLOYMENT_ID\",
                     \"tag\" : \"ci-$BUILD_NUMBER\"
                     }
                 }
@@ -104,11 +94,10 @@ function deploy(){
                     \"input\" : {
                         \"id\" : \"$IMAGE\",
                         \"tag\" : \"ci-$BUILD_NUMBER\",
-                        \"repository\" : \"images.astronomer.cloud/$organization_id/$deployment_id\"
+                        \"repository\" : \"images.astronomer.cloud/$ASTRO_ORGANIZATION_ID/$ASTRO_DEPLOYMENT_ID\"
                         }
                     }
             }"
-
 }
 
 # Copy source files
@@ -120,9 +109,6 @@ cp -r "${PROJECT_PATH}"/README.md "${SCRIPT_PATH}"/python-sdk
 cp -r "${PROJECT_PATH}"/example_dags "${SCRIPT_PATH}"/example_dags
 cp -r "${PROJECT_PATH}"/tests/data "${SCRIPT_PATH}"/tests/data
 
-
-deploy $ASTRO_DOCKER_REGISTRY $ASTRO_ORGANIZATION_ID $ASTRO_DEPLOYMENT_ID $ASTRO_KEY_ID $ASTRO_KEY_SECRET $MASTER_DAG_DOCKERFILE
-
-deploy $ASTRO_DOCKER_REGISTRY $ASTRO_ORGANIZATION_ID $ASTRO_DEPLOYMENT_ID_SINGLE_WORKER $ASTRO_KEY_ID_SINGLE_WORKER $ASTRO_KEY_SECRET_SINGLE_WORKER $MASTER_DAG_MUTLI_WORKER_DOCKERFILE
+deploy
 
 clean
