@@ -16,7 +16,7 @@ set -e
 #         - ASTRO_KEY_SECRET: Astro cloud deployment service account API key secret.
 
 SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-PROJECT_PATH=${SCRIPT_PATH}/../..
+PROJECT_PATH="${SCRIPT_PATH}/../.."
 
 function echo_help() {
     echo "Usage:"
