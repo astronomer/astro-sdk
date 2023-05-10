@@ -73,11 +73,8 @@ function deploy(){
     deployment_id=$(echo $deployment_id | tr '[:upper:]' '[:lower:]')
     IMAGE_NAME=${docker_registry_astro}/${organization_id}/${deployment_id}:ci-${BUILD_NUMBER}
     docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${dockerfile} "${SCRIPT_PATH}"
-    echo "====================1====================="
     docker login "${docker_registry_astro}" -u "${key_id}" -p "${key_secret}"
-    echo "====================2====================="
     docker push "${IMAGE_NAME}"
-    echo "====================3====================="
 
     TOKEN=$( curl --location --request POST "https://auth.astronomer.io/oauth/token" \
         --header "content-type: application/json" \
