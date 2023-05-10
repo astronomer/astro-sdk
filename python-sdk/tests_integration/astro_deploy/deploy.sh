@@ -69,6 +69,8 @@ function deploy(){
 
     # Enforce registry name to be in lowercase
     docker_registry_astro=$(echo $docker_registry_astro | tr '[:upper:]' '[:lower:]')
+    organization_id=$(echo $organization_id | tr '[:upper:]' '[:lower:]')
+    deployment_id=$(echo $deployment_id | tr '[:upper:]' '[:lower:]')
     IMAGE_NAME=${docker_registry_astro}/${organization_id}/${deployment_id}:ci-${BUILD_NUMBER}
     docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${dockerfile} "${SCRIPT_PATH}"
     docker login "${docker_registry_astro}" -u "${key_id}" -p "${key_secret}"
