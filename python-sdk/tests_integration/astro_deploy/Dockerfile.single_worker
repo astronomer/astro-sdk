@@ -1,5 +1,19 @@
 FROM quay.io/astronomer/astro-runtime:7.3.0-base
 
+USER root
+RUN apt-get update -y && apt-get install -y git
+RUN apt-get install -y --no-install-recommends \
+        build-essential \
+        libsasl2-2 \
+        libsasl2-dev \
+        libsasl2-modules \
+        freetds-dev \
+        libssl-dev \
+        libkrb5-dev \
+        libmariadb-dev
+
+ENV SETUPTOOLS_USE_DISTUTILS=stdlib
+
 COPY python-sdk /tmp/python-sdk
 RUN pip install /tmp/python-sdk[all]
 RUN pip install apache-airflow[slack]
