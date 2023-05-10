@@ -72,7 +72,6 @@ function deploy(){
     organization_id=$(echo $organization_id | tr '[:upper:]' '[:lower:]')
     deployment_id=$(echo $deployment_id | tr '[:upper:]' '[:lower:]')
     IMAGE_NAME=${docker_registry_astro}/${organization_id}/${deployment_id}:ci-${BUILD_NUMBER}
-    IMAGE_NAME="images.astronomer.cloud/cknaqyipv05731evsry6cj4n0/cle2pjpom100468k3jxmmkey8w:ci-${BUILD_NUMBER}"
     docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${dockerfile} "${SCRIPT_PATH}"
     echo "====================1====================="
     docker login "${docker_registry_astro}" -u "${key_id}" -p "${key_secret}"
