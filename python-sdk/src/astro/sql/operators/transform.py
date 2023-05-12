@@ -12,6 +12,7 @@ from airflow.decorators.base import get_unique_task_id, task_decorator_factory
 from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
+from astro.settings import ASSUME_SCHEMA_EXISTS
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.utils.compat.typing import Context
 
@@ -33,9 +34,11 @@ class TransformOperator(BaseSQLDecoratedOperator):
         response_size: int = -1,
         sql: str = "",
         task_id: str = "",
+        assume_schema_exists: bool = ASSUME_SCHEMA_EXISTS,
         **kwargs: Any,
     ):
         task_id = task_id or get_unique_task_id("transform")
+        self.assume_schema_exists = assume_schema_exists
         super().__init__(
             conn_id=conn_id,
             parameters=parameters,
@@ -51,7 +54,9 @@ class TransformOperator(BaseSQLDecoratedOperator):
 
     def execute(self, context: Context):
         super().execute(context)
-        self.database_impl.create_schema_if_needed(self.output_table.metadata.schema)
+        self.database_impl.create_schema_if_applicable(
+            self.output_table.metadata.schema, self.assume_schema_exists
+        )
         self.database_impl.drop_table(self.output_table)
         self.database_impl.create_table_from_select_statement(
             statement=self.sql,
@@ -73,6 +78,7 @@ def transform(
     parameters: Mapping | Iterable | None = None,
     database: str | None = None,
     schema: str | None = None,
+    assume_schema_exists: bool = ASSUME_SCHEMA_EXISTS,
     **kwargs: Any,
 ) -> TaskDecorator:
     """
@@ -111,6 +117,7 @@ def transform(
         table.metadata.database in the first Table passed to the function (required if there are no table arguments)
     :param schema: Schema within the SQL instance you want to access. If left blank we will default to the
         table.metadata.schema in the first Table passed to the function (required if there are no table arguments)
+    :param assume_schema_exists: If True, do not check if the output table schema exists or attempt to create it
     :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
     :return: Transform functions return a ``Table`` object that can be passed to future tasks.
         This table will be either an auto-generated temporary table,
@@ -124,6 +131,7 @@ def transform(
             "database": database,
             "schema": schema,
             "handler": None,
+            "assume_schema_exists": assume_schema_exists,
         }
     )
     return task_decorator_factory(
@@ -140,6 +148,7 @@ def transform_file(
     parameters: dict | None = None,
     database: str | None = None,
     schema: str | None = None,
+    assume_schema_exists: bool = ASSUME_SCHEMA_EXISTS,
     **kwargs: Any,
 ) -> XComArg:
     """
@@ -156,6 +165,7 @@ def transform_file(
         table.metadata.database in the first Table passed to the function (required if there are no table arguments)
     :param schema: Schema within the SQL instance you want to access. If left blank we will default to the
         table.metadata.schema in the first Table passed to the function (required if there are no table arguments)
+    :param assume_schema_exists: If True, do not check if the output table schema exists or attempt to create it
     :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
     :return: Transform functions return a ``Table`` object that can be passed to future tasks.
         This table will be either an auto-generated temporary table,
@@ -175,6 +185,7 @@ def transform_file(
         database=database,
         schema=schema,
         sql=file_path,
+        assume_schema_exists=assume_schema_exists,
         python_callable=lambda: (file_path, parameters),
         **kwargs,
     ).output

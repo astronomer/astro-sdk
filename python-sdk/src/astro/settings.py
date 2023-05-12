@@ -75,15 +75,15 @@ RAW_SQL_MAX_RESPONSE_SIZE = conf.getint(section=SECTION_KEY, key="run_raw_sql_re
 # Should Astro SDK automatically add inlets/outlets to take advantage of Airflow 2.4 Data-aware scheduling
 AUTO_ADD_INLETS_OUTLETS = conf.getboolean(SECTION_KEY, "auto_add_inlets_outlets", fallback=True)
 
-LOAD_TABLE_SCHEMA_EXISTS = False
+ASSUME_SCHEMA_EXISTS = False
 
 
 def reload():
     """
     Reload settings from environment variable during runtime.
     """
-    global LOAD_TABLE_SCHEMA_EXISTS  # skipcq: PYL-W0603
-    LOAD_TABLE_SCHEMA_EXISTS = conf.getboolean(SECTION_KEY, "load_table_schema_exists", fallback=False)
+    global ASSUME_SCHEMA_EXISTS  # skipcq: PYL-W0603
+    ASSUME_SCHEMA_EXISTS = conf.getboolean(SECTION_KEY, "assume_schema_exists", fallback=False)
 
 
 reload()
