@@ -131,9 +131,9 @@ Parameters to use when loading a file to a Pandas dataframe
       .. code-block:: python
 
          dataframe = load_file(
-            input_file=File(path),
-            use_native_support=False,
-            load_options=[PandasLoadOptions(dtype={'id': int, 'name': str})],
+             input_file=File(path),
+             use_native_support=False,
+             load_options=[PandasLoadOptions(dtype={"id": int, "name": str})],
          )
 
 Parameters for native transfer
