@@ -18,7 +18,7 @@ from astro.sql import Table
 from astro.table import Metadata
 
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
-ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
+ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_platform")
 ASTRO_S3_BUCKET = os.getenv("S3_BUCKET", "s3://tmp9")
 
 

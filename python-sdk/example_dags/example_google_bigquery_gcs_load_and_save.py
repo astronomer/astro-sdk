@@ -35,7 +35,7 @@ with DAG(
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
-        output_table=Table(name="imdb_movies", conn_id="gcp_conn", metadata=Metadata(schema="astro")),
+        output_table=Table(name="imdb_movies", conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
     )
     # [END load_file_http_example]
 
@@ -59,7 +59,7 @@ with DAG(
         input_data=t1,
         output_file=File(
             path=f"{gcs_bucket}/{{{{ task_instance_key_str }}}}/all_movies.csv",
-            conn_id="gcp_conn",
+            conn_id="google_cloud_platform",
         ),
         if_exists="replace",
     )
@@ -71,7 +71,7 @@ with DAG(
         input_data=t2,
         output_file=File(
             path=f"{gcs_bucket}/{{{{ task_instance_key_str }}}}/top_5_movies.csv",
-            conn_id="gcp_conn",
+            conn_id="google_cloud_platform",
         ),
         if_exists="replace",
     )
