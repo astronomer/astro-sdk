@@ -27,6 +27,7 @@ with DAG(
     schedule_interval=None,
     start_date=timezone.datetime(2022, 1, 1),
     catchup=False,
+    is_paused_upon_creation=False
 ) as dag:
     # [START load_file_http_example]
     t1 = aql.load_file(

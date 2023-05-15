@@ -54,6 +54,7 @@ with DAG(
     schedule=None,
     start_date=START_DATE,
     catchup=False,
+    is_paused_upon_creation=False
 ) as load_dag:
     imdb_movies = aql.load_file(
         input_file=input_file,

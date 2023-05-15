@@ -33,6 +33,7 @@ def aggregate_data(df: pd.DataFrame):
     start_date=datetime(2021, 1, 1),
     schedule_interval=None,
     catchup=False,
+    is_paused_upon_creation=False
 )
 def example_duckdb_load_transform_dataframe_and_save():
     adoption_center_data = aql.load_file(

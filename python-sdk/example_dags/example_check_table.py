@@ -11,6 +11,7 @@ with DAG(
     schedule_interval=None,
     start_date=datetime(2000, 1, 1),
     catchup=False,
+    is_paused_upon_creation=False
 ) as dag:
     # [START data_validation__check_table]
     imdb_movies = aql.load_file(

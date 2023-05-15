@@ -47,6 +47,7 @@ def aggregate_data(df: pd.DataFrame):
         "retry_delay": timedelta(minutes=5),
     },
     catchup=False,
+    is_paused_upon_creation=False
 )
 def example_amazon_s3_snowflake_transform():
     s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
