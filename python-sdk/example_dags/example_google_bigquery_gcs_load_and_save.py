@@ -35,7 +35,7 @@ with DAG(
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
-        output_table=Table(name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")),
+        output_table=Table(name="imdb_movies", conn_id="gcp_conn", metadata=Metadata(schema="astro")),
     )
     # [END load_file_http_example]
 

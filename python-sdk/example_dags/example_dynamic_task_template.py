@@ -22,7 +22,7 @@ from astro.sql.operators.load_file import LoadFileOperator as LoadFile
 from astro.table import Metadata, Table
 
 GCS_BUCKET = os.getenv("GCS_BUCKET", "gs://dag-authoring/dynamic_task/")
-ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
+ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_platform")
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
 QUERY_STATEMENT = os.getenv(
     "ASTRO_BIGQUERY_DATASET",
