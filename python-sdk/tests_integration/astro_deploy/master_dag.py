@@ -77,6 +77,7 @@ def prepare_dag_dependency(task_info, execution_time):
                 reset_dag_run=True,
                 execution_date=execution_time,
                 allowed_states=["success", "failed", "skipped"],
+                retries=3
             )
         )
     return _task_list, _dag_run_ids
