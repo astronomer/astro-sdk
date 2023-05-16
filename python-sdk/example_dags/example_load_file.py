@@ -252,7 +252,7 @@ with dag:
 
     # [START load_file_example_19]
     aql.load_file(
-        input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="gdrive_conn"),
+        input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="google_cloud_platform"),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
