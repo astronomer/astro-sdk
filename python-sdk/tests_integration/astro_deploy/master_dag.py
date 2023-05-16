@@ -104,7 +104,6 @@ with DAG(
     schedule_interval=schedule_interval,
     start_date=datetime(2023, 1, 1),
     catchup=False,
-    max_active_runs=1,
     tags=["astro_skd_master_dag"],
 ) as dag:
     start = PythonOperator(
