@@ -30,7 +30,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
         message_list: List[str] = []
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
-        if Variable.get("RUNTIME_RELEASE"):
+        if Variable.get("IS_RUNTIME_RELEASE") == "TRUE":
             airflow_version_message = f"Results generated with latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} for the below astro-sdk run \n\n"
         else:
             airflow_version_message = f"Airflow version for the below astro-sdk run is `{airflow_version}` \n\n"
