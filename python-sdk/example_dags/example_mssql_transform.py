@@ -61,20 +61,20 @@ with DAG(
     imdb_movies = aql.load_file(
         input_file=File(path="s3://astro-sdk/imdb_v2.csv"),
         task_id="load_csv",
-        output_table=Table(conn_id="mssql_conn"),
+        output_table=Table(conn_id="mysql_conn"),
     )
 
     top_five = top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            conn_id="mssql_conn",
+            conn_id="mysql_conn",
         ),
     )
 
     last_five = last_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            conn_id="mssql_conn",
+            conn_id="mysql_conn",
         ),
     )
 

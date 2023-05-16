@@ -14,26 +14,30 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
 from airflow.models import Variable
+from datetime import datetime, timedelta
 
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 
+is_runtime_release = Variable.get("IS_RUNTIME_RELEASE", default_var="False")
+
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
     """Fetch dags run details and generate report"""
-
 
     with create_session() as session:
         last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
         message_list: List[str] = []
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
-        if Variable.get("IS_RUNTIME_RELEASE") == "TRUE":
+        if is_runtime_release == "TRUE":
             airflow_version_message = f"Results generated with latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} for the below astro-sdk run \n\n"
         else:
-            airflow_version_message = f"Airflow version for the below astro-sdk run is `{airflow_version}` \n\n"
+            airflow_version_message = (
+                f"Airflow version for the below astro-sdk run is `{airflow_version}` \n\n"
+            )
         message_list.append(airflow_version_message)
 
         for dr in last_dags_runs:
@@ -84,19 +88,24 @@ def prepare_dag_dependency(task_info, execution_time):
                 reset_dag_run=True,
                 execution_date=execution_time,
                 allowed_states=["success", "failed", "skipped"],
-                retries=3
+                retries=2,
+                retry_delay=timedelta(seconds=5),
             )
         )
     return _task_list, _dag_run_ids
 
 
+if is_runtime_release == "TRUE":
+    schedule_interval = None
+else:
+    schedule_interval = "@daily"
 with DAG(
     dag_id="example_master_dag",
-    schedule_interval="@daily",
+    schedule_interval=schedule_interval,
     start_date=datetime(2023, 1, 1),
     catchup=False,
     max_active_runs=1,
-    tags=["master_dag"],
+    tags=["astro_skd_master_dag"],
 ) as dag:
     start = PythonOperator(
         task_id="start",
