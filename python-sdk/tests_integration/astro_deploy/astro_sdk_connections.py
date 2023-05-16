@@ -42,8 +42,6 @@ def create_postgres_connection():
         session.add(conn_config)
         session.commit()
 
-@task
-
 
 @task
 def create_snowflake_connection():
@@ -100,7 +98,7 @@ def create_redshift_connection():
         session = settings.Session()
         session.add(redshift_conn_config)
         session.commit()
-
+@task
 def create_gcp_connection():
     gcp_conn_config = Connection(
         conn_id=gcp_conn_id,
@@ -206,6 +204,7 @@ def create_duckdb_connection():
         session.add(duckdb_conn_config)
         session.commit()
 
+@task
 def create_slack_connection():
     slack_conn = Connection(
         conn_id="http_slack",
