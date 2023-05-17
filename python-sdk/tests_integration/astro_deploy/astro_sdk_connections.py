@@ -89,7 +89,7 @@ def create_aws_connection():
     aws_conn_config = Connection(
         conn_id=aws_conn_id,
         conn_type="aws",
-        login="AKIAZG42HVH6QSYQ4PRF",
+        login="AKIAZG42HVH6TCD2Y7QJ",
         password=os.environ["AWS_SECRET_ACCESS_KEY"],
     )
     try:
@@ -228,7 +228,7 @@ def create_slack_connection():
     slack_conn = Connection(
         conn_id="http_slack",
         conn_type="slackwebhook",
-        password=os.environ['SLACK_WEBHOOK'],
+        password=os.environ['SLACK_WEBHOOK_PASSWORD'],
         extra={
             # Specify extra parameters here
             "timeout": "42",
