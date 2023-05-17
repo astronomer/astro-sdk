@@ -117,7 +117,7 @@ with dag:
     # [START load_file_example_7]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
     # [END load_file_example_7]
@@ -125,7 +125,7 @@ with dag:
     # [START load_file_example_8]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
             "ignore_unknown_values": True,
@@ -138,7 +138,7 @@ with dag:
     # [START load_file_example_9]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
             "ignore_unknown_values": True,
@@ -160,7 +160,7 @@ with dag:
     # [START load_file_example_11]
     aql.load_file(
         input_file=File("s3://astro-sdk/sample_pattern", conn_id=AWS_CONN_ID, filetype=FileType.CSV),
-        output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
     # [END load_file_example_11]
@@ -169,10 +169,10 @@ with dag:
     aql.load_file(
         input_file=File(
             "gs://astro-sdk/workspace/sample_pattern",
-            conn_id="bigquery",
+            conn_id="google_cloud_platform",
             filetype=FileType.CSV,
         ),
-        output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
     # [END load_file_example_12]
@@ -193,7 +193,7 @@ with dag:
     aql.load_file(
         input_file=File(
             "gs://astro-sdk/workspace/sample_pattern.csv",
-            conn_id="bigquery",
+            conn_id="google_cloud_platform",
             filetype=FileType.CSV,
         ),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
@@ -227,10 +227,10 @@ with dag:
     aql.load_file(
         input_file=File(
             "gs://astro-sdk/workspace/sample_pattern.csv",
-            conn_id="bigquery",
+            conn_id="google_cloud_platform",
             filetype=FileType.CSV,
         ),
-        output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
             "ignore_unknown_values": True,
