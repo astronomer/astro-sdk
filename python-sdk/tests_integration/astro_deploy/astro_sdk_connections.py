@@ -71,7 +71,7 @@ def create_aws_connection():
         conn_id=aws_conn_id,
         conn_type="aws",
         login="AKIAZG42HVH6QSYQ4PRF",
-        password=os.environ["ASTROSDK_AWS_SECRET_ACCESS_KEY"],
+        password=os.environ["AWS_SECRET_ACCESS_KEY"],
     )
     try:
         conn = BaseHook.get_connection(aws_conn_id)
@@ -130,7 +130,7 @@ def create_mssql_connection():
         port=1433
     )
     try:
-        conn = BaseHook.get_connection(mysql_conn)
+        conn = BaseHook.get_connection(mysql_conn_id)
         print(f"Found: {conn}")
     except AirflowNotFoundException:
         session = settings.Session()
@@ -148,7 +148,7 @@ def create_sftp_connection():
         port=2222
     )
     try:
-        conn = BaseHook.get_connection(sftp_conn_config)
+        conn = BaseHook.get_connection("sftp_conn")
         print(f"Found: {conn}")
     except AirflowNotFoundException:
         session = settings.Session()
@@ -166,7 +166,7 @@ def create_ftp_connection():
         port=21
     )
     try:
-        conn = BaseHook.get_connection(ftp_conn_config)
+        conn = BaseHook.get_connection("ftp_conn")
         print(f"Found: {conn}")
     except AirflowNotFoundException:
         session = settings.Session()
@@ -182,7 +182,7 @@ def create_databricks_connection():
         password=os.environ['DATABRICKS_PASSWORD'],
     )
     try:
-        conn = BaseHook.get_connection(databricks_conn_config)
+        conn = BaseHook.get_connection("databricks_conn")
         print(f"Found: {conn}")
     except AirflowNotFoundException:
         session = settings.Session()
@@ -197,7 +197,7 @@ def create_duckdb_connection():
         host="/tmp/ciduckdb.duckdb",
     )
     try:
-        conn = BaseHook.get_connection(duckdb_conn_config)
+        conn = BaseHook.get_connection("duckdb_conn")
         print(f"Found: {conn}")
     except AirflowNotFoundException:
         session = settings.Session()
@@ -212,7 +212,7 @@ def create_slack_connection():
         password="",
     )
     try:
-        conn = BaseHook.get_connection(slack_conn)
+        conn = BaseHook.get_connection("http_slack")
         print(f"Found: {conn}")
     except AirflowNotFoundException:
         session = settings.Session()
@@ -307,7 +307,7 @@ def setup():
     create_ftp_connection()
     create_databricks_connection()
     create_duckdb_connection()
-   # create_slack_connection()
+    create_slack_connection()
     print_sdk_version = BashOperator(
         task_id="print_sdk_version",
         bash_command='echo ASTRO_SDK_VER="$(pip freeze | grep astro-sdk-python)" ',
