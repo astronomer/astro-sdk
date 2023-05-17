@@ -11,7 +11,8 @@ from airflow.models.taskmixin import TaskMixin
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.operators.bash import BashOperator
-
+from airflow.utils.db import create_default_connections
+from airflow.utils.session import create_session, provide_session
 
 postgres_conn_id = "postgres_conn"
 gcp_conn_id = "google_cloud_platform"
@@ -22,6 +23,10 @@ redshift_conn_id = "redshift_conn"
 mysql_conn_id = "mysql_conn"
 
 
+@task
+def create_defaults():
+    with create_session() as session:
+        create_default_connections(session)
 
 @task
 def create_postgres_connection():
@@ -42,7 +47,21 @@ def create_postgres_connection():
         session.add(conn_config)
         session.commit()
 
-
+@task
+def create_gdrive_connection():
+    gdrive_connection = Connection(
+        conn_id="gdrive_conn",
+        conn_type="google_cloud_platform",
+        extra={"extra__google_cloud_platform__scope":"https://www.googleapis.com/auth/drive.readonly"}
+    )
+    try:
+        conn = BaseHook.get_connection("gdrive_conn")
+        print(f"Found: {conn}")
+        # assuming that if it has the connection id we expect, it also has the contents that we expect
+    except AirflowNotFoundException:
+        session = settings.Session()
+        session.add(gdrive_connection)
+        session.commit()
 @task
 def create_snowflake_connection():
     snowflake_conn_config = Connection(
@@ -208,8 +227,12 @@ def create_duckdb_connection():
 def create_slack_connection():
     slack_conn = Connection(
         conn_id="http_slack",
-        conn_type="slack",
-        password="",
+        conn_type="slackwebhook",
+        password=os.environ['SLACK_WEBHOOK'],
+        extra={
+            # Specify extra parameters here
+            "timeout": "42",
+        },
     )
     try:
         conn = BaseHook.get_connection("http_slack")
@@ -308,6 +331,8 @@ def setup():
     create_databricks_connection()
     create_duckdb_connection()
     create_slack_connection()
+    create_gdrive_connection()
+    create_defaults()
     print_sdk_version = BashOperator(
         task_id="print_sdk_version",
         bash_command='echo ASTRO_SDK_VER="$(pip freeze | grep astro-sdk-python)" ',

@@ -36,7 +36,6 @@ from astro.table import Metadata, Table
 REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN")
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 DATABRICKS_CONN_ID = "databricks_conn"
-MSSQL_CONN_ID = "mssql_conn"
 DUCKDB_CONN_ID = "duckdb_conn"
 AWS_CONN_ID = "aws_conn"
 MYSQL_CONN_ID = "mysql_conn"
@@ -252,7 +251,7 @@ with dag:
 
     # [START load_file_example_19]
     aql.load_file(
-        input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="google_cloud_platform"),
+        input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="gdrive_conn"),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
@@ -353,7 +352,7 @@ with dag:
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
         output_table=Table(
-            conn_id=MSSQL_CONN_ID,
+            conn_id=MYSQL_CONN_ID,
         ),
     )
     # [END load_file_example_26]
