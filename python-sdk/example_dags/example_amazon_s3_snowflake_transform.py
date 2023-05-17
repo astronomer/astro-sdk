@@ -43,11 +43,11 @@ def aggregate_data(df: pd.DataFrame):
     schedule_interval=None,
     default_args={
         "email_on_failure": False,
-        "retries": 0,
-        "retry_delay": timedelta(minutes=5),
+        "retries": 1,
+        "retry_delay": timedelta(seconds=5),
     },
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
 )
 def example_amazon_s3_snowflake_transform():
     s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")

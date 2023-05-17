@@ -22,12 +22,19 @@ import astro.sql as aql
 from astro.files import File
 from astro.table import Metadata, Table
 
+default_args = {
+    "owner": "airflow",
+    "retries": 1,
+    "retry_delay": 0,
+}
+
 with DAG(
     dag_id="example_google_bigquery_gcs_load_and_save",
     schedule_interval=None,
     start_date=timezone.datetime(2022, 1, 1),
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
+    default_args=default_args,
 ) as dag:
     # [START load_file_http_example]
     t1 = aql.load_file(
@@ -35,7 +42,9 @@ with DAG(
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
-        output_table=Table(name="imdb_movies", conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
+        output_table=Table(
+            name="imdb_movies", conn_id="google_cloud_platform", metadata=Metadata(schema="astro")
+        ),
     )
     # [END load_file_http_example]
 

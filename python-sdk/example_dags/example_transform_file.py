@@ -15,7 +15,7 @@ with DAG(
     schedule_interval=None,
     start_date=START_DATE,
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
 ) as dag:
     imdb_movies = aql.load_file(
         input_file=File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"),

@@ -25,7 +25,7 @@ dag = DAG(
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
 )
 
 
@@ -44,7 +44,7 @@ with dag:
     target_table_1 = aql.load_file(
         input_file=File(DATA_DIR + "sample.csv"),
         output_table=Table(
-            conn_id="bigquery",
+            conn_id="google_cloud_platform",
             metadata=Metadata(schema="first_table_schema"),
             columns=[
                 Column(name="id", type_=types.Integer, primary_key=True),
@@ -56,7 +56,7 @@ with dag:
     target_table_2 = aql.load_file(
         input_file=File(DATA_DIR + "sample.csv"),
         output_table=Table(
-            conn_id="bigquery",
+            conn_id="google_cloud_platform",
             metadata=Metadata(schema="first_table_schema"),
             columns=[
                 Column(name="id", type_=types.Integer, primary_key=True),
@@ -67,7 +67,7 @@ with dag:
     source_table = aql.load_file(
         input_file=File(DATA_DIR + "sample_part2.csv"),
         output_table=Table(
-            conn_id="bigquery",
+            conn_id="google_cloud_platform",
             metadata=Metadata(schema="second_table_schema"),
         ),
     )

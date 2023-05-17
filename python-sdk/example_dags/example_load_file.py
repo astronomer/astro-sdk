@@ -54,7 +54,7 @@ dag = DAG(
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
 )
 
 

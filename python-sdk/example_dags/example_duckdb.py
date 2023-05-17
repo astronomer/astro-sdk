@@ -30,7 +30,7 @@ def sql_duck_func(python_1: Table):
 @dag(
     schedule_interval="0 0 * * * *",
     start_date=pendulum.from_format("2023-02-23", "YYYY-MM-DD").in_tz("UTC"),
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
 )
 def pipeline_2():
     python_1 = python_1_func()

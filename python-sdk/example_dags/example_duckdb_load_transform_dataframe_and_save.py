@@ -29,12 +29,7 @@ def aggregate_data(df: pd.DataFrame):
     return new_df
 
 
-@dag(
-    start_date=datetime(2021, 1, 1),
-    schedule_interval=None,
-    catchup=False,
-    is_paused_upon_creation=False
-)
+@dag(start_date=datetime(2021, 1, 1), schedule_interval=None, catchup=False, is_paused_upon_creation=False)
 def example_duckdb_load_transform_dataframe_and_save():
     adoption_center_data = aql.load_file(
         input_file=File("s3://tmp9/ADOPTION_CENTER_2_unquoted.csv", conn_id=AWS_CONN_ID),

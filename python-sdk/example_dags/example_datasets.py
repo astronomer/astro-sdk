@@ -37,6 +37,13 @@ top_animations_table = Table(name="top_animation", conn_id="postgres_conn")
 START_DATE = datetime(2016, 9, 1)
 
 
+default_args = {
+    "owner": "airflow",
+    "retries": 1,
+    "retry_delay": 0,
+}
+
+
 @aql.transform()
 def get_top_five_animations(input_table: Table):  # skipcq: PYL-W0613
     return """
@@ -54,7 +61,7 @@ with DAG(
     schedule=None,
     start_date=START_DATE,
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
 ) as load_dag:
     imdb_movies = aql.load_file(
         input_file=input_file,
@@ -69,6 +76,7 @@ with DAG(
     schedule=[imdb_movies_table],
     start_date=START_DATE,
     catchup=False,
+    default_args=default_args,
 ) as transform_dag:
     top_five_animations = get_top_five_animations(
         input_table=imdb_movies_table,

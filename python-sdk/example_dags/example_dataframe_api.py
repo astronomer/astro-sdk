@@ -18,6 +18,11 @@ API hooks. By requesting the expected data and returning it as a dataframe, our 
 @task or @aql.transform tasks.
 """
 
+default_args = {
+    "owner": "airflow",
+    "retries": 1,
+    "retry_delay": 0,
+}
 # We need deserialization classes for airflow 2.5 with the value where as 2.2.5 we don't need it.
 if airflow.__version__ == "2.2.5":
     ALLOWED_DESERIALIZATION_CLASSES = os.getenv("AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES")
@@ -71,7 +76,8 @@ with DAG(
     schedule_interval=None,
     start_date=START_DATE,
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
+    default_args=default_args,
 ) as dag:
     covid_data = load_and_group_covid_data()
     find_worst_covid_month(covid_data)

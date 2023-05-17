@@ -11,6 +11,13 @@ START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"title": ["Random movie"], "rating": [121]})
 
 
+default_args = {
+    "owner": "airflow",
+    "retries": 1,
+    "retry_delay": 0,
+}
+
+
 @aql.transform()
 def top_five_animations(input_table: Table):  # skipcq: PYL-W0613
     return """
@@ -56,7 +63,8 @@ with DAG(
     schedule_interval=None,
     start_date=START_DATE,
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
+    default_args=default_args,
 ) as dag:
     imdb_movies = aql.load_file(
         input_file=File(path="s3://astro-sdk/imdb_v2.csv"),

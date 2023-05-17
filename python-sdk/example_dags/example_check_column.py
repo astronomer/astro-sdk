@@ -5,12 +5,19 @@ from airflow import DAG
 
 from astro import sql as aql
 
+
+default_args = {
+    "owner": "airflow",
+    "retries": 1,
+    "retry_delay": 0,
+}
 with DAG(
     "data_validation_check_column",
     schedule_interval=None,
     start_date=datetime(2000, 1, 1),
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
+    default_args=default_args,
 ) as dag:
     # [START data_validation__check_column]
     df = pd.DataFrame(
