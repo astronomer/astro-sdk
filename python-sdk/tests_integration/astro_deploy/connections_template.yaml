@@ -7,6 +7,15 @@ connections:
     password: $POSTGRES_PASSWORD
     port: 5432
     extra:
+
+  - conn_id: mysql_conn
+    conn_type: mssql
+    host: astroserver.database.windows.net
+    schema: astrodb
+    login: astrouser
+    password: $MYSQL_PASSWORD
+    port: 1433
+
   - conn_id: google_cloud_platform
     conn_type: google_cloud_platform
     schema: default
@@ -33,10 +42,10 @@ connections:
 
   - conn_id: redshift_conn
     conn_type: redshift
-    schema: $REDSHIFT_DATABASE
-    host: $REDSHIFT_HOST
+    schema: dev
+    host: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
     port: 5439
-    login: $REDSHIFT_USERNAME
+    login: awsuser
     password: $REDSHIFT_PASSWORD
 
   - conn_id: sftp_conn
@@ -69,3 +78,8 @@ connections:
     password: $SLACK_WEBHOOK_PASSWORD
     extra:
        timeout: 42
+
+  - conn_id: gdrive_conn
+    conn_type: google_cloud_platform
+    extra:
+       extra__google_cloud_platform__scope: https://www.googleapis.com/auth/drive.readonly
