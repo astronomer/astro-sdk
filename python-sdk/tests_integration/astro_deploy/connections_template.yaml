@@ -1,7 +1,7 @@
 connections:
   - conn_id: postgres_conn
     conn_type: postgres
-    host: localhost
+    host: database-1.cyoubjkhnirn.us-east-1.rds.amazonaws.com
     schema:
     login: postgres
     password: $POSTGRES_PASSWORD
@@ -18,15 +18,13 @@ connections:
   - conn_id: snowflake_conn
     conn_type: snowflake
     host: https://gp21411.us-east-1.snowflakecomputing.com
-    port: 443
     login: UTKARSHSHARMA
     password: $SNOWFLAKE_PASSWORD
     schema: UTKARSHSHARMA
     extra:
       account: "gp21411"
       region: "us-east-1"
-      role: "AIRFLOW_TEST_USER"
-      warehouse: ROBOTS
+      extra__snowflake__insecure_mode: "false"
       database: SANDBOX
   - conn_id: aws_conn
     conn_type: aws
@@ -68,7 +66,6 @@ connections:
 
   - conn_id: http_slack
     conn_type: slackwebhook
-    host: /tmp/ciduckdb.duckdb
     password: $SLACK_WEBHOOK_PASSWORD
     extra:
        timeout: 42
