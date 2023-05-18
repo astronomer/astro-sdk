@@ -1,0 +1,74 @@
+connections:
+  - conn_id: postgres_conn
+    conn_type: postgres
+    host: localhost
+    schema:
+    login: postgres
+    password: $POSTGRES_PASSWORD
+    port: 5432
+    extra:
+  - conn_id: google_cloud_platform
+    conn_type: google_cloud_platform
+    schema: default
+    extra:
+       extra__google_cloud_platform__project: "astronomer-dag-authoring"
+       extra__google_cloud_platform__keyfile_dict: $GCP_PLATFORM_KEYFILE_SECRET
+       extra__google_cloud_platform__num_retries: 5
+
+  - conn_id: snowflake_conn
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    port: 443
+    login: UTKARSHSHARMA
+    password: $SNOWFLAKE_PASSWORD
+    schema: UTKARSHSHARMA
+    extra:
+      account: "gp21411"
+      region: "us-east-1"
+      role: "AIRFLOW_TEST_USER"
+      warehouse: ROBOTS
+      database: SANDBOX
+  - conn_id: aws_conn
+    conn_type: aws
+    login: "AKIAZG42HVH6TCD2Y7QJ"
+    password: $AWS_SECRET_ACCESS_KEY
+
+  - conn_id: redshift_conn
+    conn_type: redshift
+    schema: $REDSHIFT_DATABASE
+    host: $REDSHIFT_HOST
+    port: 5439
+    login: $REDSHIFT_USERNAME
+    password: $REDSHIFT_PASSWORD
+
+  - conn_id: sftp_conn
+    conn_type: sftp
+    host: "localhost:2222"
+    port: 2222
+    login: "foo"
+    password: $SFTP_PASSWORD
+
+  - conn_id: ftp_conn
+    conn_type: ftp
+    host: "localhost:2222"
+    port: 21
+    login: "foo"
+    password: $SFTP_PASSWORD
+
+  - conn_id: databricks_conn
+    conn_type: delta
+    host: https://dbc-9c390870-65ef.cloud.databricks.com/
+    password: $DATABRICKS_PASSWORD
+    extra:
+      http_path: /sql/1.0/warehouses/cf414a2206dfb397
+
+  - conn_id: duckdb_conn
+    conn_type: duckdb
+    host: /tmp/ciduckdb.duckdb
+
+  - conn_id: http_slack
+    conn_type: slackwebhook
+    host: /tmp/ciduckdb.duckdb
+    password: $SLACK_WEBHOOK_PASSWORD
+    extra:
+       timeout: 42
