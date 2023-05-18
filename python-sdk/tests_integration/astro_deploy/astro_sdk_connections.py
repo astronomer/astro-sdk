@@ -11,31 +11,28 @@ from airflow.utils.session import create_session
 import yaml
 
 
-"""
-
-
-"""
-
-
 connections_yaml = f"{os.environ['AIRFLOW_HOME']}/include/connections_template.yaml"
+
+
 @task
 def replace_env_var_in_yaml():
-    with open(connections_yaml, 'r') as file:
+    with open(connections_yaml, "r") as file:
         yaml_content = yaml.safe_load(file)
 
         # Recursively replace environment variables in the YAML content
     connections_details = recursive_replace_env_vars(yaml_content)
-    with open(connections_yaml, 'w') as file:
-        yaml.dump(connections_details, file, default_flow_style=False)
 
     # Save the modified YAML content back to the file
+    with open(connections_yaml, "w") as file:
+        yaml.dump(connections_details, file, default_flow_style=False)
+
 
 def recursive_replace_env_vars(data):
     if isinstance(data, dict):
         for key, value in data.items():
             if isinstance(value, str):
                 # Check if the string value is an environment variable
-                if value.startswith('$') and value[1:] in os.environ:
+                if value.startswith("$") and value[1:] in os.environ:
                     data[key] = os.environ[value[1:]]
             else:
                 # Recursively replace environment variables in nested data structures
@@ -45,6 +42,8 @@ def recursive_replace_env_vars(data):
         data = [recursive_replace_env_vars(item) for item in data]
 
     return data
+
+
 @task
 def create_connections():
     with open(connections_yaml) as fp:

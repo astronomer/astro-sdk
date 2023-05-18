@@ -35,9 +35,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
         if is_runtime_release == "TRUE":
             airflow_version_message = f"Results generated for latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} with {os.environ['AIRFLOW__CORE__EXECUTOR']}  \n\n"
         else:
-            airflow_version_message = (
-                f"Airflow version for the below astro-sdk run is `{airflow_version}` with {os.environ['AIRFLOW__CORE__EXECUTOR']} \n\n"
-            )
+            airflow_version_message = f"Airflow version for the below astro-sdk run is `{airflow_version}` with {os.environ['AIRFLOW__CORE__EXECUTOR']} \n\n"
         message_list.append(airflow_version_message)
 
         for dr in last_dags_runs:
