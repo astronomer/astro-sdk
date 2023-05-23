@@ -20,11 +20,7 @@ def top_five_animations(input_table: Table):
 
 
 with DAG(
-    "calculate_popular_movies",
-    schedule_interval=None,
-    start_date=datetime(2000, 1, 1),
-    catchup=False,
-    is_paused_upon_creation=False,
+    "calculate_popular_movies", schedule_interval=None, start_date=datetime(2000, 1, 1), catchup=False
 ) as dag:
     imdb_movies = aql.load_file(
         File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"),

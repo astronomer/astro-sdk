@@ -7,11 +7,7 @@ from astro.files import File
 from astro.table import Table
 
 with DAG(
-    "data_validation_check_table",
-    schedule_interval=None,
-    start_date=datetime(2000, 1, 1),
-    catchup=False,
-    is_paused_upon_creation=False,
+    "data_validation_check_table", schedule_interval=None, start_date=datetime(2000, 1, 1), catchup=False
 ) as dag:
     # [START data_validation__check_table]
     imdb_movies = aql.load_file(

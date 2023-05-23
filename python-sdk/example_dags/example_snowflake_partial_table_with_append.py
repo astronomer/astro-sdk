@@ -73,7 +73,6 @@ def create_table(table: Table):
     start_date=datetime(2021, 12, 1),
     schedule_interval=None,
     catchup=False,
-    is_paused_upon_creation=False,
     default_args={
         "email_on_failure": False,
         "retries": 1,

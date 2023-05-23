@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import os
 import pandas as pd
 from airflow import DAG
 
@@ -9,6 +9,8 @@ from astro.table import Table
 
 START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"title": ["Random movie"], "rating": [121]})
+
+ASTRO_SQLITE_DEFAULT_CONN_ID = os.getenv("ASTRO_SQLITE_DEFAULT_CONN_ID", "sqlite_default")
 
 
 # [START transform_example_1]
@@ -69,17 +71,11 @@ def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame)
 # [END transform_example_4]
 
 
-with DAG(
-    "example_transform",
-    schedule_interval=None,
-    start_date=START_DATE,
-    catchup=False,
-    is_paused_upon_creation=False,
-) as dag:
+with DAG("example_transform", schedule_interval=None, start_date=START_DATE, catchup=False) as dag:
     imdb_movies = aql.load_file(
         input_file=File(path="s3://astro-sdk/imdb_v2.csv"),
         task_id="load_csv",
-        output_table=Table(conn_id="sqlite_default"),
+        output_table=Table(conn_id=ASTRO_SQLITE_DEFAULT_CONN_ID),
     )
 
     top_five = top_five_animations(
@@ -92,7 +88,7 @@ with DAG(
     last_five = last_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            conn_id="sqlite_default",
+            conn_id=ASTRO_SQLITE_DEFAULT_CONN_ID,
         ),
     )
 

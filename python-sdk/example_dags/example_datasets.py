@@ -56,13 +56,7 @@ def get_top_five_animations(input_table: Table):  # skipcq: PYL-W0613
 
 
 # [START dataset_producer]
-with DAG(
-    dag_id="example_dataset_producer",
-    schedule=None,
-    start_date=START_DATE,
-    catchup=False,
-    is_paused_upon_creation=False,
-) as load_dag:
+with DAG(dag_id="example_dataset_producer", schedule=None, start_date=START_DATE, catchup=False) as load_dag:
     imdb_movies = aql.load_file(
         input_file=input_file,
         task_id="load_csv",

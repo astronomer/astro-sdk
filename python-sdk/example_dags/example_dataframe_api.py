@@ -76,7 +76,6 @@ with DAG(
     schedule_interval=None,
     start_date=START_DATE,
     catchup=False,
-    is_paused_upon_creation=False,
     default_args=default_args,
 ) as dag:
     covid_data = load_and_group_covid_data()

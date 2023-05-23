@@ -18,7 +18,7 @@ from astro.sql import Table
 from astro.table import Metadata
 
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
-ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_platform")
+ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
 ASTRO_S3_BUCKET = os.getenv("S3_BUCKET", "s3://tmp9")
 
 default_args = {
@@ -44,7 +44,6 @@ with DAG(
     start_date=datetime(2022, 1, 1),
     catchup=False,
     tags=["airflow_version:2.3.0"],
-    is_paused_upon_creation=False,
     default_args=default_args,
 ) as dag:
 

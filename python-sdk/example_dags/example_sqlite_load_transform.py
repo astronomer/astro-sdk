@@ -1,3 +1,4 @@
+import os
 import time
 from datetime import datetime
 
@@ -9,6 +10,8 @@ from astro.sql import drop_table
 from astro.table import Table
 
 START_DATE = datetime(2000, 1, 1)
+
+ASTRO_SQLITE_DEFAULT_CONN_ID = os.getenv("ASTRO_SQLITE_DEFAULT_CONN_ID", "sqlite_default")
 
 
 @aql.transform()
@@ -25,25 +28,21 @@ def get_top_five_animations(input_table: Table):  # skipcq: PYL-W0613
 imdb_movies_name = "imdb_movies" + str(int(time.time()))
 
 with DAG(
-    "example_sqlite_load_transform",
-    schedule_interval=None,
-    start_date=START_DATE,
-    catchup=False,
-    is_paused_upon_creation=False,
+    "example_sqlite_load_transform", schedule_interval=None, start_date=START_DATE, catchup=False
 ) as dag:
     imdb_movies = aql.load_file(
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
         task_id="load_csv",
-        output_table=Table(name=imdb_movies_name, conn_id="sqlite_default"),
+        output_table=Table(name=imdb_movies_name, conn_id=ASTRO_SQLITE_DEFAULT_CONN_ID),
     )
 
     top_five_animations = get_top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
             name="top_animation",
-            conn_id="sqlite_default",
+            conn_id=ASTRO_SQLITE_DEFAULT_CONN_ID,
         ),
     )
     # Note - Using persistent table just to showcase drop_table operator.

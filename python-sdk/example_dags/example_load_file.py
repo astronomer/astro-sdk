@@ -4,7 +4,7 @@ Pre-requisites for load_file_example_19:
  - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
     with the file path to the service account.
  - In the connection we need to specfiy the scopes.
-    Connection variable is ``extra__google_cloud_platform__scope``
+    Connection variable is ``extra__google_cloud_default__scope``
     or in Airflow Connections UI ``Scopes (comma separated)``
     For ex:- https://www.googleapis.com/auth/drive.readonly
     Please refer to https://developers.google.com/identity/protocols/oauth2/scopes#drive for more details.
@@ -41,6 +41,12 @@ AWS_CONN_ID = "aws_conn"
 MYSQL_CONN_ID = "mysql_conn"
 
 CWD = pathlib.Path(__file__).parent
+
+ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
+ASTRO_POSTGRESS_CONN_ID = os.getenv("ASTRO_POSTGRESS_CONN_ID", "postgres_conn")
+ASTRO_REDSHIFT_CONN_ID = os.getenv("ASTRO_REDSHIFT_CONN_ID", "redshift_conn")
+
+
 default_args = {
     "owner": "airflow",
     "retries": 1,
@@ -54,7 +60,6 @@ dag = DAG(
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
-    is_paused_upon_creation=False,
 )
 
 
@@ -63,7 +68,7 @@ with dag:
     my_homes_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
-            conn_id="postgres_conn",
+            conn_id=ASTRO_POSTGRESS_CONN_ID,
         ),
     )
     # [END load_file_example_1]
@@ -78,7 +83,7 @@ with dag:
     sample_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.ndjson"),
         output_table=Table(
-            conn_id="postgres_conn",
+            conn_id=ASTRO_POSTGRESS_CONN_ID,
         ),
         ndjson_normalize_sep="__",
     )
@@ -88,7 +93,7 @@ with dag:
     new_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
-            conn_id="postgres_conn",
+            conn_id=ASTRO_POSTGRESS_CONN_ID,
         ),
         if_exists="replace",
     )
@@ -98,7 +103,7 @@ with dag:
     custom_schema_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
-            conn_id="postgres_conn",
+            conn_id=ASTRO_POSTGRESS_CONN_ID,
             columns=[
                 sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                 sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
@@ -117,7 +122,7 @@ with dag:
     # [START load_file_example_7]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_GCP_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
     # [END load_file_example_7]
@@ -125,7 +130,7 @@ with dag:
     # [START load_file_example_8]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_GCP_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
             "ignore_unknown_values": True,
@@ -138,7 +143,7 @@ with dag:
     # [START load_file_example_9]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_GCP_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
             "ignore_unknown_values": True,
@@ -152,7 +157,7 @@ with dag:
     my_homes_table = aql.load_file(
         input_file=File(path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV),
         output_table=Table(
-            conn_id="postgres_conn",
+            conn_id=ASTRO_POSTGRESS_CONN_ID,
         ),
     )
     # [END load_file_example_10]
@@ -160,7 +165,7 @@ with dag:
     # [START load_file_example_11]
     aql.load_file(
         input_file=File("s3://astro-sdk/sample_pattern", conn_id=AWS_CONN_ID, filetype=FileType.CSV),
-        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_GCP_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
     # [END load_file_example_11]
@@ -169,10 +174,10 @@ with dag:
     aql.load_file(
         input_file=File(
             "gs://astro-sdk/workspace/sample_pattern",
-            conn_id="google_cloud_platform",
+            conn_id=ASTRO_GCP_CONN_ID,
             filetype=FileType.CSV,
         ),
-        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_GCP_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
     # [END load_file_example_12]
@@ -184,7 +189,7 @@ with dag:
             conn_id=AWS_CONN_ID,
             filetype=FileType.CSV,
         ),
-        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_REDSHIFT_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
     # [END load_file_example_13]
@@ -193,10 +198,10 @@ with dag:
     aql.load_file(
         input_file=File(
             "gs://astro-sdk/workspace/sample_pattern.csv",
-            conn_id="google_cloud_platform",
+            conn_id=ASTRO_GCP_CONN_ID,
             filetype=FileType.CSV,
         ),
-        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_REDSHIFT_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
     # [END load_file_example_14]
@@ -213,7 +218,7 @@ with dag:
     # [START load_file_example_16]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id=AWS_CONN_ID),
-        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_REDSHIFT_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
             "IGNOREHEADER": 1,
@@ -227,10 +232,10 @@ with dag:
     aql.load_file(
         input_file=File(
             "gs://astro-sdk/workspace/sample_pattern.csv",
-            conn_id="google_cloud_platform",
+            conn_id=ASTRO_GCP_CONN_ID,
             filetype=FileType.CSV,
         ),
-        output_table=Table(conn_id="google_cloud_platform", metadata=Metadata(schema="astro")),
+        output_table=Table(conn_id=ASTRO_GCP_CONN_ID, metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
             "ignore_unknown_values": True,

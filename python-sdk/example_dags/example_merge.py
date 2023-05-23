@@ -1,3 +1,4 @@
+import os
 import pathlib
 from datetime import datetime
 
@@ -18,6 +19,7 @@ default_args = {
     "retry_delay": 0,
 }
 
+ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
 dag = DAG(
     dag_id="example_merge_bigquery",
     start_date=datetime(2019, 1, 1),
@@ -25,7 +27,6 @@ dag = DAG(
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
-    is_paused_upon_creation=False,
 )
 
 
@@ -44,7 +45,7 @@ with dag:
     target_table_1 = aql.load_file(
         input_file=File(DATA_DIR + "sample.csv"),
         output_table=Table(
-            conn_id="google_cloud_platform",
+            conn_id=ASTRO_GCP_CONN_ID,
             metadata=Metadata(schema="first_table_schema"),
             columns=[
                 Column(name="id", type_=types.Integer, primary_key=True),
@@ -56,7 +57,7 @@ with dag:
     target_table_2 = aql.load_file(
         input_file=File(DATA_DIR + "sample.csv"),
         output_table=Table(
-            conn_id="google_cloud_platform",
+            conn_id=ASTRO_GCP_CONN_ID,
             metadata=Metadata(schema="first_table_schema"),
             columns=[
                 Column(name="id", type_=types.Integer, primary_key=True),
@@ -67,7 +68,7 @@ with dag:
     source_table = aql.load_file(
         input_file=File(DATA_DIR + "sample_part2.csv"),
         output_table=Table(
-            conn_id="google_cloud_platform",
+            conn_id=ASTRO_GCP_CONN_ID,
             metadata=Metadata(schema="second_table_schema"),
         ),
     )

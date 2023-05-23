@@ -13,15 +13,13 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
-from airflow.models import Variable
 from datetime import datetime, timedelta
 
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
-
-is_runtime_release = Variable.get("IS_RUNTIME_RELEASE", default_var="False")
+IS_RUNTIME_RELEASE = bool(os.getenv("IS_RUNTIME_RELEASE", False))
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
@@ -32,7 +30,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
         message_list: List[str] = []
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
-        if is_runtime_release == "TRUE":
+        if IS_RUNTIME_RELEASE:
             airflow_version_message = f"Results generated for latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} with {os.environ['AIRFLOW__CORE__EXECUTOR']}  \n\n"
         else:
             airflow_version_message = f"Airflow version for the below astro-sdk run is `{airflow_version}` with {os.environ['AIRFLOW__CORE__EXECUTOR']} \n\n"
@@ -91,7 +89,7 @@ def prepare_dag_dependency(task_info, execution_time):
     return _task_list, _dag_run_ids
 
 
-if is_runtime_release == "TRUE":
+if IS_RUNTIME_RELEASE:
     schedule_interval = None
 else:
     schedule_interval = "@daily"
