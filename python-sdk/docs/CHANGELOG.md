@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.4
+
+### Bug Fixes
+
+- Fix AstroCustomXcomBackend circular import issue. [#1943](https://github.com/astronomer/astro-sdk/pull/1943)
+
+
 ## 1.5.3
 
 ### Bug Fixes
