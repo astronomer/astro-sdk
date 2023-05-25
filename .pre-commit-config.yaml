@@ -65,7 +65,7 @@ repos:
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.265'
+    rev: 'v0.0.267'
     hooks:
       - id: ruff
         args:
@@ -80,7 +80,7 @@ repos:
         types: [text]
         exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/modified_constraint_file.txt$|^python-sdk/tests/benchmark/Makefile$
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v1.2.0'
+      rev: 'v1.3.0'
       hooks:
       - id: mypy
         name: mypy-python-sdk
