@@ -9,11 +9,11 @@ This example DAG creates the reporting table & truncates it by the end of the ex
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas as pd
 from airflow.decorators import dag
-from datetime import datetime, timedelta
+
 from astro.files import File
 from astro.sql import append, cleanup, dataframe, load_file, run_raw_sql, transform
 from astro.table import Metadata, Table

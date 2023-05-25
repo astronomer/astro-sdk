@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from datetime import datetime
 from typing import Any, List
 
 from airflow import DAG
@@ -12,8 +13,6 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
-from datetime import datetime
-
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
