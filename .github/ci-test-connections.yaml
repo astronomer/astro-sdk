@@ -84,7 +84,6 @@ connections:
     password: $REDSHIFT_PASSWORD
   - conn_id: redshift_default
     conn_type: redshift
-    host: $REDSHIFT_HOST
     port: 5439
     extra:
       iam: false
