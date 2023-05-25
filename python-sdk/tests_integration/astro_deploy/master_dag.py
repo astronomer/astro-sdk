@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-from datetime import datetime
 from typing import Any, List
 
 from airflow import DAG
@@ -13,7 +12,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
@@ -98,7 +97,7 @@ with DAG(
     schedule_interval=schedule_interval,
     start_date=datetime(2023, 1, 1),
     catchup=False,
-    tags=["astro_sdk_master_dag"],
+    tags=["master_dag"],
 ) as dag:
     start = PythonOperator(
         task_id="start",
