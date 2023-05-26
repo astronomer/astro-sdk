@@ -82,6 +82,17 @@ connections:
     port: 5439
     login: $REDSHIFT_USERNAME
     password: $REDSHIFT_PASSWORD
+  - conn_id: redshift_default
+    conn_type: redshift
+    port: 5439
+    extra:
+      iam: false
+      cluster_identifier: <REDSHIFT_CLUSTER_IDENTIFIER>
+      profile: default
+      db_user: awsuser
+      port: 5439,
+      database: dev
+      region: 'us-east-1'
   - conn_id: s3_conn_benchmark
     conn_type: aws
     description: null
