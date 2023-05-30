@@ -11,12 +11,16 @@ from astro.files.locations.base import BaseFileLocation
 from astro.options import contains_required_option
 
 
+class WASBLocationException(Exception):
+    pass
+
+
 class WASBLocation(BaseFileLocation):
     """Handler WASB object store operations"""
 
     location_type = FileLocation.WASB
     supported_conn_type = {WasbHook.conn_type, "wasbs"}
-    LOAD_OPTIONS_CLASS_NAME = "WASBLocationLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = ("WASBLocationLoadOptions",)
     AZURE_HOST = "blob.core.windows.net"
 
     def exists(self) -> bool:
@@ -105,7 +109,7 @@ class WASBLocation(BaseFileLocation):
         """
         if not contains_required_option(self.load_options, "storage_account"):
             raise ValueError(
-                f"Required param missing 'storage_account', pass {self.LOAD_OPTIONS_CLASS_NAME}"
+                f"Required param missing 'storage_account', pass {self.LOAD_OPTIONS_CLASS_NAME[0]}"
                 f"(storage_account=<account_name>) to load_options"
             )
         url = urlparse(self.path)
@@ -115,3 +119,40 @@ class WASBLocation(BaseFileLocation):
             netloc=f"{self.load_options.storage_account}.{self.AZURE_HOST}",  # type: ignore
         )
         return url.geturl()
+
+    def databricks_auth_settings(self) -> dict:
+        """
+        Required settings to transfer files in/to Databricks. Currently relies on storage account access key,
+        as described in:
+        https://docs.databricks.com/storage/azure-storage.html
+
+        :return: A dictionary of settings keys to settings values
+        """
+        urlparse(self.path)
+        account_name = self.hook.get_conn().account_name
+
+        try:
+            access_key = self.hook.get_connection(conn_id=self.conn_id).extra_dejson["shared_access_key"]
+        except KeyError:
+            raise WASBLocationException(
+                "The connection extras must define `shared_access_key` for transfers from BlobStorage to Databricks"
+            )
+
+        cred_dict = {f"fs.azure.account.key.{account_name}.blob.core.windows.net": access_key}
+        return cred_dict
+
+    @property
+    def databricks_uri(self) -> str:
+        """
+        Return a Databricks compatible WASB URI, including the Azure storage account host.
+        Example: wasb://astro-sdk@astrosdk.blob.core.windows.net/homes.csv
+
+        :return: self.path, including the Azure storage account host
+        """
+        new_path = self.path
+        parsed_uri = urlparse(self.path)
+        if "@" not in parsed_uri.netloc:
+            account_name = self.hook.get_conn().account_name
+            new_netloc = f"{parsed_uri.netloc}@{account_name}.blob.core.windows.net"
+            new_path = self.path.replace(parsed_uri.netloc, new_netloc)
+        return new_path

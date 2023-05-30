@@ -24,6 +24,7 @@ DATABASE_NAME_TO_CONN_ID = {
     Database.DELTA: "databricks_conn",
     Database.MSSQL: "mssql_conn",
     Database.DUCKDB: "duckdb_conn",
+    Database.MYSQL: "mysql_conn",
 }
 
 
@@ -81,7 +82,7 @@ def database_table_fixture(request):
     file = params.get("file")
 
     database.populate_table_metadata(table)
-    database.create_schema_if_needed(table.metadata.schema)
+    database.create_schema_if_applicable(table.metadata.schema)
 
     if file:
         database.load_file_to_table(file, table)

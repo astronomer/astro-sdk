@@ -45,9 +45,13 @@ DEFAULT_FILEPATH_MSSQL = str(pathlib.Path(CWD.parent.parent, "data/sample_withou
             "database": Database.DUCKDB,
             "file": File(DEFAULT_FILEPATH),
         },
+        {
+            "database": Database.MYSQL,
+            "file": File(DEFAULT_FILEPATH),
+        },
     ],
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake", "redshift", "duckdb"],
+    ids=["sqlite", "postgres", "bigquery", "snowflake", "redshift", "duckdb", "mysql"],
 )
 def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
@@ -133,24 +137,27 @@ def test_drop_table_with_table_metadata_mssql(database_table_fixture, sample_dag
         },
         {
             "database": Database.DUCKDB,
-            "table": Table(conn_id="redshift_conn"),
+            "table": Table(conn_id="duckdb_conn"),
+            "file": File(DEFAULT_FILEPATH),
+        },
+        {
+            "database": Database.MYSQL,
+            "table": Table(conn_id="mysql_conn"),
             "file": File(DEFAULT_FILEPATH),
         },
     ],
     indirect=True,
-    ids=["postgres", "redshift", "duckdb"],
+    ids=["postgres", "redshift", "duckdb", "mysql"],
 )
 def test_drop_table_without_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
     database, test_table = database_table_fixture
     assert database.table_exists(test_table)
-
     with sample_dag:
         aql.drop_table(
             table=test_table,
         )
     test_utils.run_dag(sample_dag)
-
     assert not database.table_exists(test_table)
 
 

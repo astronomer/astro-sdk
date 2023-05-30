@@ -1,5 +1,86 @@
 # Changelog
 
+## 1.7.0a2
+
+### Feature
+- Allow users to disable schema check and creation on `transform` [#1925](https://github.com/astronomer/astro-sdk/pull/1925)
+- Allow users to disable schema check and creation on `load_file` [#1922](https://github.com/astronomer/astro-sdk/pull/1922)
+
+
+## 1.6.1
+
+### Bug Fixes
+
+- Fix AstroCustomXcomBackend circular import issue. [#1943](https://github.com/astronomer/astro-sdk/pull/1943)
+
+
+## 1.6.0
+
+### Feature
+- Add MySQL support [#1801](https://github.com/astronomer/astro-sdk/pull/1801)
+- Add support to load from Azure blob storage into Databricks [#1561](https://github.com/astronomer/astro-sdk/pull/1561)
+- Add argument  `skip_on_failure` to `CleanupOperator` [#1837](https://github.com/astronomer/astro-sdk/pull/1837) by @scottleechua
+- Add `query_modifier` to `raw_sql`, `transform` and `transform_file`, which allow users to define SQL statements to be run before the main query statement [#1898](https://github.com/astronomer/astro-sdk/pull/1898).
+  Example of how to use this feature can be used to add Snowflake query tags to a SQL statement:
+  ```python
+  from astro.query_modifier import QueryModifier
+
+
+  @aql.run_raw_sql(
+      results_format="pandas_dataframe",
+      conn_id="sqlite_default",
+      query_modifier=QueryModifier(pre_queries=["ALTER team_1", "ALTER team_2"]),
+  )
+  def dummy_method():
+      return "SELECT 1+1"
+  ```
+- Upgrade astro-runtime to 7.4.2 [#1878](https://github.com/astronomer/astro-sdk/pull/1878)
+
+### Bug fix:
+- Raise exception in case larger dataframes than expected are passed to `aql.dataframe` [#1839](https://github.com/astronomer/astro-sdk/pull/1839)
+- Revert breaking change introduced in 1.5.0, re-allowing `aql.transform` to receive `sql filepath [#1879](https://github.com/astronomer/astro-sdk/pull/1879)
+
+### Docs
+- Update open lineage documentation [#1881](https://github.com/astronomer/astro-sdk/pull/1881)
+
+### Misc
+- Support Apache Airflow 2.6 [#1899](https://github.com/astronomer/astro-sdk/pull/1899), with internal serialization changes
+- Add basic `tiltifle` for local dev [#1819](https://github.com/astronomer/astro-sdk/pull/1819)
+
+
+## 1.5.4
+### Bug Fixes
+- Fix AstroCustomXcomBackend circular import issue. [#1943](https://github.com/astronomer/astro-sdk/pull/1943)
+
+
+## 1.5.3
+
+### Bug fix:
+
+- Support using SQL operators (`run_raw_sql`, `transform`, `dataframe`) to convert a Pandas dataframe into a table when using a DuckDB in-memory
+database. [#1848](https://github.com/astronomer/astro-sdk/pull/1848).
+- Fix code coverage issues [#1815](https://github.com/astronomer/astro-sdk/pull/1815)
+- Upgrade astro-runtime to 7.4.1 [#1858](https://github.com/astronomer/astro-sdk/pull/1858)
+
+
+## 1.5.2
+
+### Improvements
+- Restore pandas load option classes - `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` [#1795](https://github.com/astronomer/astro-sdk/pull/1795)
+
+
+## 1.5.1
+
+### Improvements
+- Add Openlineage facets for Microsoft SQL server. [#1752](https://github.com/astronomer/astro-sdk/pull/1752)
+
+### Bug fixes
+- Use `use_native_support` param in load_file operator for table creation. [#1756](https://github.com/astronomer/astro-sdk/pull/1756)
+- Resolved `pandas-gbq` dependency issue. [#1768](https://github.com/astronomer/astro-sdk/pull/1768)
+- Fix Minio support for Snowflake. [#1767](https://github.com/astronomer/astro-sdk/pull/1767)
+- Add handler param in database.run_sql() method [1773](https://github.com/astronomer/astro-sdk/pull/1773)
+
+
 ## 1.5.0
 
 ### Feature:
@@ -13,7 +94,6 @@
 - Use cache to reduce redundant database calls [#1488](https://github.com/astronomer/astro-sdk/pull/1488)
 - Remove default `copy_options` as part of `SnowflakeLoadOptions`. All `copy_options` are now supported as part of `SnowflakeLoadOptions` as per [documentation](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions). [#1689](https://github.com/astronomer/astro-sdk/pull/1689)
 - Remove `load_options` from `File` object. [#1721](https://github.com/astronomer/astro-sdk/pull/1721)
-- Consolidated `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` to single `PandasLoadOptions`. [#1722](https://github.com/astronomer/astro-sdk/pull/1722)
 - Render SQL code with parameters in BaseSQLDecoratedOperator. [#897](https://github.com/astronomer/astro-sdk/pull/897)
 
 ### Bug fixes
@@ -29,6 +109,9 @@
 ### Misc
 - Add cleanup DAG to clean snowflake tables created as part of CI when the runners fail as part of GitHub actions. [#1663](https://github.com/astronomer/astro-sdk/issues/1663)
 - Run example DAGs on astro-cloud and collect the results. [#1499](https://github.com/astronomer/astro-sdk/pull/1499)
+
+### Breaking Change
+- Consolidated `PandasCsvLoadOptions`, `PandasJsonLoadOptions`, `PandasNdjsonLoadOptions` and `PandasParquetLoadOptions` to single `PandasLoadOptions`. [#1722](https://github.com/astronomer/astro-sdk/pull/1722)
 
 
 ## 1.4.1

@@ -1,0 +1,13 @@
+.coverage
+.env
+.git
+.idea
+.mypy_cache
+.nox
+.pytest_cache
+__pycache__
+docs
+example_dags
+mk
+tests
+dev/logs

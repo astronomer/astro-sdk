@@ -4,7 +4,7 @@ from unittest import mock
 
 import pandas as pd
 
-from astro.dataframes.load_options import PandasLoadOptions
+from astro.dataframes.load_options import PandasCsvLoadOptions, PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import CSVFileType
 
@@ -26,6 +26,16 @@ def test_read_csv_file_with_pandas_opts(mock_read_csv):
     """Test pandas option get pass to read_csv"""
     path = str(sample_file.absolute())
     csv_type = CSVFileType(path, load_options=PandasLoadOptions(delimiter="$"))
+    with open(path) as file:
+        csv_type.export_to_dataframe(file)
+    mock_read_csv.assert_called_once_with(file, delimiter="$")
+
+
+@mock.patch("astro.files.types.csv.pd.read_csv")
+def test_read_csv_file_with_pandas_opts_with_deprecated_load_options(mock_read_csv):
+    """Test pandas option get pass to read_csv"""
+    path = str(sample_file.absolute())
+    csv_type = CSVFileType(path, load_options=PandasCsvLoadOptions(delimiter="$"))
     with open(path) as file:
         csv_type.export_to_dataframe(file)
     mock_read_csv.assert_called_once_with(file, delimiter="$")

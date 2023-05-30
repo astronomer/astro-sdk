@@ -4,10 +4,12 @@ import time
 from datetime import timedelta
 from typing import Any
 
+from airflow import __version__ as airflow_version
 from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
+from packaging import version
 
 try:
     # Airflow >= 2.3
@@ -73,6 +75,8 @@ class CleanupOperator(AstroSQLBaseOperator):
     :param run_sync_mode: Whether to wait for the DAG to finish or not. Set to True if you want
         to immediately clean all tables. Note that if you supply anything to `tables_to_cleanup`
         this argument is ignored.
+    :param skip_on_failure: Skip cleanup if any upstream task fails. Useful while debugging failed tasks,
+        to prevent temporary tables upstream from being deleted prematurely. The default is False.
     """
 
     template_fields = ("tables_to_cleanup",)
@@ -85,10 +89,12 @@ class CleanupOperator(AstroSQLBaseOperator):
         retries: int = 3,
         retry_delay: timedelta = timedelta(seconds=10),
         run_sync_mode: bool = False,
+        skip_on_failure: bool = False,
         **kwargs,
     ):
         self.tables_to_cleanup = tables_to_cleanup or []
         self.run_immediately = run_sync_mode
+        self.skip_on_failure = skip_on_failure
         task_id = task_id or get_unique_task_id("cleanup")
 
         super().__init__(task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs)
@@ -100,6 +106,10 @@ class CleanupOperator(AstroSQLBaseOperator):
             if not self.run_immediately:
                 self.wait_for_dag_to_finish(context)
             self.tables_to_cleanup = self.get_all_task_outputs(context=context)
+        if self.skip_on_failure:
+            task_instances = context["dag_run"].get_task_instances()
+            if self._has_task_failed(task_instances=task_instances):
+                return None
         temp_tables = filter_for_temp_tables(self.tables_to_cleanup)
         self.log.info(
             "Tables found for cleanup: %s",
@@ -112,6 +122,27 @@ class CleanupOperator(AstroSQLBaseOperator):
         db = create_database(conn_id=table.conn_id, table=table)
         self.log.info("Dropping table %s", table.name)
         db.drop_table(table)
+
+    def _has_task_failed(self, task_instances: list[TaskInstance]) -> bool:
+        """
+        Given a list of task instances, return True if at least one task has failed.
+
+        :param task_instances:
+        :return: boolean if at least one task besides this one has failed
+        """
+        failed_tasks = [
+            (ti.task_id, ti.state)
+            for ti in task_instances
+            if ti.task_id != self.task_id and ti.state == State.FAILED
+        ]
+        if failed_tasks:
+            self.log.info(
+                "skipping cleanup as the following tasks have failed: %s",
+                failed_tasks,
+            )
+            return True
+        else:
+            return False
 
     def _is_dag_running(self, task_instances: list[TaskInstance]) -> bool:
         """
@@ -186,11 +217,14 @@ class CleanupOperator(AstroSQLBaseOperator):
 
     @staticmethod
     def _get_executor_from_job_id(job_id: int) -> str | None:
-        from airflow.jobs.base_job import BaseJob
+        if version.parse(airflow_version) >= version.parse("2.6"):
+            from airflow.jobs.job import Job
+        else:
+            from airflow.jobs.base_job import BaseJob as Job
         from airflow.utils.session import create_session
 
         with create_session() as session:
-            job = session.get(BaseJob, job_id)
+            job = session.get(Job, job_id)
         return job.executor_class if job else None
 
     def get_all_task_outputs(self, context: Context) -> list[BaseTable]:

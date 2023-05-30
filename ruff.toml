@@ -35,4 +35,4 @@ max-complexity = 6
 
 [isort]
 combine-as-imports = true
-known-first-party = ["astro", "tests", "sql_cli"]
+known-first-party = ["astro", "tests"]

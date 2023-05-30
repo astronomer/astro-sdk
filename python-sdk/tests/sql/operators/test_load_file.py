@@ -1,5 +1,6 @@
 import os
 import pathlib
+import warnings
 from unittest import mock
 
 import pandas as pd
@@ -8,6 +9,7 @@ import pytest
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
+from astro.dataframes.load_options import PandasCsvLoadOptions
 from astro.files import File
 from astro.sql.operators.load_file import LoadFileOperator, load_file
 from astro.table import Metadata, Table
@@ -204,3 +206,19 @@ def test_load_file_native_support_kwargs_warnings_message(database_table_fixture
             if_exists=if_exists,
             native_support_kwargs={"dummy": "dummy"},
         )
+
+
+def test_deprecation_warning_for_loadoptions():
+    path = str(CWD) + "/../../data/homes_main.csv"
+    with warnings.catch_warnings(record=True) as warn:
+        load_file(
+            input_file=File(path),
+            output_table=Table(conn_id="sqlite_default"),
+            use_native_support=False,
+            load_options=PandasCsvLoadOptions(delimiter="$"),
+        )
+    assert (
+        "`PandasCsvLoadOptions` will be replaced by `astro.dataframes.load_options.PandasLoadOptions` in"
+        " astro-sdk-python>=2.0.0. Please use `astro.dataframes.load_options.PandasLoadOptions` class instead."
+        in [str(w.message) for w in warn]
+    )

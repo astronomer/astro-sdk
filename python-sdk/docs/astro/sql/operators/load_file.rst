@@ -43,6 +43,8 @@ Parameters to use when loading a file to a database table
 
     Note that if you use ``if_exists='replace'``, the existing table will be dropped and the schema of the new data will be used.
 
+#. **assume_schema_exists** (default is False) - By default, the SDK checks if the schema of the target table exists, and if not, it tries to create it. This query can be costly. This argument makes the SDK skip this check, since the user is informing the schema already exists.
+
 #. **output_table** - This parameter defines the output table to load data to, which should be an instance of ``astro.sql.table.Table``. You can specify the schema of the table by providing a list of the instance of ``sqlalchemy.Column <https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Column>`` to the ``columns`` parameter. If you don't specify a schema, it will be inferred using Pandas.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
@@ -118,8 +120,21 @@ Parameters to use when loading a file to a Pandas dataframe
        :start-after: [START load_file_example_6]
        :end-before: [END load_file_example_6]
 
-#. **load_options** - :ref:`load_options`
+#. **load_options** - Use :ref:`load_options` to configure how the SDK loads data from your file to the dataframe.
 
+   .. note::
+
+      Depending on the file type you provide, the Astro SDK uses `read_csv <https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html#pandas-read-csv>`_, `read_json <https://pandas.pydata.org/docs/reference/api/pandas.read_json.html>`_, or `read_parquet <https://pandas.pydata.org/docs/reference/api/pandas.read_parquet.html>`_ to parse your file and load it to a dataframe. If the Astro SDK fails to automatically load data from your file to a dataframe, configure `dtype <https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html>`_ in :ref:`load_options` to manually specify the schema for the dataframe.
+
+      For example, to load data from a `.csv` file with two columns, `id` and `name`, you would add the following to your code:
+
+      .. code-block:: python
+
+         dataframe = load_file(
+             input_file=File(path),
+             use_native_support=False,
+             load_options=[PandasLoadOptions(dtype={"id": int, "name": str})],
+         )
 
 Parameters for native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -197,10 +212,14 @@ Supported native transfers
      - Redshift
      - https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html
      - https://docs.aws.amazon.com/redshift/latest/dg/c-getting-started-using-spectrum-create-role.html
-   * - Azure
+   * - Azure Blob Storage (WASB)
      - Snowflake
      - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
      - https://docs.snowflake.com/en/user-guide/data-load-azure-config.html
+   * - Azure Blob Storage (WASB)
+     - Databricks
+     - Use a WASB connection which defines ``host`` and ``extras.shared_access_key``
+     - https://docs.databricks.com/storage/azure-storage.html#access-azure-data-lake-storage-gen2-or-blob-storage-using-the-account-key
 
 .. note::
    For loading from S3 to Redshift database, although Redshift allows the below two options for authorization, **we
@@ -248,6 +267,17 @@ Loading to Duckdb
    :language: python
    :start-after: [START load_file_example_27]
    :end-before: [END load_file_example_27]
+
+Loading to MySQL
+~~~~~~~~~~~~~~~~~
+
+``load_file`` can load data to MySQL database hosted on cloud or on-premise server.
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_28]
+   :end-before: [END load_file_example_28]
+
 
 
 Patterns in file path

@@ -29,7 +29,13 @@ from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.options import LoadOptions
-from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
+from astro.query_modifier import QueryModifier
+from astro.settings import (
+    ASSUME_SCHEMA_EXISTS,
+    LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+    LOAD_TABLE_AUTODETECT_ROWS_COUNT,
+    SCHEMA,
+)
 from astro.table import BaseTable, Metadata
 from astro.utils.compat.functools import cached_property
 
@@ -73,6 +79,7 @@ class BaseDatabase(ABC):
         self.conn_id = conn_id
         self.sql: str | ClauseElement = ""
         self.load_options = load_options
+        self.table = table
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
@@ -101,6 +108,7 @@ class BaseDatabase(ABC):
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
         handler: Callable | None = None,
+        query_modifier: QueryModifier = QueryModifier(),
         **kwargs,
     ) -> Any:
         """
@@ -109,6 +117,7 @@ class BaseDatabase(ABC):
         Whenever possible, this method should be implemented using Airflow Hooks,
         since this will simplify the integration with Async operators.
 
+        :param query_modifier: a query modifier that informs the pre and post query queries.
         :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         :param autocommit: Optional autocommit flag
@@ -125,7 +134,7 @@ class BaseDatabase(ABC):
                 stacklevel=2,
             )
             sql = kwargs.get("sql_statement")  # type: ignore
-
+        sql = query_modifier.merge_pre_and_post_queries(sql)
         # We need to autocommit=True to make sure the query runs. This is done exclusively for SnowflakeDatabase's
         # truncate method to reflect changes.
         if isinstance(sql, str):
@@ -327,10 +336,12 @@ class BaseDatabase(ABC):
         statement: str,
         target_table: BaseTable,
         parameters: dict | None = None,
+        query_modifier: QueryModifier = QueryModifier(),
     ) -> None:
         """
         Export the result rows of a query statement into another table.
 
+        :param query_modifier: a query modifier that informs the pre and post query queries.
         :param statement: SQL query statement
         :param target_table: Destination table where results will be recorded.
         :param parameters: (Optional) parameters to be used to render the SQL query
@@ -338,7 +349,7 @@ class BaseDatabase(ABC):
         statement = self._create_table_statement.format(
             self.get_table_qualified_name(target_table), statement
         )
-        self.run_sql(statement, parameters)
+        self.run_sql(sql=statement, parameters=parameters, query_modifier=query_modifier)
 
     def drop_table(self, table: BaseTable) -> None:
         """
@@ -353,7 +364,7 @@ class BaseDatabase(ABC):
     # Table load methods
     # ---------------------------------------------------------
 
-    def create_schema_and_table_if_needed(
+    def create_table_if_needed(
         self,
         table: BaseTable,
         file: File,
@@ -387,7 +398,6 @@ class BaseDatabase(ABC):
         ):
             return
 
-        self.create_schema_if_needed(table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(table):
             files = resolve_file_path_pattern(
                 file.path,
@@ -443,6 +453,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        assume_schema_exists: bool = ASSUME_SCHEMA_EXISTS,
         **kwargs,
     ):
         """
@@ -459,6 +470,7 @@ class BaseDatabase(ABC):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+        :param assume_schema_exists: If True, do not check if the output table schema it exists or attempt to create it
         """
         normalize_config = normalize_config or {}
         if self.check_for_minio_connection(input_file=input_file):
@@ -468,7 +480,9 @@ class BaseDatabase(ABC):
             )
             use_native_support = False
 
-        self.create_schema_and_table_if_needed(
+        self.create_schema_if_applicable(output_table.metadata.schema, assume_schema_exists)
+
+        self.create_table_if_needed(
             file=input_file,
             table=output_table,
             columns_names_capitalization=columns_names_capitalization,
@@ -613,7 +627,7 @@ class BaseDatabase(ABC):
 
         source_dataframe.to_sql(
             self.get_table_qualified_name(target_table),
-            con=self.sqlalchemy_engine,
+            con=self.connection,
             if_exists=if_exists,
             chunksize=chunk_size,
             method="multi",
@@ -730,16 +744,19 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_applicable(
+        self, schema: str | None, assume_exists: bool = ASSUME_SCHEMA_EXISTS
+    ) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        :param assume_exists: If assume exists is True, does not check or attempt to create the schema
         """
         # We check if the schema exists first because snowflake will fail on a create schema query even if it
         # doesn't actually create a schema.
-        if schema and not self.schema_exists(schema):
+        if not assume_exists and schema and not self.schema_exists(schema):
             statement = self._create_schema_statement.format(schema)
             self.run_sql(statement)
 

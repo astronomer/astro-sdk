@@ -11,7 +11,7 @@ from pandas._testing import assert_frame_equal
 
 from astro import sql as aql
 from astro.constants import Database, FileType
-from astro.dataframes.load_options import PandasLoadOptions
+from astro.dataframes.load_options import PandasCsvLoadOptions, PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
@@ -68,11 +68,14 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
             "database": Database.MSSQL,
         },
         {
+            "database": Database.MYSQL,
+        },
+        {
             "database": Database.DUCKDB,
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -129,11 +132,14 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
             "database": Database.MSSQL,
         },
         {
+            "database": Database.MYSQL,
+        },
+        {
             "database": Database.DUCKDB,
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_files_fixture):
     db, test_table = database_table_fixture
@@ -190,12 +196,16 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
         {
+            "database": Database.MYSQL,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
             "database": Database.DUCKDB,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_aql_replace_existing_table(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -236,11 +246,14 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
             "database": Database.MSSQL,
         },
         {
+            "database": Database.MYSQL,
+        },
+        {
             "database": Database.DUCKDB,
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_aql_local_file_with_no_table_name(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -271,9 +284,12 @@ def test_aql_local_file_with_no_table_name(sample_dag, database_table_fixture):
         {
             "database": Database.DUCKDB,
         },
+        {
+            "database": Database.MYSQL,
+        },
     ],
     indirect=True,
-    ids=["sqlite", "duckdb"],
+    ids=["sqlite", "duckdb", "mysql"],
 )
 def test_aql_load_file_pattern(remote_files_fixture, sample_dag, database_table_fixture):
     remote_object_uri = remote_files_fixture[0]
@@ -300,9 +316,12 @@ def test_aql_load_file_pattern(remote_files_fixture, sample_dag, database_table_
         {
             "database": Database.POSTGRES,
         },
+        {
+            "database": Database.MYSQL,
+        },
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["postgres", "mysql"],
 )
 def test_aql_load_file_local_file_pattern(sample_dag, database_table_fixture):
     filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
@@ -337,7 +356,9 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
     def validate(input_df):
         assert isinstance(input_df, pd.DataFrame)
         assert test_df.shape == input_df.shape
-        assert test_df.sort_values("sell").equals(input_df.sort_values("sell"))
+        assert test_df.sort_values("sell", ignore_index=True).equals(
+            input_df.sort_values("sell", ignore_index=True)
+        )
         print(input_df)
 
     with sample_dag:
@@ -359,9 +380,12 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
         {
             "database": Database.DUCKDB,
         },
+        {
+            "database": Database.MYSQL,
+        },
     ],
     indirect=True,
-    ids=["sqlite", "duckdb"],
+    ids=["sqlite", "duckdb", "mysql"],
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -410,11 +434,14 @@ def test_load_file_using_file_connection(sample_dag, remote_files_fixture, datab
             "database": Database.MSSQL,
         },
         {
+            "database": Database.MYSQL,
+        },
+        {
             "database": Database.DUCKDB,
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_load_file_using_sftp_connection(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -443,13 +470,12 @@ def test_load_file_using_sftp_connection(sample_dag, database_table_fixture):
         {
             "database": Database.REDSHIFT,
         },
+        {
+            "database": Database.MYSQL,
+        },
     ],
     indirect=True,
-    ids=[
-        "bigquery",
-        "postgresql",
-        "redshift",
-    ],
+    ids=["bigquery", "postgresql", "redshift", "mysql"],
 )
 @pytest.mark.parametrize("file_type", ["csv"])
 def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_type):
@@ -616,9 +642,12 @@ def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture, native
         {
             "database": Database.MSSQL,
         },
+        {
+            "database": Database.MYSQL,
+        },
     ],
     indirect=True,
-    ids=["Bigquery", "redshift", "mssql"],
+    ids=["Bigquery", "redshift", "mssql", "mysql"],
 )
 def test_loading_local_file_to_database(database_table_fixture):
     """
@@ -798,9 +827,12 @@ def test_load_file_bigquery_error_out(sample_dag, database_table_fixture):
         {
             "database": Database.DUCKDB,
         },
+        {
+            "database": Database.MYSQL,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "duckdb", "mysql"],
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, database_table_fixture, file_type):
@@ -895,11 +927,14 @@ def test_load_file_for_mssql(sample_dag, database_table_fixture, file_type):
             "database": Database.MSSQL,
         },
         {
+            "database": Database.MYSQL,
+        },
+        {
             "database": Database.DUCKDB,
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "duckdb"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
 def test_aql_nested_ndjson_file_with_default_sep_param(sample_dag, database_table_fixture):
     """Test the flattening of single level nested ndjson, with default separator '_'."""
@@ -1389,6 +1424,32 @@ def test_load_file_delimiter(sample_dag, database_table_fixture):
     test_utils.run_dag(sample_dag)
 
 
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        },
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_delimiter_with_deprecated_load_options(sample_dag, database_table_fixture):
+    """Test passing of a single LoadOptions instance instead of list with deprecated PandasCsvLoadOptions"""
+    _, test_table = database_table_fixture
+
+    path = str(CWD) + "/../../data/delimiter_dollar.csv"
+
+    with sample_dag:
+        load_file(
+            input_file=File(path),
+            output_table=test_table,
+            use_native_support=False,
+            load_options=PandasCsvLoadOptions(delimiter="$"),
+        )
+    test_utils.run_dag(sample_dag)
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -1459,7 +1520,7 @@ def test_load_file_snowflake_azure_native_path(sample_dag, database_table_fixtur
 )
 @mock.patch("astro.databases.base.BaseDatabase.load_file_to_table_using_pandas")
 @mock.patch("astro.databases.base.resolve_file_path_pattern")
-@mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
+@mock.patch("astro.databases.base.BaseDatabase.create_schema_if_applicable")
 @mock.patch("astro.databases.base.BaseDatabase.drop_table")
 @mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_table_using_schema_autodetection")
 @mock.patch("astro.databases.base.BaseDatabase.is_native_autodetect_schema_available")
@@ -1467,7 +1528,7 @@ def test_table_creation_and_population_done_via_pandas_path(
     is_native_autodetect_schema_available,
     load_file_to_table_using_pandas,
     resolve_file_path_pattern,
-    create_schema_if_needed,
+    create_schema_if_applicable,
     drop_table,
     create_table_using_schema_autodetection,
     sample_dag,

@@ -5,3 +5,8 @@ coverage:
         target: auto
         threshold: 5%
         only_pulls: true
+flags:
+  PythonSDK:
+    paths:
+      - python-sdk/src
+    carryforward: true

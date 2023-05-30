@@ -16,7 +16,7 @@ set -e
 #         - ASTRO_KEY_SECRET: Astro cloud deployment service account API key secret.
 
 SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-PROJECT_PATH=${SCRIPT_PATH}/../..
+PROJECT_PATH="${SCRIPT_PATH}/../.."
 
 function echo_help() {
     echo "Usage:"
@@ -66,6 +66,11 @@ function deploy(){
 
     # Build image and deploy
     BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')
+
+    # Enforce registry name to be in lowercase
+    docker_registry_astro=$(echo $docker_registry_astro | tr '[:upper:]' '[:lower:]')
+    organization_id=$(echo $organization_id | tr '[:upper:]' '[:lower:]')
+    deployment_id=$(echo $deployment_id | tr '[:upper:]' '[:lower:]')
     IMAGE_NAME=${docker_registry_astro}/${organization_id}/${deployment_id}:ci-${BUILD_NUMBER}
     docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${dockerfile} "${SCRIPT_PATH}"
     docker login "${docker_registry_astro}" -u "${key_id}" -p "${key_secret}"

@@ -313,10 +313,10 @@ def dataframe(
         we can infer the connection ID from the first table passed into the python_callable function.
         (required if there are no table arguments)
     :param database: Database within the SQL instance you want to access. If left blank we will
-        default to the table.metatadata.database in the first Table passed
+        default to the table.metadata.database in the first Table passed
         to the function (required if there are no table arguments)
     :param schema: Schema within the SQL instance you want to access. If left blank we will
-        default to the table.metatadata.schema in the first Table passed to the
+        default to the table.metadata.schema in the first Table passed to the
         function (required if there are no table arguments)
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe

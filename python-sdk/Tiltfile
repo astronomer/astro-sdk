@@ -1,0 +1,16 @@
+docker_compose('dev/docker-compose.yaml')
+
+docker_build(
+  # Image name - must match the image in the docker-compose file
+  'astro-sdk-dev',
+  # Docker context
+  '.',
+  # Dockerfile
+  dockerfile = 'dev/Dockerfile',
+  live_update = [
+    sync('./pyproject.toml', '/usr/local/airflow/astro_sdk/pyproject.toml'),
+    sync('./src', '/usr/local/airflow/astro_sdk/src'),
+    run('cd /usr/local/airflow/astro_sdk && pip install -e ".[all,tests,doc]"', trigger='pyproject.toml'),
+    restart_container(),
+  ]
+)

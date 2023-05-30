@@ -19,7 +19,7 @@ SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
 
 
-def get_report(dag_run_ids: List[str], **context: Any) -> None:
+def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
     """Fetch dags run details and generate report"""
     with create_session() as session:
         last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()

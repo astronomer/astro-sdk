@@ -21,11 +21,13 @@ from astro.databases.databricks.load_options import DeltaLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.options import LoadOptions
+from astro.query_modifier import QueryModifier
+from astro.settings import ASSUME_SCHEMA_EXISTS
 from astro.table import BaseTable, Metadata
 
 
 class DeltaDatabase(BaseDatabase):
-    LOAD_OPTIONS_CLASS_NAME = "DeltaLoadOptions"
+    LOAD_OPTIONS_CLASS_NAME = ("DeltaLoadOptions",)
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} USING DELTA AS {} "
 
     def __init__(self, conn_id: str, table: BaseTable | None = None, load_options: LoadOptions | None = None):
@@ -93,7 +95,9 @@ class DeltaDatabase(BaseDatabase):
         # Schemas do not need to be created for delta, so we can assume this is true
         return True
 
-    def create_schema_if_needed(self, schema: str | None) -> None:  # skipcq: PYL-W0613
+    def create_schema_if_applicable(
+        self, schema: str | None, assume_exists: bool = ASSUME_SCHEMA_EXISTS
+    ) -> None:  # skipcq: PYL-W0613
         # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 
@@ -122,6 +126,7 @@ class DeltaDatabase(BaseDatabase):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = None,
+        assume_schema_exists: bool = ASSUME_SCHEMA_EXISTS,
         databricks_job_name: str = "",
         **kwargs,
     ):
@@ -141,7 +146,7 @@ class DeltaDatabase(BaseDatabase):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
-
+        :param assume_schema_exists: If True, skips check to see if output_table schema exists
         """
         load_file_to_delta(
             input_file=input_file,
@@ -157,11 +162,15 @@ class DeltaDatabase(BaseDatabase):
     def openlineage_dataset_namespace(self) -> str:
         return ""
 
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        return ""
+
     def create_table_from_select_statement(
         self,
         statement: str,
         target_table: BaseTable,
         parameters: dict | None = None,
+        query_modifier=QueryModifier(),
     ) -> None:
         """
         Create a Delta table from a SQL SELECT statement.
@@ -174,6 +183,7 @@ class DeltaDatabase(BaseDatabase):
         statement = self._create_table_statement.format(
             self.get_table_qualified_name(target_table), statement
         )
+        statement = query_modifier.merge_pre_and_post_queries(statement)
         self.run_sql(sql=statement, parameters=parameters)
 
     def parameterize_variable(self, variable: str) -> str:
@@ -196,11 +206,13 @@ class DeltaDatabase(BaseDatabase):
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
         handler: Callable | None = None,
+        query_modifier: QueryModifier = QueryModifier(),
         **kwargs,
     ) -> Any:
         """
         Run SQL against a delta table using spark SQL.
 
+        :param query_modifier:
         :param sql: SQL Query to run on delta table
         :param parameters: parameters to pass to delta
         :param handler: function that takes in a databricks cursor as an argument.
@@ -210,6 +222,7 @@ class DeltaDatabase(BaseDatabase):
         hook = DatabricksSqlHook(
             databricks_conn_id=self.conn_id,
         )
+        sql = query_modifier.merge_pre_and_post_queries(sql)
         return hook.run(sql, parameters=parameters, handler=handler)
 
     def table_exists(self, table: BaseTable) -> bool:

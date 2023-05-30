@@ -51,6 +51,7 @@ env:
   SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
   AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+  AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
   AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
   AIRFLOW_VAR_FOO: templated_file_name
   AWS_BUCKET: tmp9
@@ -60,6 +61,10 @@ env:
   MSSQL_HOST: ${{ secrets.MSSQL_HOST }}
   MSSQL_LOGIN: ${{ secrets.MSSQL_LOGIN }}
   MSSQL_PASSWORD: ${{ secrets.MSSQL_PASSWORD }}
+  MYSQL_DB: ${{ secrets.MYSQL_DB }}
+  MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+  MYSQL_LOGIN: ${{ secrets.MYSQL_LOGIN }}
+  MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
 
 jobs:
   Markdown-link-check:
@@ -196,6 +201,7 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
   Run-Unit-tests-Airflow-2-5:
     strategy:
@@ -236,7 +242,7 @@ jobs:
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-${{ matrix.version }}(airflow='2.5.0')" -- tests/ --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-${{ matrix.version }}(airflow='2.6.0')" -- tests/ --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -313,7 +319,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_load_file.py" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.6.0')" -- tests_integration/ -k "test_load_file.py" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
@@ -409,7 +415,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_example_dags.py" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.6.0')" -- tests_integration/ -k "test_example_dags.py" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
@@ -505,7 +511,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py" --splits 11 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.6.0')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py" --splits 11 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
@@ -530,6 +536,7 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
   Run-example-dag-tests-Airflow-2-2-5:
     if: >-
@@ -612,6 +619,7 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
   Generate-Constraints:
     if: (github.event_name == 'release' || github.event_name == 'push')
@@ -619,7 +627,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [ '3.7', '3.8', '3.9', '3.10' ]
-        airflow: [ '2.2.5', '2.3.4', '2.4.2', '2.5.1' ]
+        airflow: [ '2.2.5', '2.3.4', '2.4.2', '2.5.3', '2.6.0']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -679,6 +687,7 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: PythonSDK
           files: ./python-sdk/coverage.xml
 
   collect-durations:

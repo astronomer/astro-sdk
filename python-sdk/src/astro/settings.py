@@ -17,6 +17,7 @@ BIGQUERY_SCHEMA = conf.get(SECTION_KEY, "bigquery_default_schema", fallback=SCHE
 SNOWFLAKE_SCHEMA = conf.get(SECTION_KEY, "snowflake_default_schema", fallback=SCHEMA)
 REDSHIFT_SCHEMA = conf.get(SECTION_KEY, "redshift_default_schema", fallback=SCHEMA)
 MSSQL_SCHEMA = conf.get(SECTION_KEY, "mssql_default_schema", fallback=SCHEMA)
+MYSQL_SCHEMA = conf.get(SECTION_KEY, "mysql_default_schema", fallback=SCHEMA)
 
 BIGQUERY_SCHEMA_LOCATION = conf.get(
     SECTION_KEY, "bigquery_dataset_location", fallback=DEFAULT_BIGQUERY_SCHEMA_LOCATION
@@ -67,10 +68,22 @@ LOAD_TABLE_AUTODETECT_ROWS_COUNT = conf.getint(
     section=SECTION_KEY, key="load_table_autodetect_rows_count", fallback=1000
 )
 
-
 #: Reduce responses sizes returned by aql.run_raw_sql to avoid trashing the Airflow DB if the BaseXCom is used.
 RAW_SQL_MAX_RESPONSE_SIZE = conf.getint(section=SECTION_KEY, key="run_raw_sql_response_size", fallback=-1)
 
 # Temp changes
 # Should Astro SDK automatically add inlets/outlets to take advantage of Airflow 2.4 Data-aware scheduling
 AUTO_ADD_INLETS_OUTLETS = conf.getboolean(SECTION_KEY, "auto_add_inlets_outlets", fallback=True)
+
+ASSUME_SCHEMA_EXISTS = False
+
+
+def reload():
+    """
+    Reload settings from environment variable during runtime.
+    """
+    global ASSUME_SCHEMA_EXISTS  # skipcq: PYL-W0603
+    ASSUME_SCHEMA_EXISTS = conf.getboolean(SECTION_KEY, "assume_schema_exists", fallback=False)
+
+
+reload()

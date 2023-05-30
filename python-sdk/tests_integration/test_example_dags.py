@@ -32,7 +32,7 @@ def wrapper_run_dag(dag):
 
 
 @provide_session
-def get_session(session=None):
+def get_session(session=None):  # skipcq: PYL-W0621
     create_default_connections(session)
     return session
 
@@ -45,6 +45,7 @@ def session():
 MIN_VER_DAG_FILE: dict[str, list[str]] = {
     "2.3": ["example_dynamic_task_template.py", "example_bigquery_dynamic_map_task.py"],
     "2.4": ["example_datasets.py"],
+    "2.6.1": ["calculate_popular_movies_by_genre.py"],
 }
 
 # Sort descending based on Versions and convert string to an actual version
@@ -67,10 +68,10 @@ def get_dag_bag() -> DagBag:
 
     print(".airflowignore contents: ")
     print(airflow_ignore_file.read_text())
-    dag_bag = DagBag(example_dags_dir, include_examples=False)
-    assert dag_bag.dags
-    assert not dag_bag.import_errors
-    return dag_bag
+    db = DagBag(example_dags_dir, include_examples=False)
+    assert db.dags
+    assert not db.import_errors
+    return db
 
 
 PRE_DEFINED_ORDER = [
@@ -89,6 +90,6 @@ dag_bag = get_dag_bag()
 
 
 @pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
-def test_example_dag(session, dag_id: str):
+def test_example_dag(session, dag_id: str):  # skipcq: PYL-W0613, PYL-W0621
     dag = dag_bag.get_dag(dag_id)
     wrapper_run_dag(dag)

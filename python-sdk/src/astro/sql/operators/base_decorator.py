@@ -14,8 +14,10 @@ from sqlalchemy.sql.functions import Function
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.query_modifier import QueryModifier
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.table import BaseTable, Table
+from astro.utils.compat.functools import cached_property
 from astro.utils.compat.typing import Context
 from astro.utils.table import find_first_table
 
@@ -25,8 +27,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
     template_fields: Sequence[str] = ("sql", "parameters", "op_args", "op_kwargs")
     template_ext: Sequence[str] = (".sql",)
-
-    database_impl: BaseDatabase
 
     def __init__(
         self,
@@ -38,6 +38,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         response_limit: int = -1,
         response_size: int = -1,
         sql: str = "",
+        query_modifier: QueryModifier = QueryModifier(),
         **kwargs: Any,
     ):
         self.kwargs = kwargs or {}
@@ -54,6 +55,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.response_size = self.op_kwargs.pop("response_size", response_size)
 
         self.op_args: dict[str, Table | pd.DataFrame] = {}
+        self.query_modifier = self.op_kwargs.pop("query_modifier", query_modifier)
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
         # has 10 dataframes as upstream tasks and it crashes the worker
@@ -97,6 +99,10 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             args.append(item)
         self.op_args = args  # type: ignore
 
+    @cached_property
+    def database_impl(self) -> BaseDatabase:
+        return create_database(self.conn_id)
+
     def _enrich_context(self, context: Context) -> Context:
         """
         Prepare the sql and context for execution.
@@ -136,14 +142,14 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         ):
             raise ValueError("source and target table must belong to the same datasource")
 
-        self.database_impl = create_database(self.conn_id, first_table)
+        self.database_impl.table = first_table
 
         # Find and load dataframes from op_arg and op_kwarg into Table
         self.create_output_table_if_needed()
-        self.op_args = load_op_arg_dataframes_into_sql(  # type: ignore
+        self.op_args = self.load_op_arg_dataframes_into_sql(  # type: ignore
             conn_id=self.conn_id, op_args=self.op_args, output_table=self.output_table  # type: ignore
         )
-        self.op_kwargs = load_op_kwarg_dataframes_into_sql(
+        self.op_kwargs = self.load_op_kwarg_dataframes_into_sql(
             conn_id=self.conn_id,
             op_kwargs=self.op_kwargs,
             output_table=self.output_table,
@@ -211,6 +217,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if self.sql.endswith(".sql"):
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
+        self.op_kwargs.pop("sql", None)
 
     def move_function_params_into_sql_params(self, context: dict) -> None:
         """
@@ -359,51 +366,52 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
             return None
 
+    def load_op_arg_dataframes_into_sql(self, conn_id: str, op_args: tuple, output_table: BaseTable) -> tuple:
+        """
+        Identify dataframes in op_args and load them to the table.
 
-def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, output_table: BaseTable) -> tuple:
-    """
-    Identify dataframes in op_args and load them to the table.
+        :param conn_id: Connection identifier to be used to load content to the target_table
+        :param op_args: user-defined decorator's kwargs
+        :param output_table: Similar table where the dataframe content will be written to
+        :return: New op_args, in which dataframes are replaced by tables
+        """
+        final_args: list[Table | BaseTable] = []
+        database = self.database_impl or create_database(conn_id=conn_id)
+        for arg in op_args:
+            if isinstance(arg, pd.DataFrame):
+                target_table = output_table.create_similar_table()
+                database.load_pandas_dataframe_to_table(source_dataframe=arg, target_table=target_table)
+                final_args.append(target_table)
+            elif isinstance(arg, BaseTable):
+                arg = database.populate_table_metadata(arg)
+                final_args.append(arg)
+            else:
+                final_args.append(arg)
+        return tuple(final_args)
 
-    :param conn_id: Connection identifier to be used to load content to the target_table
-    :param op_args: user-defined decorator's kwargs
-    :param output_table: Similar table where the dataframe content will be written to
-    :return: New op_args, in which dataframes are replaced by tables
-    """
-    final_args: list[Table | BaseTable] = []
-    database = create_database(conn_id=conn_id)
-    for arg in op_args:
-        if isinstance(arg, pd.DataFrame):
-            target_table = output_table.create_similar_table()
-            database.load_pandas_dataframe_to_table(source_dataframe=arg, target_table=target_table)
-            final_args.append(target_table)
-        elif isinstance(arg, BaseTable):
-            arg = database.populate_table_metadata(arg)
-            final_args.append(arg)
-        else:
-            final_args.append(arg)
-    return tuple(final_args)
+    def load_op_kwarg_dataframes_into_sql(
+        self, conn_id: str, op_kwargs: dict, output_table: BaseTable
+    ) -> dict:
+        """
+        Identify dataframes in op_kwargs and load them to a table.
 
-
-def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, output_table: BaseTable) -> dict:
-    """
-    Identify dataframes in op_kwargs and load them to a table.
-
-    :param conn_id: Connection identifier to be used to load content to the target_table
-    :param op_kwargs: user-defined decorator's kwargs
-    :param output_table: Similar table where the dataframe content will be written to
-    :return: New op_kwargs, in which dataframes are replaced by tables
-    """
-    final_kwargs = {}
-    database = create_database(conn_id=conn_id, table=output_table)
-    for key, value in op_kwargs.items():
-        if isinstance(value, pd.DataFrame):
-            target_table = output_table.create_similar_table()
-            df_table = cast(BaseTable, target_table.create_similar_table())
-            database.load_pandas_dataframe_to_table(source_dataframe=value, target_table=df_table)
-            final_kwargs[key] = df_table
-        elif isinstance(value, BaseTable):
-            value = database.populate_table_metadata(value)
-            final_kwargs[key] = value
-        else:
-            final_kwargs[key] = value
-    return final_kwargs
+        :param conn_id: Connection identifier to be used to load content to the target_table
+        :param op_kwargs: user-defined decorator's kwargs
+        :param output_table: Similar table where the dataframe content will be written to
+        :return: New op_kwargs, in which dataframes are replaced by tables
+        """
+        final_kwargs = {}
+        database = self.database_impl or create_database(conn_id=conn_id)
+        database.table = output_table
+        for key, value in op_kwargs.items():
+            if isinstance(value, pd.DataFrame):
+                target_table = output_table.create_similar_table()
+                df_table = cast(BaseTable, target_table.create_similar_table())
+                database.load_pandas_dataframe_to_table(source_dataframe=value, target_table=df_table)
+                final_kwargs[key] = df_table
+            elif isinstance(value, BaseTable):
+                value = database.populate_table_metadata(value)
+                final_kwargs[key] = value
+            else:
+                final_kwargs[key] = value
+        return final_kwargs

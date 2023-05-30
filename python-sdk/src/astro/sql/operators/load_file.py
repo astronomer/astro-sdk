@@ -8,17 +8,30 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.hooks.base import BaseHook
 from airflow.models.xcom_arg import XComArg
 
+from astro import settings
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.dataframes.load_options import (
+    PandasCsvLoadOptions,
+    PandasJsonLoadOptions,
+    PandasNdjsonLoadOptions,
+    PandasParquetLoadOptions,
+)
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File, resolve_file_path_pattern
 from astro.options import LoadOptions, LoadOptionsList
-from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.compat.typing import Context
+
+DEPRECATED_LOAD_OPTIONS_CLASSES = [
+    PandasCsvLoadOptions,
+    PandasJsonLoadOptions,
+    PandasNdjsonLoadOptions,
+    PandasParquetLoadOptions,
+]
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
@@ -34,6 +47,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param assume_schema_exists: If True, skips check to see if output_table schema exists
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -50,9 +64,10 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
-        load_options: list[LoadOptions] | None = None,
+        load_options: LoadOptions | list[LoadOptions] | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        enable_native_fallback: bool | None = settings.LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        assume_schema_exists: bool = settings.ASSUME_SCHEMA_EXISTS,
         **kwargs,
     ) -> None:
         kwargs.setdefault("task_id", get_unique_task_id("load_file"))
@@ -70,6 +85,23 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 DeprecationWarning,
                 stacklevel=2,
             )
+
+        if load_options is not None:
+            if not isinstance(load_options, list):
+                load_options = [load_options]
+
+            deprecated_classes = {type(cls).__name__ for cls in load_options}.intersection(
+                [cls.__name__ for cls in DEPRECATED_LOAD_OPTIONS_CLASSES]
+            )
+            if deprecated_classes:
+                warnings.warn(
+                    f'`{", ".join(deprecated_classes)}` will be replaced by'
+                    f" `astro.dataframes.load_options.PandasLoadOptions` in astro-sdk-python>=2.0.0."
+                    f" Please use `astro.dataframes.load_options.PandasLoadOptions` class instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
         self.output_table = output_table
         self.input_file = input_file
         self.input_file.load_options = load_options
@@ -82,6 +114,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
+        self.assume_schema_exists = assume_schema_exists
         self.load_options_list = LoadOptionsList(load_options)
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
@@ -129,6 +162,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             native_support_kwargs=self.native_support_kwargs,
             columns_names_capitalization=self.columns_names_capitalization,
             enable_native_fallback=self.enable_native_fallback,
+            assume_schema_exists=self.assume_schema_exists,
             databricks_job_name=f"Load data {self.dag_id}_{self.task_id}",
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
@@ -314,7 +348,7 @@ def load_file(
     native_support_kwargs: dict | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: bool | None = True,
-    load_options: list[LoadOptions] | None = None,
+    load_options: LoadOptions | list[LoadOptions] | None = None,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.

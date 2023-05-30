@@ -24,9 +24,10 @@ DATA_FILEPATH_MSSQL = pathlib.Path(CWD.parent.parent, "data/sample_without_unico
     [
         {"database": Database.SQLITE, "file": File(path=str(DATA_FILEPATH))},
         {"database": Database.DUCKDB, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.MYSQL, "file": File(path=str(DATA_FILEPATH))},
     ],
     indirect=True,
-    ids=["sqlite", "duckdb"],
+    ids=["sqlite", "duckdb", "mysql"],
 )
 def test_run_raw_sql_without_limit(caplog, sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
@@ -100,9 +101,10 @@ def test_run_raw_sql_without_limit_for_mssql(caplog, sample_dag, database_table_
     [
         {"database": Database.SQLITE, "file": File(path=str(DATA_FILEPATH))},
         {"database": Database.DUCKDB, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.MYSQL, "file": File(path=str(DATA_FILEPATH))},
     ],
     indirect=True,
-    ids=["sqlite", "duckdb"],
+    ids=["sqlite", "duckdb", "mysql"],
 )
 def test_run_raw_sql_with_limit(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
@@ -163,9 +165,10 @@ def test_run_raw_sql_with_limit_for_mssql(sample_dag, database_table_fixture):
     [
         {"database": Database.SQLITE, "file": File(path=str(DATA_FILEPATH))},
         {"database": Database.DUCKDB, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.MYSQL, "file": File(path=str(DATA_FILEPATH))},
     ],
     indirect=True,
-    ids=["sqlite", "duckdb"],
+    ids=["sqlite", "duckdb", "mysql"],
 )
 def test_run_raw_sql__results_format__pandas_dataframe(sample_dag, database_table_fixture):
     """run_raw_sql() command should return `pandas.DataFrame` when `results_format='pandas_dataframe' is passed"""
@@ -197,9 +200,10 @@ def test_run_raw_sql__results_format__pandas_dataframe(sample_dag, database_tabl
         {"database": Database.POSTGRES, "file": File(path=str(DATA_FILEPATH))},
         {"database": Database.BIGQUERY, "file": File(path=str(DATA_FILEPATH))},
         {"database": Database.DUCKDB, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.MYSQL, "file": File(path=str(DATA_FILEPATH))},
     ],
     indirect=True,
-    ids=["sqlite", "snowflake", "postgres", "bigquery", "duckdb"],
+    ids=["sqlite", "snowflake", "postgres", "bigquery", "duckdb", "mysql"],
 )
 def test_run_raw_sql__results_format__list(sample_dag, database_table_fixture):
     """run_raw_sql() command should return `List` when `results_format='list' is passed"""

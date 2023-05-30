@@ -23,7 +23,13 @@ from astro.table import BaseTable
 
 cwd = pathlib.Path(__file__).parent
 
-supported_file_locations = [FileLocation.LOCAL, FileLocation.S3, FileLocation.GS]
+supported_file_locations = [
+    FileLocation.LOCAL,
+    FileLocation.S3,
+    FileLocation.GS,
+    FileLocation.WASB,
+    FileLocation.WASBS,
+]
 
 log = logging.getLogger(__file__)
 
@@ -109,7 +115,7 @@ def _create_load_file_pyspark_file(
         databricks_options.autoloader_load_options["cloudFiles.allowOverwrites"] = "true"
 
     file_path = generate_file(
-        data_source_path=str(dbfs_file_path) if dbfs_file_path else input_file.path,
+        data_source_path=str(dbfs_file_path) if dbfs_file_path else input_file.location.databricks_uri,
         table_name=delta_table.name,
         source_type=str(input_file.location.location_type),
         output_file_path=Path(output_file.name),
