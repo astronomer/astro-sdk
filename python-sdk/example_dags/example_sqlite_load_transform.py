@@ -28,7 +28,10 @@ def get_top_five_animations(input_table: Table):  # skipcq: PYL-W0613
 imdb_movies_name = "imdb_movies" + str(int(time.time()))
 
 with DAG(
-    "example_sqlite_load_transform", schedule_interval=None, start_date=START_DATE, catchup=False
+    "example_sqlite_load_transform",
+    schedule_interval=None,
+    start_date=START_DATE,
+    catchup=False,
 ) as dag:
     imdb_movies = aql.load_file(
         input_file=File(

@@ -71,7 +71,12 @@ def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame)
 # [END transform_example_4]
 
 
-with DAG("example_transform", schedule_interval=None, start_date=START_DATE, catchup=False) as dag:
+with DAG(
+    "example_transform",
+    schedule_interval=None,
+    start_date=START_DATE,
+    catchup=False,
+) as dag:
     imdb_movies = aql.load_file(
         input_file=File(path="s3://astro-sdk/imdb_v2.csv"),
         task_id="load_csv",
