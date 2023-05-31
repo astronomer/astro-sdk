@@ -5,7 +5,6 @@ from airflow import DAG
 
 from astro import sql as aql
 
-
 default_args = {
     "owner": "airflow",
     "retries": 1,
