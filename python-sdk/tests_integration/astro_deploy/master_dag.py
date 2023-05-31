@@ -17,9 +17,8 @@ from airflow.utils.session import create_session
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
-IS_RUNTIME_RELEASE = os.getenv("IS_RUNTIME_RELEASE", False)
+IS_RUNTIME_RELEASE = os.getenv("IS_RUNTIME_RELEASE", default="False")
 IS_RUNTIME_RELEASE = bool(IS_RUNTIME_RELEASE)
-
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
