@@ -38,6 +38,7 @@ def example_duckdb_load_transform_dataframe_and_save():
     adoption_center_data = aql.load_file(
         input_file=File("s3://tmp9/ADOPTION_CENTER_2_unquoted.csv", conn_id=AWS_CONN_ID),
         task_id="adoption_center_data",
+        output_table=Table(conn_id=DUCKDB_CONN_ID),
     )
 
     filtered_dataframe = filter_data(

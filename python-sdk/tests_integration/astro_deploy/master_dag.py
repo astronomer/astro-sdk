@@ -17,7 +17,9 @@ from airflow.utils.session import create_session
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
-IS_RUNTIME_RELEASE = bool(os.getenv("IS_RUNTIME_RELEASE", False))
+IS_RUNTIME_RELEASE = os.getenv("IS_RUNTIME_RELEASE", False)
+IS_RUNTIME_RELEASE = bool(IS_RUNTIME_RELEASE)
+
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
@@ -29,9 +31,15 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
         if IS_RUNTIME_RELEASE:
-            airflow_version_message = f"Results generated for latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} with {os.environ['AIRFLOW__CORE__EXECUTOR']}  \n\n"
+            airflow_version_message = (
+                f"Results generated for latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} "
+                f"with {os.environ['AIRFLOW__CORE__EXECUTOR']}  \n\n"
+            )
         else:
-            airflow_version_message = f"Airflow version for the below astro-sdk run is `{airflow_version}` with {os.environ['AIRFLOW__CORE__EXECUTOR']} \n\n"
+            airflow_version_message = (
+                f"Airflow version for the below astro-sdk run is `{airflow_version}` "
+                f"with {os.environ['AIRFLOW__CORE__EXECUTOR']} \n\n"
+            )
         message_list.append(airflow_version_message)
 
         for dr in last_dags_runs:
