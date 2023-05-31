@@ -21,7 +21,6 @@ IS_RUNTIME_RELEASE = os.getenv("IS_RUNTIME_RELEASE", False)
 IS_RUNTIME_RELEASE = bool(IS_RUNTIME_RELEASE)
 
 
-
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
     """Fetch dags run details and generate report"""
 
