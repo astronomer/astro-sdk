@@ -1,3 +1,4 @@
+import os
 import time
 from datetime import datetime
 
@@ -9,6 +10,8 @@ from astro.sql import drop_table
 from astro.table import Table
 
 START_DATE = datetime(2000, 1, 1)
+
+ASTRO_SQLITE_DEFAULT_CONN_ID = os.getenv("ASTRO_SQLITE_DEFAULT_CONN_ID", "sqlite_default")
 
 
 @aql.transform()
@@ -35,14 +38,14 @@ with DAG(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
         task_id="load_csv",
-        output_table=Table(name=imdb_movies_name, conn_id="sqlite_default"),
+        output_table=Table(name=imdb_movies_name, conn_id=ASTRO_SQLITE_DEFAULT_CONN_ID),
     )
 
     top_five_animations = get_top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
             name="top_animation",
-            conn_id="sqlite_default",
+            conn_id=ASTRO_SQLITE_DEFAULT_CONN_ID,
         ),
     )
     # Note - Using persistent table just to showcase drop_table operator.

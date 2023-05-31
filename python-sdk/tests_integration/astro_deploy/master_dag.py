@@ -17,16 +17,28 @@ from airflow.utils.session import create_session
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
+IS_RUNTIME_RELEASE = os.getenv("IS_RUNTIME_RELEASE", default="False")
+IS_RUNTIME_RELEASE = bool(IS_RUNTIME_RELEASE)
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
     """Fetch dags run details and generate report"""
+
     with create_session() as session:
         last_dags_runs: List[DagRun] = session.query(DagRun).filter(DagRun.run_id.in_(dag_run_ids)).all()
         message_list: List[str] = []
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
-        airflow_version_message = f"Airflow version for the below astro-sdk run is `{airflow_version}` \n\n"
+        if IS_RUNTIME_RELEASE:
+            airflow_version_message = (
+                f"Results generated for latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} "
+                f"with {os.environ['AIRFLOW__CORE__EXECUTOR']}  \n\n"
+            )
+        else:
+            airflow_version_message = (
+                f"Airflow version for the below astro-sdk run is `{airflow_version}` "
+                f"with {os.environ['AIRFLOW__CORE__EXECUTOR']} \n\n"
+            )
         message_list.append(airflow_version_message)
 
         for dr in last_dags_runs:
@@ -82,9 +94,13 @@ def prepare_dag_dependency(task_info, execution_time):
     return _task_list, _dag_run_ids
 
 
+if IS_RUNTIME_RELEASE:
+    schedule_interval = None
+else:
+    schedule_interval = "@daily"
 with DAG(
     dag_id="example_master_dag",
-    schedule_interval="@daily",
+    schedule_interval=schedule_interval,
     start_date=datetime(2023, 1, 1),
     catchup=False,
     tags=["master_dag"],

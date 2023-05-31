@@ -29,12 +29,19 @@ QUERY_STATEMENT = os.getenv(
     "SELECT rating FROM `astronomer-dag-authoring.dynamic_template.movie`",
 )
 
+default_args = {
+    "owner": "airflow",
+    "retries": 1,
+    "retry_delay": 0,
+}
+
 with DAG(
     dag_id="example_dynamic_task_template",
     schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     catchup=False,
     tags=["airflow_version:2.3.0"],
+    default_args=default_args,
 ) as dag:
     LoadFile.partial(
         task_id="load_gcs_to_bq",
