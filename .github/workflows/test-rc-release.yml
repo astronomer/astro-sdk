@@ -50,7 +50,7 @@ jobs:
       - name: Update project dependencies to use RC providers
         run: |
           echo "Updating setup.cfg with RC provider packages"
-          python3 dev/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
+          python3 dev/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
 
       - name: Setup Github Actions git user
         run: |
