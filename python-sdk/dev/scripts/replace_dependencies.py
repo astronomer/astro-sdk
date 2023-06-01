@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import argparse
-import pathlib
 import fileinput
+import pathlib
 from re import sub
 from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
 from pip._internal.utils.packaging import get_requirement
+
 CWD = pathlib.Path(__file__).parent
 
 
