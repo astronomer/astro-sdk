@@ -1,5 +1,4 @@
----
-name: test-rc-release
+name: testRCRelease
 
 on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
