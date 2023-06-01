@@ -43,8 +43,8 @@ def aggregate_data(df: pd.DataFrame):
     schedule_interval=None,
     default_args={
         "email_on_failure": False,
-        "retries": 0,
-        "retry_delay": timedelta(minutes=5),
+        "retries": 1,
+        "retry_delay": timedelta(seconds=5),
     },
     catchup=False,
 )

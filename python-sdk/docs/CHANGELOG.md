@@ -6,6 +6,14 @@
 - Allow users to disable schema check and creation on `transform` [#1925](https://github.com/astronomer/astro-sdk/pull/1925)
 - Allow users to disable schema check and creation on `load_file` [#1922](https://github.com/astronomer/astro-sdk/pull/1922)
 
+
+## 1.6.1
+
+### Bug Fixes
+
+- Fix AstroCustomXcomBackend circular import issue. [#1943](https://github.com/astronomer/astro-sdk/pull/1943)
+
+
 ## 1.6.0
 
 ### Feature
@@ -38,6 +46,11 @@
 ### Misc
 - Support Apache Airflow 2.6 [#1899](https://github.com/astronomer/astro-sdk/pull/1899), with internal serialization changes
 - Add basic `tiltifle` for local dev [#1819](https://github.com/astronomer/astro-sdk/pull/1819)
+
+
+## 1.5.4
+### Bug Fixes
+- Fix AstroCustomXcomBackend circular import issue. [#1943](https://github.com/astronomer/astro-sdk/pull/1943)
 
 
 ## 1.5.3

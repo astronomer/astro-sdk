@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 import pandas as pd
@@ -9,6 +10,8 @@ from astro.table import Table
 
 START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"title": ["Random movie"], "rating": [121]})
+
+ASTRO_SQLITE_DEFAULT_CONN_ID = os.getenv("ASTRO_SQLITE_DEFAULT_CONN_ID", "sqlite_default")
 
 
 # [START transform_example_1]
@@ -78,7 +81,7 @@ with DAG(
     imdb_movies = aql.load_file(
         input_file=File(path="s3://astro-sdk/imdb_v2.csv"),
         task_id="load_csv",
-        output_table=Table(conn_id="sqlite_default"),
+        output_table=Table(conn_id=ASTRO_SQLITE_DEFAULT_CONN_ID),
     )
 
     top_five = top_five_animations(
@@ -91,7 +94,7 @@ with DAG(
     last_five = last_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            conn_id="sqlite_default",
+            conn_id=ASTRO_SQLITE_DEFAULT_CONN_ID,
         ),
     )
 

@@ -36,6 +36,7 @@ with DAG(
     tags=["example"],
     schedule="@once",
     catchup=False,
+    is_paused_upon_creation=False,
 ) as dag:
     snowflake_op_sql_str = SnowflakeOperator(task_id="snowflake_op_sql_str", sql=query, handler=handle_result)
 
