@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from pip._internal.utils.packaging import get_requirement
 
-CWD = pathlib.Path(__file__).parent
+CWD = pathlib.Path(__file__)
 
 
 def _parse_pinned_pacakge_from_cncf(cncf_url: str) -> str:
@@ -93,7 +93,7 @@ def update_pyproject(rc_provider_packages: list[str]):
             raise Exception(
                 f"Invalid package {package} provided. It needs to be pinned to a specific version."
             )
-        with fileinput.FileInput("pyproject.toml", inplace=True) as pyproject_file:
+        with fileinput.FileInput(str(CWD) + "/pyproject.toml", inplace=True) as pyproject_file:
             for line in pyproject_file:
                 print(sub(f"{package_name_to_search}.*", pinned_package, line), end="")
 
