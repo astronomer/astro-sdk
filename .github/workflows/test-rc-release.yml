@@ -34,14 +34,9 @@ jobs:
     if: ${{ inputs.issue_url }}
     steps:
       - name: Checkout
-          uses: actions/checkout@v3
-          with:
-            ref: ${{ inputs.base_git_rev }}
-
-      - name: Checkout pull/${{ github.event.number }}
-          uses: actions/checkout@v3
-          with:
-            ref: ${{ github.event.pull_request.head.sha }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.base_git_rev }}
 
       - name: Create RC branch
         id: create_rc_branch
