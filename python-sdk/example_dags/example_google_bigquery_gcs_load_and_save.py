@@ -22,11 +22,20 @@ import astro.sql as aql
 from astro.files import File
 from astro.table import Metadata, Table
 
+ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
+
+default_args = {
+    "owner": "airflow",
+    "retries": 1,
+    "retry_delay": 0,
+}
+
 with DAG(
     dag_id="example_google_bigquery_gcs_load_and_save",
     schedule_interval=None,
     start_date=timezone.datetime(2022, 1, 1),
     catchup=False,
+    default_args=default_args,
 ) as dag:
     # [START load_file_http_example]
     t1 = aql.load_file(
@@ -34,7 +43,7 @@ with DAG(
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
-        output_table=Table(name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")),
+        output_table=Table(name="imdb_movies", conn_id=ASTRO_GCP_CONN_ID, metadata=Metadata(schema="astro")),
     )
     # [END load_file_http_example]
 
@@ -58,7 +67,7 @@ with DAG(
         input_data=t1,
         output_file=File(
             path=f"{gcs_bucket}/{{{{ task_instance_key_str }}}}/all_movies.csv",
-            conn_id="gcp_conn",
+            conn_id=ASTRO_GCP_CONN_ID,
         ),
         if_exists="replace",
     )
@@ -70,7 +79,7 @@ with DAG(
         input_data=t2,
         output_file=File(
             path=f"{gcs_bucket}/{{{{ task_instance_key_str }}}}/top_5_movies.csv",
-            conn_id="gcp_conn",
+            conn_id=ASTRO_GCP_CONN_ID,
         ),
         if_exists="replace",
     )
