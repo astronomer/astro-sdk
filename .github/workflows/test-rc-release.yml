@@ -55,6 +55,7 @@ jobs:
           ls dev/scripts/
           echo "Updating pyproject.toml with RC provider packages"
           cat dev/scripts/replace_dependencies.py
+          pip install bs4
           python dev/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
           git diff
 
