@@ -52,10 +52,10 @@ jobs:
           echo "Updating pyproject.toml with RC provider packages"
           pwd
           echo "Updating pyproject.toml with RC provider packages"
-          ls dev/
+          ls dev/scripts/
           echo "Updating pyproject.toml with RC provider packages"
-          cat dev/replace_dependencies.py
-          python ../.github/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
+          cat dev/scripts/replace_dependencies.py
+          python dev/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
           git diff
 
       - name: Setup Github Actions git user
