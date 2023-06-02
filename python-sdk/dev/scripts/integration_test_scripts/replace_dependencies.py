@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from pip._internal.utils.packaging import get_requirement
 
-ROOT = pathlib.Path(__file__).parent.parent.parent
+ROOT = pathlib.Path(__file__).parent.parent.parent.parent
 
 
 def _parse_pinned_pacakge_from_cncf(cncf_url: str) -> str:
