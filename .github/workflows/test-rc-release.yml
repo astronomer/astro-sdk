@@ -65,8 +65,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git add setup.cfg
-          git commit -m "Update setup.cfg to use RC provider packages"
+          git add pyproject.toml
+          git commit -m "Update pyproject.toml to use RC provider packages"
           git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
           gh pr create --base ${{ inputs.base_git_rev }} \
                        --title "[DO NOT MERGE] Test RC provider packages" \
