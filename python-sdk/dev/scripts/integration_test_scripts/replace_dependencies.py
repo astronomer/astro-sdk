@@ -78,9 +78,9 @@ def update_pyproject(rc_provider_packages: list[str]):
         package_name_to_search = requirement.name
 
         if requirement.specifier:
-            pinned_package = f"{package_name_to_search}{requirement.specifier}\","
+            pinned_package = f'{package_name_to_search}{requirement.specifier}",'
         elif requirement.url:
-            pinned_package = f"{package_name_to_search} @{requirement.url}\","
+            pinned_package = f'{package_name_to_search} @{requirement.url}",'
         else:
             raise Exception(
                 f"Invalid package {package} provided. It needs to be pinned to a specific version."
