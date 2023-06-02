@@ -49,6 +49,8 @@ jobs:
       - name: Update project dependencies to use RC providers
         run: |
           echo "Updating pyproject.toml with RC provider packages"
+          pwd
+          cat ../.github/scripts/replace_dependencies.py
           python ../.github/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
 
       - name: Setup Github Actions git user
