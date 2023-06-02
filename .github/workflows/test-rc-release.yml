@@ -50,6 +50,9 @@ jobs:
         run: |
           echo "Updating pyproject.toml with RC provider packages"
           pwd
+          ls
+          ls ../
+          ls ../.github
           cat ../.github/scripts/replace_dependencies.py
           python ../.github/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
 
