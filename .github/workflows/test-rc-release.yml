@@ -13,7 +13,6 @@ on:  # yamllint disable-line rule:truthy
         required: false
         type: string
         default: 'main'
-  pull_request:
 defaults:
   run:
     working-directory: python-sdk
@@ -50,7 +49,7 @@ jobs:
       - name: Update project dependencies to use RC providers
         run: |
           echo "Updating pyproject.toml with RC provider packages"
-          python dev/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
+          python ../.github/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
 
       - name: Setup Github Actions git user
         run: |
