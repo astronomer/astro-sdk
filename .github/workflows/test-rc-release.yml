@@ -32,19 +32,24 @@ jobs:
     runs-on: 'ubuntu-20.04'
     if: ${{ inputs.issue_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.base_git_rev }}
+#      - name: Checkout
+#          uses: actions/checkout@v3
+#          with:
+#            ref: ${{ inputs.base_git_rev }}
 
-      - name: Create RC branch
-        id: create_rc_branch
-        run: |
-          current_timestamp=`date +%Y-%m-%dT%H-%M-%S%Z`
-          echo "Current timestamp is" $current_timestamp
-          branch_name="rc-test-$current_timestamp"
-          git checkout -b $branch_name
-          echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
+      - name: Checkout pull/${{ github.event.number }}
+          uses: actions/checkout@v3
+          with:
+            ref: ${{ github.event.pull_request.head.sha }}
+
+#      - name: Create RC branch
+#        id: create_rc_branch
+#        run: |
+#          current_timestamp=`date +%Y-%m-%dT%H-%M-%S%Z`
+#          echo "Current timestamp is" $current_timestamp
+#          branch_name="rc-test-$current_timestamp"
+#          git checkout -b $branch_name
+#          echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
 
       - name: Update project dependencies to use RC providers
         run: |
@@ -55,22 +60,23 @@ jobs:
           echo "Updating pyproject.toml with RC provider packages"
           cat dev/replace_dependencies.py
           python ../.github/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
+          git diff
 
-      - name: Setup Github Actions git user
-        run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Actions"
-
-      - name: Commit changes and create a pull request
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git add setup.cfg
-          git commit -m "Update setup.cfg to use RC provider packages"
-          git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
-          gh pr create --base ${{ inputs.base_git_rev }} \
-                       --title "[DO NOT MERGE] Test RC provider packages" \
-                       --body "${{ inputs.issue_url }}" --fill
-          echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+#      - name: Setup Github Actions git user
+#        run: |
+#          git config --global user.email "action@github.com"
+#          git config --global user.name "GitHub Actions"
+#
+#      - name: Commit changes and create a pull request
+#        env:
+#          GH_TOKEN: ${{ github.token }}
+#        run: |
+#          git add setup.cfg
+#          git commit -m "Update setup.cfg to use RC provider packages"
+#          git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
+#          gh pr create --base ${{ inputs.base_git_rev }} \
+#                       --title "[DO NOT MERGE] Test RC provider packages" \
+#                       --body "${{ inputs.issue_url }}" --fill
+#          echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
     outputs:
       rc_testing_branch: ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
