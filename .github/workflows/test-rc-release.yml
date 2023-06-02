@@ -38,6 +38,10 @@ jobs:
         with:
           ref: ${{ inputs.base_git_rev }}
 
+      - name: Install dev dependency
+          run: |
+            python3 -m pip install -r dev/scripts/integration_test_scripts/requirements.txt
+
       - name: Create RC branch
         id: create_rc_branch
         run: |
@@ -50,8 +54,7 @@ jobs:
       - name: Update project dependencies to use RC providers
         run: |
           echo "Updating pyproject.toml with RC provider packages"
-          pip install bs4
-          python3 dev/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
+          python3 dev/scripts/integration_test_scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
 
       - name: Setup Github Actions git user
         run: |
