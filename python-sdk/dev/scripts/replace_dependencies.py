@@ -107,7 +107,7 @@ if __name__ == "__main__":
             "The URL of the github issue that announce provider testing"
             "(e.g., https://github.com/apache/airflow/issues/31322)"
         ),
-        required=True
+        required=True,
     )
     args = parser.parse_args()
     issue_url = args.issue_url
