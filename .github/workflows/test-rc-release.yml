@@ -39,8 +39,8 @@ jobs:
           ref: ${{ inputs.base_git_rev }}
 
       - name: Install dev dependency
-          run: |
-            python3 -m pip install -r dev/scripts/integration_test_scripts/requirements.txt
+        run: |
+          python3 -m pip install -r dev/scripts/integration_test_scripts/requirements.txt
 
       - name: Create RC branch
         id: create_rc_branch
