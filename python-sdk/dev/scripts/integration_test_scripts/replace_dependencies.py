@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from pip._internal.utils.packaging import get_requirement
 
-ROOT = pathlib.Path(__file__).parent.parent.parent
+ROOT = pathlib.Path(__file__).parent.parent.parent.parent
 
 
 def _parse_pinned_pacakge_from_cncf(cncf_url: str) -> str:
@@ -78,9 +78,9 @@ def update_pyproject(rc_provider_packages: list[str]):
         package_name_to_search = requirement.name
 
         if requirement.specifier:
-            pinned_package = f"{package_name_to_search}{requirement.specifier}"
+            pinned_package = f"{package_name_to_search}{requirement.specifier}\","
         elif requirement.url:
-            pinned_package = f"{package_name_to_search} @{requirement.url}"
+            pinned_package = f"{package_name_to_search} @{requirement.url}\","
         else:
             raise Exception(
                 f"Invalid package {package} provided. It needs to be pinned to a specific version."
