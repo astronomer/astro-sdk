@@ -100,13 +100,14 @@ def update_pyproject(rc_provider_packages: list[str]):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
+    # group = parser.add_argument() .add_mutually_exclusive_group(required=True)
+    parser.add_argument(
         "--issue-url",
         help=(
             "The URL of the github issue that announce provider testing"
             "(e.g., https://github.com/apache/airflow/issues/31322)"
         ),
+        required=True
     )
     args = parser.parse_args()
     issue_url = args.issue_url
