@@ -76,4 +76,3 @@ jobs:
           echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
     outputs:
       rc_testing_branch: ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
-
