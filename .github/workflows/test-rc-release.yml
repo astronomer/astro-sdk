@@ -9,7 +9,7 @@ on:  # yamllint disable-line rule:truthy
           (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
       base_git_rev:
-        description: 'The base git revision to test Providers RCs (temp)'
+        description: 'The base git revision to test Providers RCs'
         required: false
         type: string
         default: 'main'
