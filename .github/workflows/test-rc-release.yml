@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "Updating pyproject.toml with RC provider packages"
           pip install bs4
-          python dev/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
+          python3 dev/scripts/replace_dependencies.py --issue-url ${{ inputs.issue_url }}
 
       - name: Setup Github Actions git user
         run: |
