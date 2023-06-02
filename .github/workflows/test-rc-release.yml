@@ -13,7 +13,6 @@ on:  # yamllint disable-line rule:truthy
         required: false
         type: string
         default: 'main'
-  pull_request:
 defaults:
   run:
     working-directory: python-sdk
