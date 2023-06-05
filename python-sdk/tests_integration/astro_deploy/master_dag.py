@@ -117,7 +117,6 @@ def start_sftp_ftp_services_method():
         InstanceType="t2.micro",
         SecurityGroupIds=[INBOUND_SECURITY_GROUP_ID],
     )
-    public_ip = instance[0].classic_address._public_ip
     instance_id = instance[0].id
     ti = get_current_context()["ti"]
     ti.xcom_push(key=EC2_INSTANCE_ID_KEY, value=instance_id)
