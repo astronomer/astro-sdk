@@ -149,7 +149,7 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
     sftp_conn = Connection(
         conn_id="sftp_default",
         conn_type="sftp",
-        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["create_ec2_instance"]),
+        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["start_sftp_ftp_services"]),
         login=SFTP_USERNAME,
         password=SFTP_PASSWORD
     )  # create a connection object
@@ -157,7 +157,7 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
     ftp_conn = Connection(
         conn_id="ftp_default",
         conn_type="ftp",
-        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["create_ec2_instance"]),
+        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["start_sftp_ftp_services"]),
         login=FTP_USERNAME,
         password=FTP_PASSWORD
     )  # create a connection object
