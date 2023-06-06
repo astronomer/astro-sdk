@@ -267,8 +267,10 @@ with dag:
     aql.load_file(
         task_id="sftp_to_snowflake",
         input_file=File(
-            path="sftp://upload/ADOPTION_CENTER_1_unquoted.csv", conn_id="sftp_conn", filetype=FileType.CSV
-        )
+            path="sftp://upload/ADOPTION_CENTER_1_unquoted.csv",
+            conn_id="sftp_conn",
+            filetype=FileType.CSV
+        ),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
