@@ -6,14 +6,13 @@ from typing import Any, List
 
 from airflow import DAG, settings
 from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
-from airflow.models import DagRun
+from airflow.models import Connection, DagRun
 from airflow.models.baseoperator import chain
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator, get_current_context
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
-from airflow.models import Connection
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
@@ -33,6 +32,7 @@ SFTP_USERNAME = os.getenv("SFTP_USERNAME", "not_set")
 SFTP_PASSWORD = os.getenv("SFTP_PASSWORD", "not_set")
 FTP_USERNAME = os.getenv("FTP_USERNAME", "not_set")
 FTP_PASSWORD = os.getenv("FTP_PASSWORD", "not_set")
+
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
     """Fetch dags run details and generate report"""
@@ -109,6 +109,7 @@ def prepare_dag_dependency(task_info, execution_time):
 
 def start_sftp_ftp_services_method():
     import boto3
+
     ec2 = boto3.resource("ec2", **AWS_S3_CREDS)
     instance = ec2.create_instances(
         ImageId=AMI_ID,
@@ -151,7 +152,7 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
         conn_type="sftp",
         host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["start_sftp_ftp_services"])[0],
         login=SFTP_USERNAME,
-        password=SFTP_PASSWORD
+        password=SFTP_PASSWORD,
     )  # create a connection object
 
     ftp_conn = Connection(
@@ -159,7 +160,7 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
         conn_type="ftp",
         host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["start_sftp_ftp_services"])[0],
         login=FTP_USERNAME,
-        password=FTP_PASSWORD
+        password=FTP_PASSWORD,
     )  # create a connection object
 
     session = settings.Session()
@@ -182,9 +183,9 @@ def terminate_instance(task_instance: "TaskInstance") -> None:
     import boto3
 
     ec2 = boto3.client("ec2", **AWS_S3_CREDS)
-    ec2_instance_id_xcom = task_instance.xcom_pull(key=EC2_INSTANCE_ID_KEY, task_ids=["start_sftp_ftp_services"])[
-        0
-    ]
+    ec2_instance_id_xcom = task_instance.xcom_pull(
+        key=EC2_INSTANCE_ID_KEY, task_ids=["start_sftp_ftp_services"]
+    )[0]
     ec2.terminate_instances(
         InstanceIds=[
             ec2_instance_id_xcom,
@@ -319,19 +320,24 @@ with DAG(
         trigger_rule="all_success",
     )
 
-    start >> start_sftp_ftp_services >> create_sftp_ftp_default_airflow_connection >> [  # skipcq PYL-W0104
-        list_installed_pip_packages,
-        get_airflow_version,
-        load_file_trigger_tasks[0],
-        transform_trigger_tasks[0],
-        dataframe_trigger_tasks[0],
-        append_trigger_tasks[0],
-        merge_trigger_tasks[0],
-        dynamic_task_trigger_tasks[0],
-        data_validation_trigger_tasks[0],
-        dataset_trigger_tasks[0],
-        cleanup_snowflake_trigger_tasks[0],
-    ]
+    (
+        start
+        >> start_sftp_ftp_services
+        >> create_sftp_ftp_default_airflow_connection
+        >> [  # skipcq PYL-W0104
+            list_installed_pip_packages,
+            get_airflow_version,
+            load_file_trigger_tasks[0],
+            transform_trigger_tasks[0],
+            dataframe_trigger_tasks[0],
+            append_trigger_tasks[0],
+            merge_trigger_tasks[0],
+            dynamic_task_trigger_tasks[0],
+            data_validation_trigger_tasks[0],
+            dataset_trigger_tasks[0],
+            cleanup_snowflake_trigger_tasks[0],
+        ]
+    )
 
     last_task = [
         list_installed_pip_packages,
