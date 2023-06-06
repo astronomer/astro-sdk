@@ -175,7 +175,7 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
 
         session.add(conn)
         session.commit()  # it will insert the connection object programmatically.
-        logging.info(f"Connection {conn.conn_id} is created")
+        logging.info("Connection %s is created", conn.conn_id)
 
 
 def terminate_instance(task_instance: "TaskInstance") -> None:
