@@ -245,7 +245,7 @@ with dag:
         task_id="s3_to_dataframe_filetype",
         input_file=File(
             path="s3://astro-sdk/python_sdk/example_dags/data/sample_csv.data", filetype=FileType.CSV
-        )
+        ),
     )
     # [END load_file_example_18]
 
