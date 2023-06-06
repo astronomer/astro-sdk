@@ -117,7 +117,7 @@ def start_sftp_ftp_services_method():
         InstanceType="t2.micro",
         SecurityGroupIds=[INBOUND_SECURITY_GROUP_ID],
     )
-    instance_id = instance[0].id
+    instance_id = instance[0].instance_id
     ti = get_current_context()["ti"]
     ti.xcom_push(key=EC2_INSTANCE_ID_KEY, value=instance_id)
     while get_instances_status(instance_id) != "running":
@@ -149,7 +149,7 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
     sftp_conn = Connection(
         conn_id="sftp_default",
         conn_type="sftp",
-        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["start_sftp_ftp_services"]),
+        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["start_sftp_ftp_services"])[0],
         login=SFTP_USERNAME,
         password=SFTP_PASSWORD
     )  # create a connection object
@@ -157,7 +157,7 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
     ftp_conn = Connection(
         conn_id="ftp_default",
         conn_type="ftp",
-        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["start_sftp_ftp_services"]),
+        host=task_instance.xcom_pull(key=INSTANCE_PUBLIC_IP, task_ids=["start_sftp_ftp_services"])[0],
         login=FTP_USERNAME,
         password=FTP_PASSWORD
     )  # create a connection object
