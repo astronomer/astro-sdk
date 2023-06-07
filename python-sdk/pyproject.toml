@@ -75,6 +75,7 @@ amazon = [
     "apache-airflow-providers-amazon>=5.0.0",
     "s3fs",
     "smart-open[s3]>=5.2.1",
+    "redshift-connector<=2.0.910"
 ]
 azure = [
     "apache-airflow-providers-microsoft-azure",
