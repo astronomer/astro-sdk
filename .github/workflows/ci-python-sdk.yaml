@@ -38,7 +38,7 @@ env:
   POSTGRES_PORT: 5432
   AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
   REDSHIFT_DATABASE: dev
-  REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+  REDSHIFT_HOST: redshift-cluster-1.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
   SNOWFLAKE_SCHEMA: ASTROFLOW_CI
   SNOWFLAKE_DATABASE: SANDBOX
   SNOWFLAKE_WAREHOUSE: DEMO
