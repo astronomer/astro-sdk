@@ -1,11 +1,13 @@
 # Changelog
 
-## 1.7.0a2
+## 1.7.0a3
 
 ### Feature
 - Allow users to disable schema check and creation on `transform` [#1925](https://github.com/astronomer/astro-sdk/pull/1925)
 - Allow users to disable schema check and creation on `load_file` [#1922](https://github.com/astronomer/astro-sdk/pull/1922)
 
+### Bug fixes
+- Fix QueryModifier issue on Snowflake [#1962](https://github.com/astronomer/astro-sdk/pull/1962)
 
 ## 1.6.1
 
