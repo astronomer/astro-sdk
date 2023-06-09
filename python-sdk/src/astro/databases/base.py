@@ -103,6 +103,30 @@ class BaseDatabase(ABC):
         """Return Sqlalchemy engine."""
         return self.hook.get_sqlalchemy_engine()  # type: ignore[no-any-return]
 
+    def run_single_sql_query(
+        self,
+        sql: str | ClauseElement = "",
+        parameters: dict | None = None,
+    ) -> Any:
+        """
+        Return the results to running a SQL statement.
+
+        Whenever possible, this method should be implemented using Airflow Hooks,
+        since this will simplify the integration with Async operators.
+
+        :param sql: Contains SQL query to be run against database
+        :param parameters: Optional parameters to be used to render the query
+        """
+        # We need to autocommit=True to make sure the query runs. This is done exclusively for SnowflakeDatabase's
+        # truncate method to reflect changes.
+        if isinstance(sql, str):
+            result = self.connection.execute(
+                sqlalchemy.text(sql).execution_options(autocommit=True), parameters
+            )
+        else:
+            result = self.connection.execute(sql, parameters)
+        return result
+
     def run_sql(
         self,
         sql: str | ClauseElement = "",
@@ -134,15 +158,15 @@ class BaseDatabase(ABC):
                 stacklevel=2,
             )
             sql = kwargs.get("sql_statement")  # type: ignore
-        sql = query_modifier.merge_pre_and_post_queries(sql)
-        # We need to autocommit=True to make sure the query runs. This is done exclusively for SnowflakeDatabase's
-        # truncate method to reflect changes.
-        if isinstance(sql, str):
-            result = self.connection.execute(
-                sqlalchemy.text(sql).execution_options(autocommit=True), parameters
-            )
-        else:
-            result = self.connection.execute(sql, parameters)
+
+        for sql_query in query_modifier.pre_queries:
+            _ = self.run_single_sql_query(sql_query, parameters)
+
+        result = self.run_single_sql_query(sql, parameters)
+
+        for sql_query in query_modifier.post_queries:
+            _ = self.run_single_sql_query(sql_query, parameters)
+
         if handler:
             return handler(result)
         return None
