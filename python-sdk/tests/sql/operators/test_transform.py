@@ -32,9 +32,10 @@ def test_transform_calls_with_query_tag(run_sql, sample_dag):
         dummy_method()
 
     test_utils.run_dag(sample_dag)
-    enriched_query = run_sql.method_calls[1].args[0].text
-    assert enriched_query.startswith("ALTER team_1;ALTER team_2;CREATE TABLE IF NOT EXISTS ")
-    assert enriched_query.endswith("AS SELECT 1+1")
+    run_sql.method_calls[1].args[0].text.startswith("ALTER team_1")
+    run_sql.method_calls[2].args[0].text.startswith("ALTER team_2")
+    run_sql.method_calls[3].args[0].text.startswith("CREATE TABLE IF NOT EXISTS")
+    run_sql.method_calls[3].args[0].text.endswith("AS SELECT 1+1")
 
 
 @mock.patch("astro.databases.base.BaseDatabase.connection")
@@ -56,9 +57,9 @@ def test_transform_file_calls_with_query_tag(run_sql, sample_dag):
         test_utils.run_dag(sample_dag)
 
         assert run_sql.method_calls[1].args[0].text.startswith("ALTER team_1")
-        assert run_sql.method_calls[2].args[1].text.startswith("ALTER team_2")
-        assert run_sql.method_calls[3].args[2].text.startswith("CREATE TABLE IF NOT EXISTS")
-        assert run_sql.method_calls[3].args[2].text.endswith("AS SELECT 1+1")
+        assert run_sql.method_calls[2].args[0].text.startswith("ALTER team_2")
+        assert run_sql.method_calls[3].args[0].text.startswith("CREATE TABLE IF NOT EXISTS")
+        assert run_sql.method_calls[3].args[0].text.endswith("AS SELECT 1+1")
 
 
 @mock.patch("astro.databases.snowflake.SnowflakeDatabase.connection")
