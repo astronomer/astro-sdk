@@ -323,7 +323,7 @@ with DAG(
         trigger_rule="all_success",
     )
 
-    (
+    (  # skipcq PYL-W0104
         start
         >> start_sftp_ftp_services
         >> create_sftp_ftp_default_airflow_connection
