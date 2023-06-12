@@ -358,4 +358,4 @@ with DAG(
 
     last_task >> end  # skipcq PYL-W0104
     last_task >> report  # skipcq PYL-W0104
-    last_task >> terminate_ec2_instance
+    last_task >> terminate_ec2_instance  # skipcq PYL-W0104
