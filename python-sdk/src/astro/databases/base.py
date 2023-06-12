@@ -101,7 +101,7 @@ class BaseDatabase(ABC):
     @cached_property
     def sqlalchemy_engine(self) -> sqlalchemy.engine.base.Engine:
         """Return Sqlalchemy engine."""
-        return self.hook.get_sqlalchemy_engine(engine_kwargs={"encoding": "latin-1"})  # type: ignore[no-any-return]
+        return self.hook.get_sqlalchemy_engine()  # type: ignore[no-any-return]
 
     def run_sql(
         self,
