@@ -175,3 +175,6 @@ Contributors and maintainers should abide by the [Contributor Code of Conduct](C
 ## License
 
 [Apache Licence 2.0](LICENSE)
+
+## Notes
+Redshift support is having an issue with dc2.large(gen2) instances. You can still use it with ra3.xlplus(gen 3). We have registered a case with AWS for the same.
