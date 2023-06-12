@@ -118,6 +118,7 @@ def start_sftp_ftp_services_method():
         InstanceType="t2.micro",
         SecurityGroupIds=[INBOUND_SECURITY_GROUP_ID],
     )
+    print("instance : ", instance)
     instance_id = instance[0].instance_id
     ti = get_current_context()["ti"]
     ti.xcom_push(key=EC2_INSTANCE_ID_KEY, value=instance_id)
@@ -134,8 +135,10 @@ def get_instances_status(instance_id: str) -> str:
     response = client.describe_instances(
         InstanceIds=[instance_id],
     )
+    print("response : ", response)
     instance_details = response["Reservations"][0]["Instances"][0]
     instance_state: str = instance_details["State"]["Name"]
+    print("instance_state : ", instance_state)
     if instance_state == "running":
         ti = get_current_context()["ti"]
         ti.xcom_push(key=INSTANCE_PUBLIC_IP, value=instance_details["PublicIpAddress"])
