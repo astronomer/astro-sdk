@@ -74,8 +74,7 @@ postgres = [
 amazon = [
     "apache-airflow-providers-amazon>=5.0.0",
     "s3fs",
-    "smart-open[s3]>=5.2.1",
-    "redshift-connector<=2.0.910"
+    "smart-open[s3]>=5.2.1"
 ]
 azure = [
     "apache-airflow-providers-microsoft-azure",
@@ -130,8 +129,7 @@ all = [
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
-    "apache-airflow-providers-mysql",
-    "redshift-connector<=2.0.910"
+    "apache-airflow-providers-mysql"
 ]
 doc = [
     "myst-parser>=0.17",

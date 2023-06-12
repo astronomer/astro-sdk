@@ -96,7 +96,7 @@ class BaseDatabase(ABC):
     @property
     def connection(self) -> sqlalchemy.engine.base.Connection:
         """Return a Sqlalchemy connection object for the given database."""
-        return self.sqlalchemy_engine.connect()
+        return self.sqlalchemy_engine.connect(encoding="latin-1")
 
     @cached_property
     def sqlalchemy_engine(self) -> sqlalchemy.engine.base.Engine:
