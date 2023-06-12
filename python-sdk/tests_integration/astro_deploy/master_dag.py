@@ -181,7 +181,7 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
         logging.info("Connection %s is created", conn.conn_id)
 
 
-def terminate_instance(task_instance: "TaskInstance") -> None:
+def terminate_instance(task_instance: "TaskInstance") -> None:  # noqa: F821
     """Terminate ec2 instance by instance id"""
     import boto3
 
