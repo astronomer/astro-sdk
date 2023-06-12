@@ -105,7 +105,6 @@ class RedshiftDatabase(BaseDatabase):
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
         uri = self.hook.get_uri()
-        uri = uri + "?encoding=latin-1"
         return create_engine(uri)
 
     @property
