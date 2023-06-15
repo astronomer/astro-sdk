@@ -142,9 +142,12 @@ class BaseFileLocation(ABC):
 
         :param path: Path to a file in the filesystem/Object stores
         """
-        file_scheme = urlparse(path).scheme
+        parse_result = urlparse(path)
+        file_scheme = parse_result.scheme
         if file_scheme == "":
             location = FileLocation.LOCAL
+        elif file_scheme in ("http", "https") and parse_result.hostname.endswith(".sharepoint.com"):
+            location = FileLocation.SHARE_POINT
         else:
             try:
                 location = FileLocation(file_scheme)
