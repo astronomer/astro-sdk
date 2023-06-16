@@ -38,7 +38,7 @@ env:
   POSTGRES_PORT: 5432
   AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
   REDSHIFT_DATABASE: dev
-  REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+  #REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
   SNOWFLAKE_SCHEMA: ASTROFLOW_CI
   SNOWFLAKE_DATABASE: SANDBOX
   SNOWFLAKE_WAREHOUSE: DEMO
@@ -116,6 +116,49 @@ jobs:
       - run: pip3 install nox
       - run: nox -s build_docs
 
+  create_redshift_cluster:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) ||
+      (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
+      ) ||
+      (
+        github.event_name == 'release'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: |
+          pip install ./dev/script/redshift/requirements.txt
+          source ./dev/script/redshift/create_env_vars.sh
+      - id: get_redshift_host
+        run: echo "REDSHIFT_HOST=${REDSHIFT_HOST}" >> "$GITHUB_OUTPUT"
+      - id: get_redshift_cluster_id
+        run: echo "REDSHIFT_HOST=${REDSHIFT_CLUSTER_ID}" >> "$GITHUB_OUTPUT"
+
   Run-Optional-Packages-tests-python-sdk:
     if: >-
       github.event_name == 'push' ||
@@ -130,6 +173,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: create_redshift_cluster
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -202,6 +246,8 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
 
   Run-Unit-tests-Airflow-2-5:
     strategy:
@@ -263,6 +309,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: create_redshift_cluster
     strategy:
       fail-fast: false
       matrix:
@@ -344,6 +391,8 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
 
   Run-example-dag-Integration-Airflow-2-5:
     if: >-
@@ -359,6 +408,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: create_redshift_cluster
     strategy:
       fail-fast: false
       matrix:
@@ -440,6 +490,8 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
 
   Run-Integration-tests-Airflow-2-5:
     if: >-
@@ -455,6 +507,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: create_redshift_cluster
     strategy:
       fail-fast: false
       matrix:
@@ -537,6 +590,8 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
 
   Run-example-dag-tests-Airflow-2-2-5:
     if: >-
@@ -552,6 +607,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: create_redshift_cluster
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -620,6 +676,44 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
+
+  delete_redshift_cluster:
+    if: ${{ always() && !cancelled() && needs.build.result == 'success' }}
+    needs:
+      - Run-Unit-tests-Airflow-2-5
+      - Run-example-dag-tests-Airflow-2-2-5
+      - Run-Integration-tests-Airflow-2-5
+      - Run-load-file-Integration-Airflow-2-5
+      - Run-example-dag-Integration-Airflow-2-5
+      - Run-Optional-Packages-tests-python-sdk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: |
+          pip install ./dev/script/redshift/requirements.txt
+          python ./create_redshift_cluster.py --actions=delete --cluster_id=${REDSHIFT_CLUSTER_ID}
+    env:
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
 
   Generate-Constraints:
     if: (github.event_name == 'release' || github.event_name == 'push')
