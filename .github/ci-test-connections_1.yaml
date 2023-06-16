@@ -1,0 +1,158 @@
+postgres_conn:
+    conn_type: postgres
+    host: localhost
+    schema:
+    login: postgres
+    password: postgres
+    port: 5432
+    extra:
+postgres_conn_pagila:
+    conn_type: postgres
+    host: localhost
+    schema: pagila
+    login: postgres
+    password: postgresð
+    port: 5432
+    extra:
+postgres_benchmark_conn:
+    conn_type: postgres
+    host: postgres
+    schema:
+    login: postgres
+    password: postgres
+    port: 5432
+    extra:
+snowflake_conn:
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    port: 443
+    login: gp21411
+    password: $Falling+from+the+sk4
+    schema: ASTROFLOW_CI
+    extra:
+      account: "gp21411"
+      region: "us-east-1"
+      role: "AIRFLOW_TEST_USER"
+      warehouse: ROBOTS
+      database: SANDBOX
+snowflake_conn_1:
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    port: 443
+    login: gp21411
+    password: $Falling+from+the+sk4
+    extra:
+      account: "gp21411"
+      region: "us-east-1"
+      role: "AIRFLOW_TEST_USER"
+      warehouse: ROBOTS
+bigquery:
+    conn_type: bigquery
+    description: null
+    extra:
+      project: "astronomer-dag-authoring"
+    host: null
+    login: null
+    password: null
+    port: null
+    schema: null
+sqlite_conn:
+    conn_type: sqlite
+    host: /tmp/sqlite.db
+    schema:
+    login:
+    password:
+gcp_conn:
+    conn_type: google_cloud_platform
+    description: null
+    extra: null
+gdrive_conn:
+    conn_type: google_cloud_platform
+    description: connection to test google drive as file location
+    extra: '{"extra__google_cloud_platform__scope":"https://www.googleapis.com/auth/drive.readonly"}'
+aws_conn:
+    conn_type: aws
+    description: null
+    extra: null
+redshift_conn:
+    conn_type: redshift
+    schema: dev
+    host: $utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+    port: 5439
+    login: awsuser
+    password: Awsuser123&
+redshift_default:
+    conn_type: redshift
+    port: 5439
+    extra:
+      iam: false
+      cluster_identifier: <REDSHIFT_CLUSTER_IDENTIFIER>
+      profile: default
+      db_user: awsuser
+      port: 5439,
+      database: dev
+      region: 'us-east-1'
+s3_conn_benchmark:
+    conn_type: aws
+    description: null
+    extra:
+      aws_access_key_id: AKIAZG42HVH6UXGLQKEG
+      aws_secret_access_key: 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
+databricks_conn:
+    conn_type: delta
+    host: https://dbc-9c390870-65ef.cloud.databricks.com/
+    password: dapi335eb99724f8f52b3c12c26856495829
+    extra:
+      http_path: /sql/1.0/warehouses/cf414a2206dfb397
+wasb_default:
+    conn_type: wasb
+    description: null
+    extra:
+      connection_string: DefaultEndpointsProtocol=https;AccountName=astrosdk;AccountKey=i1XKrURpVtWYZV7Z079ZG9vhNDrpCZ1431K8BdPH5DTV9Jecx+vCtiaHRLAVAJxAyyA0o4InFgZ2+AStFeJYtw==;EndpointSuffix=core.windows.net
+wasb_conn_with_access_key:
+    conn_type: wasb
+    login: astrosdk
+    host: astrosdk.blob.core.windows.net
+    description: null
+    extra:
+      shared_access_key: i1XKrURpVtWYZV7Z079ZG9vhNDrpCZ1431K8BdPH5DTV9Jecx+vCtiaHRLAVAJxAyyA0o4InFgZ2+AStFeJYtw==
+gcp_conn_project:
+    conn_type: google_cloud_platform
+    description: null
+    extra:
+      project: "astronomer-dag-authoring"
+      project_id: "astronomer-dag-authoring"
+mssql_conn:
+    conn_type: mssql
+    host: astromssqlserver.database.windows.net
+    login: astrouser
+    password: Passw@rd
+    port: 1433
+    schema: astrouser
+    extra:
+duckdb_conn:
+    conn_type: duckdb
+    host: /tmp/ciduckdb.duckdb
+    schema:
+    login:
+    password:
+duckdb_memory:
+    conn_type: duckdb
+    host:
+    schema:
+    login:
+    password:
+minio_conn:
+    conn_type: aws
+    description: null
+    extra:
+      aws_access_key_id: "ROOTNAME"
+      aws_secret_access_key: "CHANGEME123"
+      endpoint_url: "http://127.0.0.1:9000"
+mysql_conn:
+    conn_type: mysql
+    host: astromysql.mysql.database.azure.com
+    login: astrouser
+    password: Passw@rd
+    port: 3306
+    schema: $MYSQL_DB
