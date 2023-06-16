@@ -39,7 +39,7 @@ def nostdout():
 
 
 def generate_cluster_identifier(len: int = 15):
-    return "".join(random.choices(string.ascii_lowercase), k=15)
+    return "".join(random.choices(string.ascii_lowercase, k=15))
 
 
 def create_redshift_cluster(cluster_id: str | None = None):
