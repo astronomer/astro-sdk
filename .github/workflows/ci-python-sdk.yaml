@@ -154,7 +154,7 @@ jobs:
       - run: |
           pwd
           pip install -r ./dev/scripts/redshift/requirements.txt
-          source ./dev/script/redshift/create_env_vars.sh
+          source ./dev/scripts/redshift/create_env_vars.sh
       - id: get_redshift_host
         run: echo "REDSHIFT_HOST=${REDSHIFT_HOST}" >> "$GITHUB_OUTPUT"
       - id: get_redshift_cluster_id
