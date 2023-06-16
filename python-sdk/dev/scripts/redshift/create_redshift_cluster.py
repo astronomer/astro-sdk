@@ -14,13 +14,13 @@ import boto3
 
 REDSHIFT_REGION_NAME = os.getenv("REDSHIFT_REGION_NAME", "us-east-2")
 REDSHIFT_DATABASE = os.getenv("REDSHIFT_DATABASE", "dev")
-REDSHIFT_USERNAME = os.getenv("REDSHIFT_USERNAME", "awsuser")
-REDSHIFT_PASSWORD = os.getenv("REDSHIFT_PASSWORD", "Awsuser123&")
+REDSHIFT_USERNAME = os.getenv("REDSHIFT_USERNAME", "not-set")
+REDSHIFT_PASSWORD = os.getenv("REDSHIFT_PASSWORD", "not-set")
 REDSHIFT_NODE_TYPE = os.getenv("REDSHIFT_NODE_TYPE", "dc2.large")
 
 AWS_S3_CREDS = {
-    "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "AKIAZG42HVH6TCD2Y7QJ"),
-    "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", "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"),
+    "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "not-set"),
+    "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", "not-set"),
     "region_name": REDSHIFT_REGION_NAME,
 }
 
