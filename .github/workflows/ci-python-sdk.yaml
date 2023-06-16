@@ -153,7 +153,7 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: |
           pwd
-          pip install -r dev/script/redshift/requirements.txt
+          pip install -r ./dev/scripts/redshift/requirements.txt
           source ./dev/script/redshift/create_env_vars.sh
       - id: get_redshift_host
         run: echo "REDSHIFT_HOST=${REDSHIFT_HOST}" >> "$GITHUB_OUTPUT"
