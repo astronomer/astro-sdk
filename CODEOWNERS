@@ -1,5 +1,5 @@
 # Order is important; the last matching pattern takes the most
 # precedence.
 
-*               @pankajastro @tatiana @utkarsharma2
-python-sdk/     @dimberman @tatiana @utkarsharma2 @sunank200 @pankajastro @pankajkoti
+*               @pankajastro @tatiana @utkarsharma2 @astronomer/astro-devex
+python-sdk/     @dimberman @tatiana @utkarsharma2 @sunank200 @pankajastro
