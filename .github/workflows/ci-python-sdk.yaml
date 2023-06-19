@@ -132,7 +132,8 @@ jobs:
       )
     runs-on: ubuntu-latest
     outputs:
-      get_redshift_host: ${{ steps.get_redshift_host.outputs.REDSHIFT_HOST }}
+      get_redshift_host: ${{ steps.setup_redshift.outputs.get_redshift_host }}
+      get_redshift_cluster_id: ${{ steps.setup_redshift.outputs.get_redshift_cluster_id }}
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -153,8 +154,9 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      id: build_step
-      - run: |
+      - name: Setup redshift
+        id: setup_redshift
+        run: |
           pwd
           pip install -r ./dev/scripts/redshift/requirements.txt
           source ./dev/scripts/redshift/create_env_vars.sh
