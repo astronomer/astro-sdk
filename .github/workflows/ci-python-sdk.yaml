@@ -158,8 +158,10 @@ jobs:
           pwd
           pip install -r ./dev/scripts/redshift/requirements.txt
           source ./dev/scripts/redshift/create_env_vars.sh
-      - run: echo $REDSHIFT_HOST
-      - run: echo $REDSHIFT_CLUSTER_ID
+          echo $REDSHIFT_HOST
+          echo $REDSHIFT_CLUSTER_ID
+          echo "get_redshift_host=${REDSHIFT_HOST}" >> "$GITHUB_OUTPUT"
+          echo "get_redshift_cluster_id=${REDSHIFT_CLUSTER_ID}" >> "$GITHUB_OUTPUT"
       - id: get_redshift_host
         run: echo "get_redshift_host=${REDSHIFT_HOST}" >> "$GITHUB_OUTPUT"
       - id: get_redshift_cluster_id
