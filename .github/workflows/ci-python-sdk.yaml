@@ -261,8 +261,8 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
-      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
-      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.outputs.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.outputs.get_redshift_cluster_id}}
 
   Run-Unit-tests-Airflow-2-5:
     strategy:
@@ -378,9 +378,6 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: echo ${{needs.create_redshift_cluster.outputs}}
-      - run: echo ${{needs.create_redshift_cluster.outputs.REDSHIFT_HOST}}
-      - run: echo ${{needs.create_redshift_cluster.outputs.get_redshift_cluster_id}}
       - run: echo $REDSHIFT_HOST
       - run: echo $REDSHIFT_CLUSTER_ID
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
@@ -511,8 +508,8 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
-      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
-      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.outputs.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.outputs.get_redshift_cluster_id}}
 
   Run-Integration-tests-Airflow-2-5:
     if: >-
@@ -611,8 +608,8 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
-      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
-      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.outputs.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.outputs.get_redshift_cluster_id}}
 
   Run-example-dag-tests-Airflow-2-2-5:
     if: >-
@@ -697,8 +694,8 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
-      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
-      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.outputs.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.outputs.get_redshift_cluster_id}}
 
   delete_redshift_cluster:
     if: ${{ always() }}
