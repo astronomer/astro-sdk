@@ -16,7 +16,7 @@ REDSHIFT_REGION_NAME = os.getenv("REDSHIFT_REGION_NAME", "us-east-2")
 REDSHIFT_DATABASE = os.getenv("REDSHIFT_DATABASE", "dev")
 REDSHIFT_USERNAME = os.getenv("REDSHIFT_USERNAME", "not-set")
 REDSHIFT_PASSWORD = os.getenv("REDSHIFT_PASSWORD", "not-set")
-REDSHIFT_NODE_TYPE = os.getenv("REDSHIFT_NODE_TYPE", "dc2.large")
+REDSHIFT_NODE_TYPE = os.getenv("REDSHIFT_NODE_TYPE", "ra3.xlplus")
 
 AWS_S3_CREDS = {
     "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "not-set"),
