@@ -90,8 +90,8 @@ if __name__ == "__main__":
     if args.action == action_create:
         # with nostdout():
         #     host, cluster_id = create_redshift_cluster(args.cluster_id)
-        host = "utojkcjammfoqds.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com"
-        cluster_id = "utojkcjammfoqds"
+        host = "utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com:5439"
+        cluster_id = "utkarsh-cluster"
         print(f"{host} {cluster_id}")
     elif args.action == action_delete:
         if args.cluster_id is None:
