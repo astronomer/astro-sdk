@@ -700,7 +700,12 @@ jobs:
   delete_redshift_cluster:
     if: ${{ always() }}
     needs:
-      - create_redshift_cluster
+      - Run-Unit-tests-Airflow-2-5
+      - Run-example-dag-tests-Airflow-2-2-5
+      - Run-Integration-tests-Airflow-2-5
+      - Run-load-file-Integration-Airflow-2-5
+      - Run-example-dag-Integration-Airflow-2-5
+      - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
