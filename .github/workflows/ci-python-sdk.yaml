@@ -159,9 +159,9 @@ jobs:
           pip install -r ./dev/scripts/redshift/requirements.txt
           source ./dev/scripts/redshift/create_env_vars.sh
       - id: get_redshift_host
-        run: echo "REDSHIFT_HOST=${REDSHIFT_HOST}" >> "$GITHUB_OUTPUT"
+        run: echo "get_redshift_host=${REDSHIFT_HOST}" >> "$GITHUB_OUTPUT"
       - id: get_redshift_cluster_id
-        run: echo "REDSHIFT_HOST=${REDSHIFT_CLUSTER_ID}" >> "$GITHUB_OUTPUT"
+        run: echo "get_redshift_cluster_id=${REDSHIFT_CLUSTER_ID}" >> "$GITHUB_OUTPUT"
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
