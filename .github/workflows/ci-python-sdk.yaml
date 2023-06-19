@@ -162,6 +162,7 @@ jobs:
         run: echo "REDSHIFT_HOST=${REDSHIFT_HOST}" >> "$GITHUB_OUTPUT"
       - id: get_redshift_cluster_id
         run: echo "REDSHIFT_HOST=${REDSHIFT_CLUSTER_ID}" >> "$GITHUB_OUTPUT"
+
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -373,9 +374,9 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - env:
-          REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
-          REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
+      - run: echo ${{needs.create_redshift_cluster.output}}
+      - run: echo ${{needs.create_redshift_cluster.output.get_redshift_host}}
+      - run: echo ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
       - run: echo $REDSHIFT_HOST
       - run: echo $REDSHIFT_CLUSTER_ID
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
@@ -407,6 +408,8 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
+      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
 
   Run-example-dag-Integration-Airflow-2-5:
     if: >-
