@@ -728,6 +728,8 @@ jobs:
     env:
       REDSHIFT_HOST: ${{needs.create_redshift_cluster.outputs.get_redshift_host}}
       REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.outputs.get_redshift_cluster_id}}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   Generate-Constraints:
     if: (github.event_name == 'release' || github.event_name == 'push')
