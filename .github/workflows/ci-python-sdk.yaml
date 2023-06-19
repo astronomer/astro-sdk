@@ -355,6 +355,9 @@ jobs:
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
+      - env:
+          REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
+          REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
 
@@ -404,8 +407,6 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
-      REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
-      REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
 
   Run-example-dag-Integration-Airflow-2-5:
     if: >-
