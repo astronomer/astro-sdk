@@ -13,6 +13,7 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator, get_current_context
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
+from redshift.create_redshift_cluster import create_redshift_cluster, delete_redshift_cluster
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
@@ -32,6 +33,14 @@ SFTP_USERNAME = os.getenv("SFTP_USERNAME", "not_set")
 SFTP_PASSWORD = os.getenv("SFTP_PASSWORD", "not_set")
 FTP_USERNAME = os.getenv("FTP_USERNAME", "not_set")
 FTP_PASSWORD = os.getenv("FTP_PASSWORD", "not_set")
+
+REDSHIFT_CLUSTER_ID = "redshift_cluster_id"
+REDSHIFT_HOST = "redshift_host"
+REDSHIFT_REGION_NAME = os.getenv("REDSHIFT_REGION_NAME", "us-east-2")
+REDSHIFT_DATABASE = os.getenv("REDSHIFT_DATABASE", "dev")
+REDSHIFT_USERNAME = os.getenv("REDSHIFT_USERNAME", "not-set")
+REDSHIFT_PASSWORD = os.getenv("REDSHIFT_PASSWORD", "not-set")
+REDSHIFT_NODE_TYPE = os.getenv("REDSHIFT_NODE_TYPE", "ra3.xlplus")
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
@@ -107,6 +116,20 @@ def prepare_dag_dependency(task_info, execution_time):
     return _task_list, _dag_run_ids
 
 
+def create_redshift_cluster_callback():
+    host, cluster_id = create_redshift_cluster()
+    ti = get_current_context()["ti"]
+    ti.xcom_push(key=REDSHIFT_CLUSTER_ID, value=cluster_id)
+    ti.xcom_push(key=REDSHIFT_HOST, value=host)
+
+
+def stop_redshift_cluster_callback(task_instance: "TaskInstance"):
+    cluster_id = task_instance.xcom_pull(
+        key=REDSHIFT_CLUSTER_ID, task_ids=["start_redshift_cluster"]
+    )[0]
+    delete_redshift_cluster(cluster_id)
+
+
 def start_sftp_ftp_services_method():
     import boto3
 
@@ -145,7 +168,7 @@ def get_instances_status(instance_id: str) -> str:
     return instance_state
 
 
-def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
+def create_airflow_connection(task_instance: Any) -> None:
     """
     Checks if airflow connection exists, if yes then deletes it.
     Then, create a new sftp_default, ftp_default connection.
@@ -166,8 +189,18 @@ def create_sftp_ftp_airflow_connection(task_instance: Any) -> None:
         password=FTP_PASSWORD,
     )  # create a connection object
 
+    redshift_conn = Connection(
+        conn_id="redshift_conn",
+        conn_type="redshift",
+        schema=REDSHIFT_DATABASE,
+        host=task_instance.xcom_pull(key=REDSHIFT_HOST, task_ids=["create_redshift_cluster"])[0],
+        port=5439,
+        login=REDSHIFT_USERNAME,
+        password=REDSHIFT_PASSWORD
+    )
+
     session = settings.Session()
-    for conn in [sftp_conn, ftp_conn]:
+    for conn in [sftp_conn, ftp_conn, redshift_conn]:
         connection = session.query(Connection).filter_by(conn_id=conn.conn_id).one_or_none()
         if connection is None:
             logging.info("Connection %s doesn't exist.", str(conn.conn_id))
@@ -224,14 +257,21 @@ with DAG(
         task_id="start_sftp_ftp_services",
         python_callable=start_sftp_ftp_services_method,
     )
+    create_redshift_cluster_task = PythonOperator(
+        task_id="create_redshift_cluster",
+        python_callable=create_redshift_cluster_callback,
+    )
 
-    create_sftp_ftp_default_airflow_connection = PythonOperator(
-        task_id="create_sftp_ftp_default_airflow_connection",
-        python_callable=create_sftp_ftp_airflow_connection,
+    create_default_airflow_connection = PythonOperator(
+        task_id="create_default_airflow_connection",
+        python_callable=create_airflow_connection,
     )
 
     terminate_ec2_instance = PythonOperator(
         task_id="terminate_instance", trigger_rule="all_done", python_callable=terminate_instance
+    )
+    stop_redshift_cluster = PythonOperator(
+        task_id="delete_redshift_cluster", trigger_rule="all_done", python_callable=stop_redshift_cluster_callback
     )
 
     dag_run_ids = []
@@ -325,8 +365,8 @@ with DAG(
 
     (  # skipcq PYL-W0104
         start
-        >> start_sftp_ftp_services
-        >> create_sftp_ftp_default_airflow_connection
+        >> [start_sftp_ftp_services, create_redshift_cluster_task]
+        >> create_default_airflow_connection
         >> [  # skipcq PYL-W0104
             list_installed_pip_packages,
             get_airflow_version,
@@ -358,4 +398,4 @@ with DAG(
 
     last_task >> end  # skipcq PYL-W0104
     last_task >> report  # skipcq PYL-W0104
-    last_task >> terminate_ec2_instance  # skipcq PYL-W0104
+    last_task >> [terminate_ec2_instance, stop_redshift_cluster]  # skipcq PYL-W0104
