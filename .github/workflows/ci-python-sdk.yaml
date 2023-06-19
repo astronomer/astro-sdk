@@ -700,12 +700,7 @@ jobs:
   delete_redshift_cluster:
     if: ${{ always() }}
     needs:
-      - Run-Unit-tests-Airflow-2-5
-      - Run-example-dag-tests-Airflow-2-2-5
-      - Run-Integration-tests-Airflow-2-5
-      - Run-load-file-Integration-Airflow-2-5
-      - Run-example-dag-Integration-Airflow-2-5
-      - Run-Optional-Packages-tests-python-sdk
+      - create_redshift_cluster
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -729,7 +724,7 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: |
           pip install -r ./dev/scripts/redshift/requirements.txt
-          python ./dev/scripts/redshift/create_redshift_cluster.py --actions=delete --cluster_id=${REDSHIFT_CLUSTER_ID}
+          python ./dev/scripts/redshift/create_redshift_cluster.py --action=delete --cluster_id=${REDSHIFT_CLUSTER_ID}
     env:
       REDSHIFT_HOST: ${{needs.create_redshift_cluster.outputs.get_redshift_host}}
       REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.outputs.get_redshift_cluster_id}}
