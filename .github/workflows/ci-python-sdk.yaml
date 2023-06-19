@@ -355,9 +355,6 @@ jobs:
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
-      - env:
-          REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
-          REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
 
@@ -376,6 +373,9 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - env:
+          REDSHIFT_HOST: ${{needs.create_redshift_cluster.output.get_redshift_host}}
+          REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
       - run: echo $REDSHIFT_HOST
       - run: echo $REDSHIFT_CLUSTER_ID
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
