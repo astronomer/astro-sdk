@@ -54,7 +54,7 @@ def create_redshift_cluster(cluster_id: str | None = None):
         MasterUserPassword=REDSHIFT_PASSWORD,
         NodeType=REDSHIFT_NODE_TYPE,
         ClusterType="single-node",
-        AutomatedSnapshotRetentionPeriod=0
+        AutomatedSnapshotRetentionPeriod=0,
     )
     while True:
         time.sleep(30)
