@@ -370,6 +370,8 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: echo $REDSHIFT_HOST
+      - run: echo $REDSHIFT_CLUSTER_ID
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -688,7 +690,7 @@ jobs:
       REDSHIFT_CLUSTER_ID: ${{needs.create_redshift_cluster.output.get_redshift_cluster_id}}
 
   delete_redshift_cluster:
-    if: ${{ always() && !cancelled() && needs.build.result == 'success' }}
+    if: ${{ always() }}
     needs:
       - Run-Unit-tests-Airflow-2-5
       - Run-example-dag-tests-Airflow-2-2-5
