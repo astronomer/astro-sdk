@@ -124,9 +124,7 @@ def create_redshift_cluster_callback():
 
 
 def stop_redshift_cluster_callback(task_instance: "TaskInstance"):
-    cluster_id = task_instance.xcom_pull(
-        key=REDSHIFT_CLUSTER_ID, task_ids=["start_redshift_cluster"]
-    )[0]
+    cluster_id = task_instance.xcom_pull(key=REDSHIFT_CLUSTER_ID, task_ids=["start_redshift_cluster"])[0]
     delete_redshift_cluster(cluster_id)
 
 
@@ -196,7 +194,7 @@ def create_airflow_connection(task_instance: Any) -> None:
         host=task_instance.xcom_pull(key=REDSHIFT_HOST, task_ids=["create_redshift_cluster"])[0],
         port=5439,
         login=REDSHIFT_USERNAME,
-        password=REDSHIFT_PASSWORD
+        password=REDSHIFT_PASSWORD,
     )
 
     session = settings.Session()
@@ -271,7 +269,9 @@ with DAG(
         task_id="terminate_instance", trigger_rule="all_done", python_callable=terminate_instance
     )
     stop_redshift_cluster = PythonOperator(
-        task_id="delete_redshift_cluster", trigger_rule="all_done", python_callable=stop_redshift_cluster_callback
+        task_id="delete_redshift_cluster",
+        trigger_rule="all_done",
+        python_callable=stop_redshift_cluster_callback,
     )
 
     dag_run_ids = []
