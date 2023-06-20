@@ -75,7 +75,6 @@ def restore_redshift_cluster(
     while True:
         time.sleep(30)
         status, host = describe_cluster_status(cluster_id)
-        print("s : ", status, "\n")
         if status == "available":
             break
     return host, cluster_id

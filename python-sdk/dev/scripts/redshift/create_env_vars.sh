@@ -1,5 +1,8 @@
 #!/bin/bash
-output="$(python ./dev/scripts/redshift/create_redshift_cluster.py --action=restore --snapshot_id=$REDSHIFT_SNAPSHOT_ID)"
+echo $1
+echo $2
+
+output="$(python ./dev/scripts/redshift/create_redshift_cluster.py --action=restore --snapshot_id=$1 --cluster_id=$2)"
 
 echo "===========================output=============================="
 echo $output
@@ -14,4 +17,3 @@ echo "===========================cluster_id=============================="
 echo $cluster_id
 
 export REDSHIFT_HOST=$host
-export REDSHIFT_CLUSTER_ID=$cluster_id
