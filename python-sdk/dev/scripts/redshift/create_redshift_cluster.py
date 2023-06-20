@@ -64,6 +64,23 @@ def create_redshift_cluster(cluster_id: str | None = None):
     return host, cluster_id
 
 
+def restore_redshift_cluster(snapshot_id: str, cluster_id: str | None = None, ):
+    cluster_id = cluster_id or generate_cluster_identifier()
+    client.restore_from_cluster_snapshot(
+        ClusterIdentifier=str(cluster_id),
+        SnapshotIdentifier=snapshot_id,
+        Port=5439,
+        PubliclyAccessible=True
+    )
+    while True:
+        time.sleep(30)
+        status, host = describe_cluster_status(cluster_id)
+        print("s : ", status, "\n")
+        if status == "available":
+            break
+    return host, cluster_id
+
+
 def describe_cluster_status(cluster_identifier: str):
     response = client.describe_clusters(ClusterIdentifier=cluster_identifier)
     return response["Clusters"][0]["ClusterStatus"], response["Clusters"][0].get("Endpoint", {}).get(
@@ -78,12 +95,19 @@ def delete_redshift_cluster(cluster_identifier: str):
 if __name__ == "__main__":
     action_create = "create"
     action_delete = "delete"
+    action_restore = "restore"
     parser = argparse.ArgumentParser(description="create/delete redshift cluster")
     parser.add_argument("--action", type=str, help="accepted values are create/delete", required=True)
     parser.add_argument(
         "--cluster_id",
         type=str,
         help=f"redshift cluster id to be use for {action_create}/{action_delete}",
+        required=False,
+    )
+    parser.add_argument(
+        "--snapshot_id",
+        type=str,
+        help=f"redshift snapshot to be use for {action_create}/{action_delete}",
         required=False,
     )
     args = parser.parse_args()
@@ -96,3 +120,10 @@ if __name__ == "__main__":
         if args.cluster_id is None:
             raise ValueError("Need --cluster_id when deleting")
         delete_redshift_cluster(args.cluster_id)
+    elif args.action == action_restore:
+        if args.snapshot_id is None:
+            raise ValueError("Need --snapshot_id when restoring")
+        host, cluster_id = restore_redshift_cluster(cluster_id=args.cluster_id, snapshot_id=args.snapshot_id)
+        print(f"{host} {cluster_id}")
+    else:
+        raise ValueError("invalid option")

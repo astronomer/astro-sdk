@@ -173,6 +173,7 @@ jobs:
       REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      REDSHIFT_SNAPSHOT_ID: ${{secret.REDSHIFT_SNAPSHOT_ID}}
 
   Run-Optional-Packages-tests-python-sdk:
     if: >-
