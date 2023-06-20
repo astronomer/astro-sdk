@@ -1303,7 +1303,7 @@ def test_aql_load_column_name_mixed_case_json_file_to_dbs(database_table_fixture
     load_file_task.operator.execute(context=create_context(load_file_task.operator))
 
     df = db.export_table_to_pandas_dataframe(test_table)
-    assert df.shape == (2, 2)
+    assert df.shape == (3, 2)
 
 
 @pytest.mark.parametrize(
