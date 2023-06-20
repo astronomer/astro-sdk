@@ -64,13 +64,13 @@ def create_redshift_cluster(cluster_id: str | None = None):
     return host, cluster_id
 
 
-def restore_redshift_cluster(snapshot_id: str, cluster_id: str | None = None, ):
+def restore_redshift_cluster(
+    snapshot_id: str,
+    cluster_id: str | None = None,
+):
     cluster_id = cluster_id or generate_cluster_identifier()
     client.restore_from_cluster_snapshot(
-        ClusterIdentifier=str(cluster_id),
-        SnapshotIdentifier=snapshot_id,
-        Port=5439,
-        PubliclyAccessible=True
+        ClusterIdentifier=str(cluster_id), SnapshotIdentifier=snapshot_id, Port=5439, PubliclyAccessible=True
     )
     while True:
         time.sleep(30)
