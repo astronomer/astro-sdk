@@ -20,9 +20,11 @@ RUN pip install apache-airflow[slack]
 
 RUN mkdir -p ${AIRFLOW_HOME}/dags
 RUN mkdir -p ${AIRFLOW_HOME}/tests
+RUN mkdir -p ${AIRFLOW_HOME}/plugins
 
 COPY example_dags/ ${AIRFLOW_HOME}/dags/
 COPY master_dag.py/ ${AIRFLOW_HOME}/dags/
+COPY redshift ${AIRFLOW_HOME}/plugins
 COPY example_snowflake_cleanup.py/ ${AIRFLOW_HOME}/dags/
 COPY tests/ ${AIRFLOW_HOME}/tests/
 
