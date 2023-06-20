@@ -124,7 +124,7 @@ def create_redshift_cluster_callback():
 
 
 def stop_redshift_cluster_callback(task_instance: "TaskInstance"):
-    cluster_id = task_instance.xcom_pull(key=REDSHIFT_CLUSTER_ID, task_ids=["start_redshift_cluster"])[0]
+    cluster_id = task_instance.xcom_pull(key=REDSHIFT_CLUSTER_ID, task_ids=["create_redshift_cluster"])[0]
     delete_redshift_cluster(cluster_id)
 
 
@@ -143,6 +143,7 @@ def start_sftp_ftp_services_method():
     instance_id = instance[0].instance_id
     ti = get_current_context()["ti"]
     ti.xcom_push(key=EC2_INSTANCE_ID_KEY, value=instance_id)
+    time.sleep(120)
     while get_instances_status(instance_id) != "running":
         logging.info("Waiting for Instance to be available in running state. Sleeping for 30 seconds.")
         time.sleep(30)
