@@ -1,5 +1,5 @@
 #!/bin/bash
-output="$(python ./dev/scripts/redshift/create_redshift_cluster.py --action=create)"
+output="$(python ./dev/scripts/redshift/create_redshift_cluster.py --action=restore --snapshot_id=$REDSHIFT_SNAPSHOT_ID)"
 
 echo "===========================output=============================="
 echo $output
