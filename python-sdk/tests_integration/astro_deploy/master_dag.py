@@ -13,7 +13,10 @@ from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator, get_current_context
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.session import create_session
-from redshift.create_redshift_cluster import create_redshift_cluster, delete_redshift_cluster, restore_redshift_cluster
+from redshift.create_redshift_cluster import (
+    delete_redshift_cluster,
+    restore_redshift_cluster,
+)
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
@@ -41,7 +44,7 @@ REDSHIFT_DATABASE = os.getenv("REDSHIFT_DATABASE", "dev")
 REDSHIFT_USERNAME = os.getenv("REDSHIFT_USERNAME", "not-set")
 REDSHIFT_PASSWORD = os.getenv("REDSHIFT_PASSWORD", "not-set")
 REDSHIFT_NODE_TYPE = os.getenv("REDSHIFT_NODE_TYPE", "ra3.xlplus")
-REDSHIFT_SNAPSHOT_ID = os.getenv('REDSHIFT_SNAPSHOT_ID', 'utkarsh-cluster-20-6-2023')
+REDSHIFT_SNAPSHOT_ID = os.getenv("REDSHIFT_SNAPSHOT_ID", "utkarsh-cluster-20-6-2023")
 
 
 def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
