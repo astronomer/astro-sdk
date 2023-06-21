@@ -69,7 +69,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
             failed_tasks = []
             for ti in dr.get_task_instances():
                 task_code = ":black_circle: "
-                if not ((ti.task_id == "end") or (ti.task_id == "get_report")):
+                if ti.task_id not in ["end", "get_report"]:
                     if ti.state == "success":
                         if ti.state == "success":
                             continue
