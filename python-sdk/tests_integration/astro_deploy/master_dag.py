@@ -122,7 +122,9 @@ def start_sftp_ftp_services_method():
     instance_id = instance[0].instance_id
     ti = get_current_context()["ti"]
     ti.xcom_push(key=EC2_INSTANCE_ID_KEY, value=instance_id)
-    time.sleep(120)  # Need to wait for ecs instance to be up otherwise the `boto3's describe_instances` call fails.
+    time.sleep(
+        120
+    )  # Need to wait for ecs instance to be up otherwise the `boto3's describe_instances` call fails.
     while get_instances_status(instance_id) != "running":
         logging.info("Waiting for Instance to be available in running state. Sleeping for 30 seconds.")
         time.sleep(30)
