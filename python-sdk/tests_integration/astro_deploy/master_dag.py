@@ -71,7 +71,6 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
                 task_code = ":black_circle: "
                 if ti.task_id not in ["end", "get_report"]:
                     if ti.state == "success":
-                        if ti.state == "success":
                             continue
                     elif ti.state == "failed":
                         task_code = ":red_circle: "
@@ -81,8 +80,6 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
                         failed_tasks.append(f"{task_code} {ti.task_id} : {ti.state} \n")
                     else:
                         failed_tasks.append(f"{task_code} {ti.task_id} : {ti.state} \n")
-                    task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
-                    message_list.append(task_message_str)
             if failed_tasks:
                 message_list.append(dr_status)
                 message_list.extend(failed_tasks)
