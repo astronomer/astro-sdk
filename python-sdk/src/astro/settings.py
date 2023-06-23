@@ -6,7 +6,7 @@ from packaging.version import Version
 
 from astro.constants import DEFAULT_SCHEMA
 
-# Section name for astro SDK configs in airflow.cfg
+# Section name for astro SDK configs in  airflow.cfg
 SECTION_KEY = "astro_sdk"
 # Bigquery list of all the valid locations: https://cloud.google.com/bigquery/docs/locations
 DEFAULT_BIGQUERY_SCHEMA_LOCATION = "us"
