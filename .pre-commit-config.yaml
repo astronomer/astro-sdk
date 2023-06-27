@@ -61,21 +61,21 @@ repos:
         args: ["--config", "./python-sdk/pyproject.toml"]
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.13.0
+    rev: 1.14.0
     hooks:
       - id: blacken-docs
         alias: black
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.272'
+    rev: 'v0.0.275'
     hooks:
       - id: ruff
         args:
         - --config=./ruff.toml
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
+    rev: v2.2.5
     hooks:
       - id: codespell
         name: Run codespell to check for common misspellings in files
@@ -83,7 +83,7 @@ repos:
         types: [text]
         exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/modified_constraint_file.txt$|^python-sdk/tests/benchmark/Makefile$
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v1.3.0'
+      rev: 'v1.4.1'
       hooks:
       - id: mypy
         name: mypy-python-sdk
@@ -91,7 +91,7 @@ repos:
         files: "^python-sdk/"
 
   -   repo: https://github.com/asottile/pyupgrade
-      rev: v3.6.0
+      rev: v3.7.0
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
