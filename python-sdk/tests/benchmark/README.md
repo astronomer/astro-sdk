@@ -134,7 +134,7 @@ Build a docker container and attempt to run it, using the `config.json` file.
 
 Requirements:
 * A GCP account
-* Environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentails](https://cloud.google.com/docs/authentication/production).
+* Environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentials](https://cloud.google.com/docs/authentication/production).
 * Datasets available in a GCS bucket
 
 The environment variable is necessary so the container can access data in GCS and export the results to BigQuery.
@@ -148,13 +148,13 @@ The result will be made available in GCS and Bigquery
 ### Remotely, using a container and a Kubernetes cluster
 
 
-Set the environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentails](https://cloud.google.com/docs/authentication/production).
+Set the environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentials](https://cloud.google.com/docs/authentication/production).
 
 Requirements:
 * A GCP account
 * Google SDK installed, including both `gcloud` and `kubectl` commands.
 * Terraform (version specified in the document [versions.tf](./infrastructure/terraform/versions.tf)
-* Environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentails](https://cloud.google.com/docs/authentication/production).
+* Environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentials](https://cloud.google.com/docs/authentication/production).
 
 If the Kubernetes does not exist yet, create it and run all the commands using:
 ```
