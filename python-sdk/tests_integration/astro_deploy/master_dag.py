@@ -52,30 +52,56 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
                 f"Airflow version for the below astro-sdk run is `{airflow_version}` "
                 f"with {os.environ['AIRFLOW__CORE__EXECUTOR']} \n\n"
             )
-        message_list.append(airflow_version_message)
+        master_dag_deployment_link = (
+            f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}"
+            f"/dags/example_master_dag/grid?search=example_master_dag"
+        )
 
+        deployment_message = (
+            f"\n <{master_dag_deployment_link}|Link> "
+            f"to the master DAG for the above run on Astro Cloud deployment \n"
+        )
+
+        dag_count, failed_dag_count = 0, 0
         for dr in last_dags_runs:
             dr_status = f" *{dr.dag_id} : {dr.get_state()}* \n"
-            message_list.append(dr_status)
+            dag_count += 1
+            failed_tasks = []
             for ti in dr.get_task_instances():
                 task_code = ":black_circle: "
                 if ti.task_id not in ["end", "get_report"]:
                     if ti.state == "success":
-                        task_code = ":large_green_circle: "
+                        continue
                     elif ti.state == "failed":
                         task_code = ":red_circle: "
+                        failed_tasks.append(f"{task_code} {ti.task_id} : {ti.state} \n")
                     elif ti.state == "upstream_failed":
                         task_code = ":large_orange_circle: "
-                    task_message_str = f"{task_code} {ti.task_id} : {ti.state} \n"
-                    message_list.append(task_message_str)
+                        failed_tasks.append(f"{task_code} {ti.task_id} : {ti.state} \n")
+                    else:
+                        failed_tasks.append(f"{task_code} {ti.task_id} : {ti.state} \n")
+            if failed_tasks:
+                message_list.append(dr_status)
+                message_list.extend(failed_tasks)
+                failed_dag_count += 1
 
-        logging.info("%s", "".join(message_list))
+        output_list = [
+            airflow_version_message,
+            f"*Total DAGS*: {dag_count} \n",
+            f"*Success DAGS*: {dag_count - failed_dag_count} :green_apple: \n",
+            f"*Failed DAGS*: {failed_dag_count} :apple: \n \n",
+        ]
+        if failed_dag_count > 0:
+            output_list.append("*Failure Details:* \n")
+            output_list.extend(message_list)
+        output_list.append(deployment_message)
+        logging.info("%s", "".join(output_list))
         # Send dag run report on Slack
         try:
             SlackWebhookOperator(
                 task_id="slack_alert",
                 http_conn_id=SLACK_WEBHOOK_CONN,
-                message="".join(message_list),
+                message="".join(output_list),
                 channel=SLACK_CHANNEL,
                 username=SLACK_USERNAME,
             ).execute(context=None)
