@@ -15,7 +15,7 @@ def test_read_excel_file():
     """Test reading of excel file from local location"""
     path = str(sample_file.absolute())
     excel_type = ExcelFileType(path)
-    with open(path, 'rb') as file:
+    with open(path, "rb") as file:
         df = excel_type.export_to_dataframe(file)
     assert df.shape == (3, 2)
     assert isinstance(df, PandasDataframe)
@@ -26,7 +26,7 @@ def test_read_excel_file_with_pandas_opts(mock_read_excel):
     """Test pandas option get pass to read_excel"""
     path = str(sample_file.absolute())
     excel_type = ExcelFileType(path, load_options=PandasLoadOptions())
-    with open(path, 'rb') as file:
+    with open(path, "rb") as file:
         excel_type.export_to_dataframe(file)
     mock_read_excel.assert_called_once_with(file)
 
