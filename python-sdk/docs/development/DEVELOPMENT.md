@@ -34,6 +34,11 @@ docker run --rm -it -p 5433:5432 dimberman/pagila-test &
 
 ## Setup IDE and editor support
 
+In case you don't have `nox` executable in your setting, run this first
+```
+pip install --user --upgrade nox
+```
+
 ```bash
 nox -s dev
 ```
