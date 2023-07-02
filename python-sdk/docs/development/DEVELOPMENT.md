@@ -38,6 +38,7 @@ In case you don't have `nox` executable in your setting, run this first
 ```
 pip install --user --upgrade nox
 ```
+And then run this:
 
 ```bash
 nox -s dev
