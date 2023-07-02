@@ -8,6 +8,10 @@
 _On **Apple M1** it is [currently required](https://github.com/psycopg/psycopg2/issues/1286#issuecomment-914286206) to install `postgresql` package. Once [compatible wheels](https://github.com/psycopg/psycopg2/issues/1482) are released, you can remove it._
 
 ## Setup a development environment
+First, change directory to `python-sdk/`
+```bash
+cd python-sdk
+```
 
 To setup your local environment simply run the below statement:
 
