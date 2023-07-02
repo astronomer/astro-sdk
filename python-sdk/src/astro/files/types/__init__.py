@@ -5,10 +5,10 @@ import pathlib
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.files.types.csv import CSVFileType
+from astro.files.types.excel import ExcelFileType
 from astro.files.types.json import JSONFileType
 from astro.files.types.ndjson import NDJSONFileType
 from astro.files.types.parquet import ParquetFileType
-from astro.files.types.excel import ExcelFileType
 from astro.options import LoadOptionsList
 
 
@@ -54,8 +54,9 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
     :return: The filetype (e.g. csv, ndjson, json, parquet, excel)
     :rtype: astro.constants.FileType
     """
-    ext_to_filetype: dict[str, type[FileTypeConstants]] = \
-        {ext: t for t in FileTypeConstants for ext in t.value.split(',')}
+    ext_to_filetype: dict[str, type[FileTypeConstants]] = {
+        ext: t for t in FileTypeConstants for ext in t.value.split(",")
+    }
 
     if isinstance(filepath, pathlib.PosixPath):
         extension = filepath.suffix[1:]
