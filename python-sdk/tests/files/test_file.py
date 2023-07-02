@@ -16,6 +16,7 @@ from astro.dataframes.load_options import (
     PandasParquetLoadOptions,
 )
 from astro.files import File, get_file_list, resolve_file_path_pattern
+from astro.files.types import FileType
 from astro.options import SnowflakeLoadOptions, WASBLocationLoadOptions
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
@@ -24,6 +25,7 @@ sample_filepaths_per_filetype = [
     (False, "/tmp/sample.json"),
     (False, "/tmp/sample.ndjson"),
     (True, "/tmp/sample.parquet"),
+    (True, "/tmp/sample.xlsx"),
 ]
 
 
@@ -49,12 +51,13 @@ def test_is_binary(filetype):
         (False, "/tmp/sample.json"),
         (False, "/tmp/sample.ndjson"),
         (False, "/tmp/sample.parquet"),
+        (False, "/tmp/sample.xlsx"),
         (True, "/tmp/"),
         (True, "s3://tmp/home_*"),
         (False, "s3://tmp/.folder/sample.csv"),
         (True, "s3://tmp/.folder/"),
     ],
-    ids=["csv", "json", "ndjson", "parquet", "csv", "json", "csv", "json"],
+    ids=["csv", "json", "ndjson", "parquet", "xlsx", "csv", "json", "csv", "json"],
 )
 def test_is_pattern(filetype):
     """Test if the file is a file pattern"""
@@ -212,7 +215,6 @@ def test_smart_open_file_stream_only_conveted_to_BytesIO_buffer_for_parquet(file
         else:
             _convert_remote_file_to_byte_stream.assert_not_called()
 
-
 def test_if_file_object_can_be_pickled():
     """Verify if we can pickle File object"""
     file = File(path="./test.csv")
@@ -226,8 +228,9 @@ def test_if_file_object_can_be_pickled():
         {"type": "ndjson", "expected_class": PandasLoadOptions},
         {"type": "json", "expected_class": PandasLoadOptions},
         {"type": "parquet", "expected_class": PandasLoadOptions},
+        {"type": "xlsx", "expected_class": PandasLoadOptions},
     ],
-    ids=["csv", "ndjson", "json", "parquet"],
+    ids=["csv", "ndjson", "json", "parquet", "xlsx"],
 )
 @pytest.mark.parametrize(
     "file_location",

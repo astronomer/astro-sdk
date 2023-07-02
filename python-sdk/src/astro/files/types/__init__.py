@@ -8,6 +8,7 @@ from astro.files.types.csv import CSVFileType
 from astro.files.types.json import JSONFileType
 from astro.files.types.ndjson import NDJSONFileType
 from astro.files.types.parquet import ParquetFileType
+from astro.files.types.excel import ExcelFileType
 from astro.options import LoadOptionsList
 
 
@@ -23,6 +24,7 @@ def create_file_type(
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
+        FileTypeConstants.EXCEL: ExcelFileType,
     }
     if not filetype:
         filetype = get_filetype(path)
@@ -49,9 +51,12 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
 
     :param filepath: URI or Path to a file
     :type filepath: str or pathlib.PosixPath
-    :return: The filetype (e.g. csv, ndjson, json, parquet)
+    :return: The filetype (e.g. csv, ndjson, json, parquet, excel)
     :rtype: astro.constants.FileType
     """
+    ext_to_filetype: dict[str, type[FileTypeConstants]] = \
+        {ext: t for t in FileTypeConstants for ext in t.value.split(',')}
+
     if isinstance(filepath, pathlib.PosixPath):
         extension = filepath.suffix[1:]
     else:
@@ -67,6 +72,6 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
         )
 
     try:
-        return FileTypeConstants(extension)
-    except ValueError:
+        return ext_to_filetype[extension.lower()]
+    except KeyError:
         raise ValueError(f"Unsupported filetype '{extension}' from file '{filepath}'.")
