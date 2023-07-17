@@ -1,12 +1,12 @@
 import os
+from datetime import datetime
+
+from airflow import DAG
+
+from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
-from astro import sql as aql
-from astro.table import Table, Metadata
-from airflow import DAG
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-
-from datetime import datetime, timedelta
+from astro.table import Metadata, Table
 
 s3_bucket = os.getenv("AWS_S3_BUCKET_SWGOH")
 
@@ -28,7 +28,7 @@ with dag:
             metadata=Metadata(schema="astro"),
         ),
         output_file=File(
-            path=f"s3://tmp9/character_training.csv",
+            path="s3://tmp9/character_training.csv",
             conn_id="aws_conn",  # This is you AWS S3 connection name configured in Airflow
             filetype=FileType.CSV,
         ),
