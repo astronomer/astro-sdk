@@ -55,20 +55,20 @@ repos:
         exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
       - id: black
         args: ["--config", "./python-sdk/pyproject.toml"]
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.14.0
+    rev: 1.15.0
     hooks:
       - id: blacken-docs
         alias: black
         additional_dependencies: [black>=22.10.0]
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.275'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 'v0.0.278'
     hooks:
       - id: ruff
         args:
@@ -91,7 +91,7 @@ repos:
         files: "^python-sdk/"
 
   -   repo: https://github.com/asottile/pyupgrade
-      rev: v3.7.0
+      rev: v3.9.0
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
