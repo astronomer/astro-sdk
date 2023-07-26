@@ -139,6 +139,7 @@ def test_dag(
         for ti in schedulable_tis:
             add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
+            ti.task.start_date = timezone.utcnow()
             ti.start_date = timezone.utcnow()
             _run_task(ti, session=session)
     if conn_file_path or variable_file_path:
