@@ -188,7 +188,7 @@ def _run_task(ti: TaskInstance, session):
     else:
         log.info("Running task %s", ti.task_id)
     try:
-        ti.__setattr__('start_date', timezone.utcnow())
+        ti.__setattr__("start_date", timezone.utcnow())
         session.flush()
         ti._run_raw_task(session=session)
         session.flush()
@@ -209,7 +209,6 @@ def _get_or_create_dagrun(
     conf: dict[Any, Any] | None,
     start_date: datetime,
     execution_date: datetime,
-
     run_id: str,
     session: Session,
 ) -> DagRun:
