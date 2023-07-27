@@ -137,6 +137,11 @@ def test_dag(
     while dr.state == State.RUNNING:
         schedulable_tis, _ = dr.update_state(session=session)
         for ti in schedulable_tis:
+            ti.start_date = timezone.utcnow()
+        session.flush()
+
+        schedulable_tis, _ = dr.update_state(session=session)
+        for ti in schedulable_tis:
             add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
@@ -187,8 +192,6 @@ def _run_task(ti: TaskInstance, session):
     else:
         log.info("Running task %s", ti.task_id)
     try:
-        ti.__setattr__("start_date", timezone.utcnow())
-        session.flush()
         ti._run_raw_task(session=session)
         session.flush()
         log.info("%s ran successfully!", ti.task_id)
