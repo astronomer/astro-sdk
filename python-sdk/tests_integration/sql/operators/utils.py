@@ -139,8 +139,6 @@ def test_dag(
         for ti in schedulable_tis:
             add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
-            ti.task.start_date = timezone.utcnow()
-            ti.start_date = timezone.utcnow()
             _run_task(ti, session=session)
     if conn_file_path or variable_file_path:
         # Remove the local variables we have added to the secrets_backend_list
@@ -189,6 +187,8 @@ def _run_task(ti: TaskInstance, session):
     else:
         log.info("Running task %s", ti.task_id)
     try:
+        ti.__setattr__('start_date', timezone.utcnow())
+        session.flush()
         ti._run_raw_task(session=session)
         session.flush()
         log.info("%s ran successfully!", ti.task_id)
