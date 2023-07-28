@@ -18,7 +18,7 @@ try:
     from pandas_gbq.exceptions import GenericGBQException
 
     RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException])
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     pass
 
 
