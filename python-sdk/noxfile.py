@@ -45,7 +45,11 @@ def test(session: nox.Session, airflow) -> None:
     elif airflow == "2.6.3":
         env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
 
-        session.install(f"apache-airflow=={airflow}", "-c", f"tests/modified_constraint_file_2.6.3-python-{session.python}.txt")
+        session.install(
+            f"apache-airflow=={airflow}",
+            "-c",
+            f"tests/modified_constraint_file_2.6.3-python-{session.python}.txt",
+        )
         session.install("-e", ".[all,tests]")
     else:
         env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
