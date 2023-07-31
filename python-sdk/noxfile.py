@@ -38,7 +38,7 @@ def test(session: nox.Session, airflow) -> None:
         # For example as part of MSSQL support we need apache-airflow-providers-microsoft-mssql>=3.2 and this
         # has been updated in the below constraint file.
         session.install(f"apache-airflow=={airflow}", "-c", "tests/modified_constraint_file_2.2.5.txt")
-        session.install("-e", ".[all,tests]", "-c", "tests/modified_constraint_file.txt")
+        session.install("-e", ".[all,tests]", "-c", "tests/modified_constraint_file_2.2.5.txt")
         session.install("apache-airflow-providers-common-sql==1.2.0")
         # install smart-open 6.3.0 since it has FTP implementation
         session.install("smart-open>=6.3.0")
