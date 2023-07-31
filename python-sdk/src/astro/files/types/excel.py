@@ -39,7 +39,7 @@ class ExcelFileType(FileType):
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:  # skipcq PYL-R0201
-        """Write csv file to one of the supported locations
+        """Write Excel file to one of the supported locations
 
         :param df: pandas dataframe
         :param stream: file stream object
@@ -48,4 +48,4 @@ class ExcelFileType(FileType):
 
     @property
     def name(self):
-        return FileTypeConstants.EXCEL
+        return FileTypeConstants.XLSX

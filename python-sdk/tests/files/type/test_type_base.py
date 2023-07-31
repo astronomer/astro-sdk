@@ -11,7 +11,7 @@ sample_filepaths_per_filetype = [
     (FileType.JSON, "sample.json"),
     (FileType.NDJSON, "sample.ndjson"),
     (FileType.PARQUET, "sample.parquet"),
-    (FileType.EXCEL, "sample.xlsx"),
+    (FileType.XLSX, "sample.xlsx"),
 ]
 sample_filetypes = [items[0] for items in sample_filepaths_per_filetype]
 sample_filepaths = [items[1] for items in sample_filepaths_per_filetype]

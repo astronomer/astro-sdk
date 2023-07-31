@@ -120,7 +120,8 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 | json     |
 | ndjson   |
 | parquet  |
-| xls,xlsx |
+| xls      |
+| xlsx     |
 
 | Database  |
 | :-------- |

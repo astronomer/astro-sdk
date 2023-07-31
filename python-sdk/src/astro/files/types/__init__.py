@@ -24,7 +24,8 @@ def create_file_type(
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
-        FileTypeConstants.EXCEL: ExcelFileType,
+        FileTypeConstants.XLS: ExcelFileType,
+        FileTypeConstants.XLSX: ExcelFileType,
     }
     if not filetype:
         filetype = get_filetype(path)
@@ -54,10 +55,6 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
     :return: The filetype (e.g. csv, ndjson, json, parquet, excel)
     :rtype: astro.constants.FileType
     """
-    ext_to_filetype: dict[str, type[FileTypeConstants]] = {
-        ext: t for t in FileTypeConstants for ext in t.value.split(",")
-    }
-
     if isinstance(filepath, pathlib.PosixPath):
         extension = filepath.suffix[1:]
     else:
@@ -73,6 +70,7 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
         )
 
     try:
-        return ext_to_filetype[extension.lower()]
-    except KeyError:
+        return FileTypeConstants(extension.lower())
+    except ValueError:
         raise ValueError(f"Unsupported filetype '{extension}' from file '{filepath}'.")
+    
