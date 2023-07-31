@@ -178,7 +178,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
+      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
       - run: pip --version
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
@@ -242,7 +242,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
+      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
       - run: pip3 --version
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
@@ -319,7 +319,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
+      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -416,7 +416,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
+      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -513,7 +513,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
+      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -608,7 +608,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
+      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -651,7 +651,7 @@ jobs:
         with:
           path: ${{ steps.pip-cache.outputs.pip_cache_dir }}
           key: constraints-${{ matrix.python }}-${{ matrix.airflow }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
+      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
       - run: pip3 install -U pip wheel build nox
       - run: nox -s build
       - run: pip3 install 'apache-airflow==${{ matrix.airflow }}' "$(ls dist/*.whl)[all]"
