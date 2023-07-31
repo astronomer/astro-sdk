@@ -73,4 +73,3 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
         return FileTypeConstants(extension.lower())
     except ValueError:
         raise ValueError(f"Unsupported filetype '{extension}' from file '{filepath}'.")
-    
