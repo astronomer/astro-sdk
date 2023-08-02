@@ -50,14 +50,16 @@ def test(session: nox.Session, airflow) -> None:
             "-c",
             f"tests/modified_constraint_file_2.6.3-python-{session.python}.txt",
         )
-        session.install("-e", ".[all,tests]")
+        if session.python == "3.11":
+            session.install("-e", ".[all,tests]", "-c", f"tests/modified_constraint_file_2.6.3-python-{session.python}.txt")
+        else:
+            session.install("-e", ".[all,tests]")
+
     else:
         env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
 
         session.install(f"apache-airflow=={airflow}")
-        session.install(
-            "-e", ".[all,tests]", "-c", f"tests/modified_constraint_file_2.6.3-python-{session.python}.txt"
-        )
+        session.install("-e", ".[all,tests]")
 
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
