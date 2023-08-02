@@ -56,9 +56,7 @@ def test(session: nox.Session, airflow) -> None:
         #     "-c",
         #     f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}/constraints-{session.python}.txt",
         # )
-        session.install(
-            f"apache-airflow=={airflow}"
-        )
+        session.install(f"apache-airflow=={airflow}")
         session.install(
             "-e",
             ".[all,tests]",
