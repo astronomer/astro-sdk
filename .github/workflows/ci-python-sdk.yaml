@@ -242,7 +242,12 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev libarrow-dev libarrow-python-dev
+      - run: sudo apt-get install -y --no-install-recommends build-essential libsasl2-2 libsasl2-dev libsasl2-modules freetds-dev libssl-dev libkrb5-dev libmariadb-dev
+      - run: sudo apt install -y -V ca-certificates lsb-release wget |
+             wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb -O /tmp/apache-arrow.deb |
+             sudo apt -y install /tmp/apache-arrow.deb |
+             sudo apt -y update |
+             sudo apt -y install libarrow-dev libarrow-python-dev
       - run: pip3 --version
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
