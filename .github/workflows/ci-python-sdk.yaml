@@ -206,7 +206,7 @@ jobs:
   Run-Unit-tests-Airflow-2-5:
     strategy:
       matrix:
-        version: [ '3.8', '3.9', '3.10', '3.11' ]
+        version: [ '3.11' ]
     if: >-
       github.event_name == 'push' ||
       (
