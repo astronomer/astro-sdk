@@ -19,8 +19,8 @@ def dev(session: nox.Session) -> None:
     session.install("-e", ".[all,tests]")
 
 
-@nox.session(python=["3.7", "3.8", "3.9", "3.10"])
-@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5.3", "2.6.0"])
+@nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
+@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5.3", "2.6.3"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     env = {
@@ -150,7 +150,7 @@ def build_docs(session: nox.Session) -> None:
     session.run("make", "html")
 
 
-@nox.session(python=["3.7", "3.8", "3.9", "3.10"])
+@nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
 @nox.parametrize("airflow", ["2.2.5", "2.3.4", "2.4.2", "2.5.3", "2.6.0"])
 def generate_constraints(session: nox.Session, airflow) -> None:
     """Generate constraints file"""
@@ -158,6 +158,7 @@ def generate_constraints(session: nox.Session, airflow) -> None:
     session.install(f"apache-airflow=={airflow}", ".[all]")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
+    session.log("Installed Dependecies:")
     out = session.run("pip3", "list", "--format=freeze", external=True, silent=True)
     pathlib.Path(f"constraints-{session.python}-{airflow}.txt").write_text(out)
     print()
