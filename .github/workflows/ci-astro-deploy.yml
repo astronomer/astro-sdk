@@ -2,6 +2,12 @@ name: "Astro Deploy"
 on:
   schedule:
     - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      git_rev:
+        description: 'The git revision to deploy'
+        required: false
+        default: ''
 
 jobs:
   deploy:
@@ -16,5 +22,21 @@ jobs:
       ASTRO_KEY_SECRET_SINGLE_WORKER: ${{ secrets.ASTRO_KEY_SECRET_SINGLE_WORKER }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - run: cd python-sdk/tests_integration/astro_deploy && bash deploy.sh $ASTRO_DOCKER_REGISTRY $ASTRO_ORGANIZATION_ID $ASTRO_DEPLOYMENT_ID $ASTRO_KEY_ID $ASTRO_KEY_SECRET $ASTRO_DEPLOYMENT_ID_SINGLE_WORKER $ASTRO_KEY_ID_SINGLE_WORKER $ASTRO_KEY_SECRET_SINGLE_WORKER
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.git_rev }}
+
+      - name: deploy
+        working-directory: python-sdk/tests_integration/astro_deploy
+        run: |
+          echo "deploying ${{ inputs.git_rev }}"
+          bash deploy.sh \
+            $ASTRO_DOCKER_REGISTRY \
+            $ASTRO_ORGANIZATION_ID \
+            $ASTRO_DEPLOYMENT_ID \
+            $ASTRO_KEY_ID \
+            $ASTRO_KEY_SECRET \
+            $ASTRO_DEPLOYMENT_ID_SINGLE_WORKER \
+            $ASTRO_KEY_ID_SINGLE_WORKER \
+            $ASTRO_KEY_SECRET_SINGLE_WORKER
