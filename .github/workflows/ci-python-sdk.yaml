@@ -203,7 +203,7 @@ jobs:
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
-  Run-Unit-tests-Airflow-2-5:
+  Run-Unit-tests-Airflow-2-6-3:
     strategy:
       matrix:
         version: [ '3.8', '3.9', '3.10', '3.11' ]
@@ -239,7 +239,7 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+          key: ${{ runner.os }}-2.6-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.version }}(airflow='2.6.3')" -- tests/ --cov=src --cov-report=xml --cov-branch
