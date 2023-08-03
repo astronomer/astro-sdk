@@ -1,4 +1,3 @@
-import os
 import pathlib
 
 import pandas as pd
@@ -11,7 +10,7 @@ from astro.files import File
 
 # Import Operator
 from astro.sql import ExportFileOperator, ExportTableToFileOperator, export_file, export_table_to_file
-from astro.sql.operators.export_to_file import ExportToFileOperator, export_to_file
+from astro.sql.operators.export_to_file import ExportToFileOperator
 from astro.table import Table
 
 from ..operators import utils as test_utils
