@@ -121,18 +121,19 @@ def test_single_worker_mode_backfill(executor_in_job, executor_in_cfg, expected_
     dag = DAG("test_single_worker_mode_backfill", start_date=datetime(2022, 1, 1))
     dr = DagRun(dag_id=dag.dag_id)
 
-    with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_cfg}), \
-        mock.patch("airflow.executors.executor_loader.ExecutorLoader.validate_database_executor_compatibility"):
-            job = Job(executor=executor_in_job)
-            session = Session()
-            session.add(job)
-            session.flush()
-            BackfillJobRunner(job=job, dag=dag)
+    with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_cfg}), mock.patch(
+        "airflow.executors.executor_loader.ExecutorLoader.validate_database_executor_compatibility"
+    ):
+        job = Job(executor=executor_in_job)
+        session = Session()
+        session.add(job)
+        session.flush()
+        BackfillJobRunner(job=job, dag=dag)
 
-            dr.creating_job_id = job.id
-            assert CleanupOperator._is_single_worker_mode(dr) == expected_val
+        dr.creating_job_id = job.id
+        assert CleanupOperator._is_single_worker_mode(dr) == expected_val
 
-            session.rollback()
+        session.rollback()
 
 
 @pytest.mark.skipif(
@@ -188,19 +189,20 @@ def test_single_worker_mode_scheduler_job(executor_in_job, executor_in_cfg, expe
     dag = DAG("test_single_worker_mode_scheduler_job", start_date=datetime(2022, 1, 1))
     dr = DagRun(dag_id=dag.dag_id)
 
-    with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_cfg}), \
-        mock.patch("airflow.executors.executor_loader.ExecutorLoader.validate_database_executor_compatibility"):
-            # Scheduler Job in Airflow sets executor from airflow.cfg
-            job = Job(executor=executor_in_job)
-            session = Session()
-            session.add(job)
-            session.flush()
-            SchedulerJobRunner(job=job)
+    with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": executor_in_cfg}), mock.patch(
+        "airflow.executors.executor_loader.ExecutorLoader.validate_database_executor_compatibility"
+    ):
+        # Scheduler Job in Airflow sets executor from airflow.cfg
+        job = Job(executor=executor_in_job)
+        session = Session()
+        session.add(job)
+        session.flush()
+        SchedulerJobRunner(job=job)
 
-            dr.creating_job_id = job.id
-            assert CleanupOperator._is_single_worker_mode(dr) == expected_val
+        dr.creating_job_id = job.id
+        assert CleanupOperator._is_single_worker_mode(dr) == expected_val
 
-            session.rollback()
+        session.rollback()
 
 
 @pytest.mark.skipif(
