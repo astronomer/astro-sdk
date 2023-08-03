@@ -96,13 +96,13 @@ def test_mssql_create_table_with_columns(database_table_fixture):
     rows = response
     assert len(rows) == 2
     assert rows[0][0:4] == (
-        "astrodb",
+        "astroflow_ci",
         SCHEMA,
         f"{table.name}",
         "id",
     )
     assert rows[1][0:4] == (
-        "astrodb",
+        "astroflow_ci",
         SCHEMA,
         f"{table.name}",
         "name",
