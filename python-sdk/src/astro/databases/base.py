@@ -294,7 +294,7 @@ class BaseDatabase(ABC):
         try:
             return SQLDatabase(engine=self.sqlalchemy_engine)
         except TypeError:
-            return SQLDatabase(con=self.sqlalchemy_engine.url)
+            return SQLDatabase(con=self.hook.get_uri())
 
     def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
         self, file: File  # skipcq: PYL-W0613
