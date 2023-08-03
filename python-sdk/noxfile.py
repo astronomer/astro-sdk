@@ -172,7 +172,6 @@ def generate_constraints(session: nox.Session, airflow) -> None:
     session.install(f"apache-airflow=={airflow}", ".[all]")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
-    session.log("Installed Dependecies:")
     out = session.run("pip3", "list", "--format=freeze", external=True, silent=True)
     pathlib.Path(f"constraints-{session.python}-{airflow}.txt").write_text(out)
     print()
