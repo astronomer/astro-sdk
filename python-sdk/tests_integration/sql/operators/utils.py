@@ -21,6 +21,7 @@ from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
 from pandas.testing import assert_frame_equal
 from sqlalchemy.orm.session import Session
+from datetime import timedelta
 
 from astro.sql.operators.cleanup import AstroCleanupException
 from astro.table import Metadata
@@ -137,7 +138,7 @@ def test_dag(
     while dr.state == State.RUNNING:
         schedulable_tis, _ = dr.update_state(session=session)
         for ti in schedulable_tis:
-            ti.start_date = timezone.utcnow()
+            ti.start_date = timezone.utcnow() - timedelta(minutes=5)
         session.flush()
         for ti in schedulable_tis:
             add_logger_if_needed(dag, ti)
