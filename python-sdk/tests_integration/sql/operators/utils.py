@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 import pandas as pd
@@ -21,7 +21,6 @@ from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
 from pandas.testing import assert_frame_equal
 from sqlalchemy.orm.session import Session
-from datetime import timedelta
 
 from astro.sql.operators.cleanup import AstroCleanupException
 from astro.table import Metadata
