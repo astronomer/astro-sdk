@@ -281,7 +281,7 @@ class BaseDatabase(ABC):
         else:
             source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
 
-        db = SQLDatabase(engine=self.sqlalchemy_engine)
+        db = self.get_pandas_sql_database()
         db.prep_table(
             source_dataframe,
             table.name.lower(),
@@ -289,6 +289,12 @@ class BaseDatabase(ABC):
             if_exists="replace",
             index=False,
         )
+
+    def get_pandas_sql_database(self):
+        try:
+            return SQLDatabase(engine=self.sqlalchemy_engine)
+        except TypeError:
+            return SQLDatabase(con=self.sqlalchemy_engine.url)
 
     def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
         self, file: File  # skipcq: PYL-W0613
