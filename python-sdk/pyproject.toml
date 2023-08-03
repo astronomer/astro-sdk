@@ -18,7 +18,7 @@ license = { file = "LICENSE" }
 requires-python = ">=3.7"
 dependencies = [
     "apache-airflow>=2.0",
-    "attrs>=20.0",
+    "attrs>=23.1",
     "pandas",
     "pyarrow",
     "pydantic>=1.10.0,<2.0.0", # Airflow & Pydantic issue: https://github.com/apache/airflow/issues/32311
