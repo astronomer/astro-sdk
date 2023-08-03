@@ -31,6 +31,6 @@ with DAG(
     )
     movies_by_genre = top_movies_by_genre(input_df=imdb_movies)
     with tempfile.NamedTemporaryFile(suffix=".csv") as tmp_file:
-        ExportToFileOperator.partial(if_exists="replace", output_file=File(path=tmp_file.name), task_id="export_movies").expand(
-            input_data=movies_by_genre
-        )
+        ExportToFileOperator.partial(
+            if_exists="replace", output_file=File(path=tmp_file.name), task_id="export_movies"
+        ).expand(input_data=movies_by_genre)
