@@ -13,7 +13,6 @@ from astro.databases.mssql import MssqlDatabase
 from astro.settings import SCHEMA
 from astro.table import Metadata, Table
 
-
 DEFAULT_CONN_ID = "mssql_default"
 CUSTOM_CONN_ID = "mssql_conn"
 SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
