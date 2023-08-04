@@ -81,6 +81,7 @@ def example_amazon_s3_snowflake_transform():
                 copy_options={"ON_ERROR": "CONTINUE"},
             )
         ],
+        use_native_support=False
     )
     temp_table_2 = aql.load_file(
         input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
@@ -91,6 +92,7 @@ def example_amazon_s3_snowflake_transform():
                 copy_options={"ON_ERROR": "CONTINUE"},
             )
         ],
+        use_native_support=False
     )
 
     combined_data = combine_data(
