@@ -34,7 +34,7 @@ def test_create_database(conn_id):
         (DEFAULT_CONN_ID, re.compile(r"^(mssql\+pymssql://)(.*):1433$")),
         (
             CUSTOM_CONN_ID,
-            r"^(mssql\+pymssql://)(.*)(astroserver.database.windows.net:1433/astrodb)$",
+            r"^(mssql\+pymssql://)(.*)(astromssqlserver.database.windows.net:1433/astromssqldb)$",
         ),
     ],
     ids=SUPPORTED_CONN_IDS,
@@ -96,13 +96,13 @@ def test_mssql_create_table_with_columns(database_table_fixture):
     rows = response
     assert len(rows) == 2
     assert rows[0][0:4] == (
-        "astrodb",
+        "astromssqldb",
         SCHEMA,
         f"{table.name}",
         "id",
     )
     assert rows[1][0:4] == (
-        "astrodb",
+        "astromssqldb",
         SCHEMA,
         f"{table.name}",
         "name",
