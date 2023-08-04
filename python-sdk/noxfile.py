@@ -44,18 +44,6 @@ def test(session: nox.Session, airflow) -> None:
         session.install("smart-open>=6.3.0")
     else:
         env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
-
-        # session.install(
-        #     f"apache-airflow=={airflow}",
-        #     "-c",
-        #     f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}/constraints-{session.python}.txt",
-        # )
-        # session.install(
-        #     "-e",
-        #     ".[all,tests]",
-        #     "-c",
-        #     f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}/constraints-{session.python}.txt",
-        # )
         session.install(f"apache-airflow=={airflow}")
         session.install(
             "-e",
