@@ -123,8 +123,7 @@ all = [
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
-    "apache-airflow-providers-mysql",
-    "openlineage-airflow>=1.0.0"
+    "apache-airflow-providers-mysql"
 ]
 doc = [
     "myst-parser>=0.17",
