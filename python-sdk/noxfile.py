@@ -44,11 +44,9 @@ def test(session: nox.Session, airflow) -> None:
         session.install("smart-open>=6.3.0")
     else:
         env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
+
         session.install(f"apache-airflow=={airflow}")
-        session.install(
-            "-e",
-            ".[all,tests]",
-        )
+        session.install("-e", ".[all,tests]")
 
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
