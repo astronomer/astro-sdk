@@ -281,7 +281,11 @@ class BaseDatabase(ABC):
         else:
             source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
 
-        db = SQLDatabase(engine=self.sqlalchemy_engine)
+        try:
+            db = SQLDatabase(engine=self.sqlalchemy_engine)
+        except TypeError:
+            db = SQLDatabase(con=self.sqlalchemy_engine)
+
         db.prep_table(
             source_dataframe,
             table.name.lower(),
