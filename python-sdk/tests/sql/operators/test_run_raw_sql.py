@@ -74,7 +74,9 @@ def test_run_sql_calls_with_query_tag(run_sql, sample_dag):
         dummy_method()
 
     test_utils.run_dag(sample_dag)
-    assert run_sql.method_calls[0].args[0].text == "ALTER team_1;ALTER team_2;SELECT 1+1"
+    assert run_sql.method_calls[0].args[0].text == "ALTER team_1"
+    assert run_sql.method_calls[1].args[0].text == "ALTER team_2"
+    assert run_sql.method_calls[2].args[0].text == "SELECT 1+1"
 
 
 @mock.patch("astro.sql.operators.raw_sql.RawSQLOperator.results_as_pandas_dataframe")
