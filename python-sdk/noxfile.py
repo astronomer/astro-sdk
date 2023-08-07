@@ -20,7 +20,7 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
-@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5.3", "2.6.0", "2.6.3"])
+@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5", "2.6"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     env = {
@@ -45,7 +45,7 @@ def test(session: nox.Session, airflow) -> None:
     else:
         env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
 
-        session.install(f"apache-airflow=={airflow}")
+        session.install(f"apache-airflow~={airflow}")
         session.install("-e", ".[all,tests]")
 
     # Log all the installed dependencies
@@ -64,7 +64,7 @@ def test(session: nox.Session, airflow) -> None:
     )
 
 
-@nox.session(python=["3.8"])
+@nox.session(python=["3.10"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("-e", ".[all,tests]")
@@ -142,7 +142,7 @@ def build(session: nox.Session) -> None:
     session.run("python", "-m", "build", *session.posargs)
 
 
-@nox.session(python="3.9")
+@nox.session(python="3.10")
 def build_docs(session: nox.Session) -> None:
     """Build release artifacts."""
     session.install("-e", ".[doc]")
@@ -151,11 +151,11 @@ def build_docs(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
-@nox.parametrize("airflow", ["2.2.5", "2.3.4", "2.4.2", "2.5.3", "2.6.3"])
+@nox.parametrize("airflow", ["2.2.5", "2.3", "2.4", "2.5", "2.6"])
 def generate_constraints(session: nox.Session, airflow) -> None:
     """Generate constraints file"""
     session.install("wheel")
-    session.install(f"apache-airflow=={airflow}", ".[all]")
+    session.install(f"apache-airflow~={airflow}", ".[all]")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     out = session.run("pip3", "list", "--format=freeze", external=True, silent=True)
