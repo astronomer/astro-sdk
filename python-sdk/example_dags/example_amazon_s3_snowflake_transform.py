@@ -10,6 +10,7 @@ from airflow.decorators import dag
 from astro import sql as aql
 from astro.files import File
 from astro.options import SnowflakeLoadOptions
+from astro.query_modifier import QueryModifier
 from astro.table import Metadata, Table
 
 
@@ -19,7 +20,9 @@ def combine_data(center_1: Table, center_2: Table):
     UNION SELECT * FROM {{center_2}}"""
 
 
-@aql.transform()
+@aql.transform(
+    query_modifier=QueryModifier(pre_queries=["ALTER SESSION SET query_tag='not_guinea_pig';"]),
+)
 def clean_data(input_table: Table):
     return """SELECT *
     FROM {{input_table}} WHERE type NOT LIKE 'Guinea Pig'
