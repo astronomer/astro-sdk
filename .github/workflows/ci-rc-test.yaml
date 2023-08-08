@@ -1,0 +1,219 @@
+---
+name: Test providers RC releases
+
+on:  # yamllint disable-line rule:truthy
+  schedule:
+    - cron: "0 0,12 * * *"
+  workflow_dispatch:
+    inputs:
+      rc_testing_branch:
+        # If a branch is given, the workflow will use it for deployment and testing.
+        # If no branch is provided, the workflow will create a new rc testing branch
+        # for deployment and testing.
+        description: |
+          rc_testing_branch: existing testing branch
+          (Either rc_testing_branch or issue_url is required, and you cannot give both.)
+        required: false
+        default: ''
+      issue_url:
+        description: |
+          issue_url: the GitHub issue URL that tracks the status of Providers release
+          (Either rc_testing_branch or issue_url is required, and you cannot give both.)
+        required: false
+      base_git_rev:
+        description: 'The base git revision to test Providers RCs'
+        required: false
+        type: string
+        default: 'main'
+
+jobs:
+  check-rc-testing-announcement:
+    runs-on: 'ubuntu-20.04'
+    if: github.event_name == 'schedule'
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout apache-airflow
+        uses: actions/checkout@v3
+        with:
+          repository: 'apache/airflow'
+
+      - name: Parse the latest 100 GitHub issues from apache-airflow to check providers testing announcement
+        id: parse-airflow-gh-issues
+        run: |
+          # The default limit is 30. Set it to 100 for retrieving more issues
+          rc_issue_url=`gh issue list \
+            --json createdAt,title,url \
+            --limit 100 \
+            --jq 'map(
+                    select(
+                      .title |
+                      contains ("Status of testing Providers that were prepared on ")
+                    )
+                  ) | .[0].url'`
+
+          echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
+
+      - name: Checkout current repo
+        uses: actions/checkout@v3
+        if: steps.parse-airflow-gh-issues.outputs.rc_issue_url != ''
+
+      - name: Parse the latest GitHub pull requests for checking existing RC provider testing pull request
+        id: parse-current-repo
+        if: steps.parse-airflow-gh-issues.outputs.rc_issue_url != ''
+        run: |
+          # The default limit is 30. Set it to 100 for retrieving more pull requests
+          rc_issue_url="${{ steps.parse-airflow-gh-issues.outputs.rc_issue_url }}"
+          jq_query="map(
+            select(.title == \"[DO NOT MERGE] Test RC provider packages for $rc_issue_url\")
+          ) | .[0].url"
+          testing_pr_url=`gh pr list \
+            --json createdAt,title,url \
+            --limit 100 \
+            --state all \
+            --jq "$jq_query"`
+
+          echo "testing_pr_url=$testing_pr_url" >> $GITHUB_OUTPUT
+
+      - name: Export rc_issue_url
+        id: export-rc-issue-url
+        run: |
+          rc_issue_url="${{ steps.parse-airflow-gh-issues.outputs.rc_issue_url }}"
+          testing_pr_url="${{ steps.parse-current-repo.outputs.testing_pr_url }}"
+          if [ "$rc_issue_url" == "" ] ; then
+            echo "No RC providers testing announcement found on apache-airflow"
+          elif [ "$testing_pr_url" != "" ] ; then
+            echo "Branch for testing RC providers has been created"
+            rc_issue_url=""
+          fi
+          echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
+    outputs:
+      rc_issue_url: ${{ steps.export-rc-issue-url.outputs.rc_issue_url }}
+
+  validate-manual-input:
+    runs-on: 'ubuntu-20.04'
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Validate user input
+        if: |
+           (inputs.rc_testing_branch == '' && inputs.issue_url == '') ||
+           (inputs.rc_testing_branch != '' && inputs.issue_url != '')
+        run: |
+          echo "Either rc_testing_branch or issue_url is required, and you cannot give both."
+          exit 1
+
+  create-branch-for-testing-rc-release:
+    needs: [validate-manual-input, check-rc-testing-announcement]
+    runs-on: 'ubuntu-20.04'
+    if: |
+      always() &&
+      (
+        (github.event_name == 'workflow_dispatch' && inputs.issue_url != '') ||
+        (github.event_name == 'schedule' && needs.check-rc-testing-announcement.outputs.rc_issue_url != '')
+      )
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.base_git_rev }}
+
+      - name: Install dev dependency
+        run: |
+          python3 -m pip install -r dev/integration_test_scripts/requirements.txt
+
+      - name: Setup Github Actions git user
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Export GitHub RC provider testing url
+        id: export-rc-issue-url
+        run: |
+          if [ "${{ inputs.issue_url }}" != "" ] ; then
+            rc_issue_url="${{ inputs.issue_url }}"
+          else
+            rc_issue_url="${{ needs.check-rc-testing-announcement.outputs.rc_issue_url }}"
+          fi
+
+          echo "rc_issue_url=$rc_issue_url"
+          echo "rc_issue_url=$rc_issue_url" >> $GITHUB_OUTPUT
+
+      - name: Update project dependencies to use RC providers
+        run: |
+          rc_issue_url="${{ steps.export-rc-issue-url.outputs.rc_issue_url }}"
+
+          echo "Updating setup.cfg with RC provider packages on $rc_issue_url"
+          python3 dev/integration_test_scripts/replace_dependencies.py --issue-url $rc_issue_url
+
+      - name: Check repo providers updated
+        id: check-repo-provideres-updated
+        run: |
+          difference=`git diff`
+          if [ -z "$difference" ]
+          then
+            echo "No provider changed"
+            echo "no_prvider_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "$difference"
+          fi
+
+      - name: Create RC branch
+        id: create_rc_branch
+        run: |
+          if [ "${{ steps.check-repo-provideres-updated.outputs.no_prvider_changed }}" != "true" ]
+          then
+            current_timestamp=`date +%Y-%m-%dT%H-%M-%S%Z`
+            echo "Current timestamp is" $current_timestamp
+            branch_name="rc-test-$current_timestamp"
+            git checkout -b $branch_name
+
+          else
+            branch_name=""
+          fi
+          echo "rc_testing_branch=$branch_name"
+          echo "rc_testing_branch=$branch_name" >> $GITHUB_OUTPUT
+
+
+      - name: Commit changes and create a pull request
+        if: steps.create_rc_branch.outputs.rc_testing_branch != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rc_issue_url="${{ steps.export-rc-issue-url.outputs.rc_issue_url }}"
+
+          git add setup.cfg
+          git commit -m "Updating setup.cfg with RC provider packages on $rc_issue_url"
+          git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
+          gh pr create --title "[DO NOT MERGE] Test RC astro-sdk packages for $rc_issue_url" \
+                       --fill
+
+          echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+    outputs:
+      rc_testing_branch: ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
+
+  export-rc-testing-branch-name:
+    needs: [validate-manual-input, create-branch-for-testing-rc-release]
+    if: |
+      always() &&
+      (
+        needs.create-branch-for-testing-rc-release.result == 'success'  &&
+        needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch != ''
+      ) ||
+      (
+        needs.validate-manual-input.result == 'success' &&
+        inputs.rc_testing_branch
+      )
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: export rc_testing_branch
+        id: export-rc-testing-branch-name-step
+        run: |
+          if [ "${{ inputs.rc_testing_branch }}" == "" ]; then
+            rc_testing_branch=${{ needs.create-branch-for-testing-rc-release.outputs.rc_testing_branch }}
+          else
+            rc_testing_branch=${{ inputs.rc_testing_branch }}
+          fi
+          echo "rc_testing_branch=$rc_testing_branch" >> $GITHUB_OUTPUT
+    outputs:
+      rc_testing_branch: ${{ steps.export-rc-testing-branch-name-step.outputs.rc_testing_branch }}
+
