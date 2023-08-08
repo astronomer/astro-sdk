@@ -73,7 +73,7 @@ amazon = [
     "smart-open[s3]>=5.2.1",
 ]
 azure = [
-    "apache-airflow-providers-microsoft-azure<=6.2.2",
+    "apache-airflow-providers-microsoft-azure<=6.2.2",  # TODO: Unpin this when we get self.hook.get_conn().account_name as not none for wasb hook.
     "azure-storage-blob",
     "smart-open[azure]>=5.2.1",
 ]
@@ -118,7 +118,7 @@ all = [
     "s3fs",
     "protobuf",
     "openlineage-airflow>=0.17.0",
-    "apache-airflow-providers-microsoft-azure<=6.2.2",
+    "apache-airflow-providers-microsoft-azure<=6.2.2",  # TODO: Unpin this when we get self.hook.get_conn().account_name as not none for wasb hook.
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
