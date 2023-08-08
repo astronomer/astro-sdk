@@ -101,6 +101,7 @@ connections:
       connection_string: $AZURE_WASB_CONN_STRING
   - conn_id: wasb_conn_with_access_key
     conn_type: wasb
+    login: astrosdk
     host: astrosdk.blob.core.windows.net
     description: null
     extra:
