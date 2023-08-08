@@ -4,6 +4,13 @@
 
 ### Bug Fixes
 
+- Fix Snowflake QueryModifier issue [#1962](https://github.com/astronomer/astro-sdk/pull/1962)
+- Add support for Pandas 2, Airflow 2.6.3 and Python 3.11 [#1989](https://github.com/astronomer/astro-sdk/pull/1989)
+
+## 1.6.1
+
+### Bug Fixes
+
 - Fix AstroCustomXcomBackend circular import issue. [#1943](https://github.com/astronomer/astro-sdk/pull/1943)
 
 
