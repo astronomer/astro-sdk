@@ -87,8 +87,10 @@ ftp = [
 ]
 openlineage = ["openlineage-airflow>=0.17.0"]
 
-databricks = ["databricks-cli",
-    "apache-airflow-providers-databricks"]
+databricks = [
+    "databricks-cli",
+    "apache-airflow-providers-databricks"
+]
 
 mssql = [
     "apache-airflow-providers-microsoft-mssql>=3.2",
