@@ -67,7 +67,7 @@ def update_pyproject_toml(rc_packages: list[str]):
 
         with fileinput.FileInput("pyproject.toml", inplace=True) as setup_file:
             for line in setup_file:
-                print(sub(f"{package_name_to_search}.*", pinned_package, line), end="")
+                print(sub(f"{package_name_to_search}.*", f'{pinned_package}",', line), end="")
 
 
 if __name__ == "__main__":
