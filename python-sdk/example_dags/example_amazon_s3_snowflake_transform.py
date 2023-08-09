@@ -23,7 +23,7 @@ def combine_data(center_1: Table, center_2: Table):
 @aql.transform(
     assume_schema_exists=True,
     query_modifier=QueryModifier(pre_queries=["ALTER SESSION SET query_tag='not_guinea_pig';"]),
-    parameters={"MULTI_STATEMENT_COUNT": 2}
+    parameters={"MULTI_STATEMENT_COUNT": 2},
 )
 def clean_data(input_table: Table):
     return """SELECT *
