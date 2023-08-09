@@ -2,12 +2,8 @@
 name: Test providers RC releases
 
 on:  # yamllint disable-line rule:truthy
-#  schedule:
-#    - cron: "0 0,12 * * *"
-  push:
-    branches: [ 'main', 'release-**' ]
-    pull_request:
-      branches: [ 'main', 'release-**' ]
+  schedule:
+    - cron: "0 0,12 * * *"
   workflow_dispatch:
     inputs:
       rc_testing_branch:
