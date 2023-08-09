@@ -42,9 +42,7 @@ def parse_providers_release_testing_gh_issue(gh_issue_url: str) -> list[str]:
     first_comment = soup.find("div", {"class": "comment"})
     h2_titles = first_comment.find_all("h2")
     package_urls = [_parse_pypi_url_from_h2_title(h2_title) for h2_title in h2_titles]
-    pinned_packages = [
-        _parse_pinned_package_from_pypi_url(url) for url in package_urls
-    ]
+    pinned_packages = [_parse_pinned_package_from_pypi_url(url) for url in package_urls]
     return pinned_packages
 
 

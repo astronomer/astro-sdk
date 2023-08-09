@@ -216,4 +216,3 @@ jobs:
           echo "rc_testing_branch=$rc_testing_branch" >> $GITHUB_OUTPUT
     outputs:
       rc_testing_branch: ${{ steps.export-rc-testing-branch-name-step.outputs.rc_testing_branch }}
-
