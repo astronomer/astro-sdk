@@ -21,7 +21,8 @@ def combine_data(center_1: Table, center_2: Table):
 
 @aql.transform(
     assume_schema_exists=True,
-    # Look like PR https://github.com/astronomer/astro-sdk/pull/1962 was supposed to fix it but it didn't so disabling it
+    # Look like PR https://github.com/astronomer/astro-sdk/pull/1962 was supposed to fix it but it didn't
+    # so disabling it
     # query_modifier=QueryModifier(pre_queries=["ALTER SESSION SET query_tag='not_guinea_pig';"]),
 )
 def clean_data(input_table: Table):
