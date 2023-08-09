@@ -48,7 +48,7 @@ def parse_providers_release_testing_gh_issue(gh_issue_url: str) -> list[str]:
     return pinned_packages
 
 
-def update_setup_cfg(rc_packages: list[str]):
+def update_pyproject_toml(rc_packages: list[str]):
     """
     Replaces the given provider packages in the setup.cfg with the given pinned RC versions.
     :param rc_packages: list of RC provider packages to be replaced
@@ -98,4 +98,4 @@ if __name__ == "__main__":
     elif rc_provider_packages:
         rc_provider_packages_list = args.rc_provider_packages.split(",")
 
-    update_setup_cfg(rc_provider_packages_list)
+    update_pyproject_toml(rc_provider_packages_list)
