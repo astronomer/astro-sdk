@@ -145,7 +145,7 @@ jobs:
         run: |
           rc_issue_url="${{ steps.export-rc-issue-url.outputs.rc_issue_url }}"
 
-          echo "Updating setup.cfg with RC provider packages on $rc_issue_url"
+          echo "Updating pyproject.toml with RC provider packages on $rc_issue_url"
           python3 dev/integration_test_scripts/replace_dependencies.py --issue-url $rc_issue_url
 
       - name: Check repo providers updated
@@ -184,8 +184,8 @@ jobs:
         run: |
           rc_issue_url="${{ steps.export-rc-issue-url.outputs.rc_issue_url }}"
 
-          git add setup.cfg
-          git commit -m "Updating setup.cfg with RC provider packages on $rc_issue_url"
+          git add pyproject.toml
+          git commit -m "Updating pyproject.toml with RC provider packages on $rc_issue_url"
           git push origin ${{ steps.create_rc_branch.outputs.rc_testing_branch }}
           gh pr create --title "[DO NOT MERGE] Test RC astro-sdk packages for $rc_issue_url" \
                        --fill
