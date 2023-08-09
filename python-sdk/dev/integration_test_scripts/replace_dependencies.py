@@ -35,7 +35,7 @@ def parse_providers_release_testing_gh_issue(gh_issue_url: str) -> list[str]:
     """Parse the pinned packages from The URL of the github issue that announce provider testing
     (e.g., https://github.com/apache/airflow/issues/31322)
 
-    :param gh_issue_url: The URL of the github issue that announce provider testing
+    :param gh_issue_url: The URL of the GitHub issue that announce provider testing
     """
     req = requests.get(gh_issue_url)
     soup = BeautifulSoup(req.text, "html.parser")
@@ -48,7 +48,8 @@ def parse_providers_release_testing_gh_issue(gh_issue_url: str) -> list[str]:
 
 def update_pyproject_toml(rc_packages: list[str]):
     """
-    Replaces the given provider packages in the setup.cfg with the given pinned RC versions.
+    Replaces the given provider packages in the pyproject.toml with the given pinned RC versions.
+
     :param rc_packages: list of RC provider packages to be replaced
     """
     for package in rc_packages:
