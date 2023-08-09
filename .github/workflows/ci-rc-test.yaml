@@ -6,15 +6,8 @@ on:  # yamllint disable-line rule:truthy
 #    - cron: "0 0,12 * * *"
   push:
     branches: [ 'main', 'release-**' ]
-    paths:
-      - 'python-sdk/**'
-      - '.github/workflows/ci-python-sdk.yaml'
     pull_request:
       branches: [ 'main', 'release-**' ]
-      paths:
-        - 'python-sdk/**'
-        - '.github/workflows/**'
-        - '*'
   workflow_dispatch:
     inputs:
       rc_testing_branch:
@@ -36,6 +29,9 @@ on:  # yamllint disable-line rule:truthy
         required: false
         type: string
         default: 'main'
+defaults:
+  run:
+    working-directory: python-sdk
 
 jobs:
   check-rc-testing-announcement:
