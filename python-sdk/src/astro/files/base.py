@@ -92,7 +92,7 @@ class File(LoggingMixin, Dataset):
 
         :return: True or False
         """
-        result: bool = self.type.name in (constants.FileType.PARQUET, constants.FileType.XLSX)
+        result: bool = self.type.name in (constants.FileType.PARQUET, constants.FileType.XLSX, constants.FileType.XLS)
         return result
 
     def is_local(self) -> bool:

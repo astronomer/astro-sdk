@@ -2,6 +2,7 @@ import pathlib
 
 import pytest
 import sqlalchemy
+from databricks.sql.types import Row
 
 from astro.constants import Database, FileType
 from astro.databases import create_database
@@ -73,8 +74,6 @@ def test_table_exists_raises_exception():
 )
 def test_delta_create_table_with_columns(database_table_fixture):
     """Create a table using specific columns and types"""
-    from databricks.sql.types import Row
-
     database, table = database_table_fixture
 
     assert not database.table_exists(table)
