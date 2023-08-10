@@ -4,7 +4,6 @@ import io
 
 import pandas as pd
 
-from astro.constants import FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
@@ -45,7 +44,3 @@ class ExcelFileType(FileType):
         :param stream: file stream object
         """
         df.to_excel(stream, index=False)
-
-    @property
-    def name(self):
-        return FileTypeConstants.XLSX

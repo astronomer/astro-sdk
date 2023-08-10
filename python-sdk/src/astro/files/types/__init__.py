@@ -6,6 +6,8 @@ from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.files.types.csv import CSVFileType
 from astro.files.types.excel import ExcelFileType
+from astro.files.types.xlsx import XLSXFileType
+from astro.files.types.xls import XLSFileType
 from astro.files.types.json import JSONFileType
 from astro.files.types.ndjson import NDJSONFileType
 from astro.files.types.parquet import ParquetFileType
@@ -24,8 +26,8 @@ def create_file_type(
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
-        FileTypeConstants.XLS: ExcelFileType,
-        FileTypeConstants.XLSX: ExcelFileType,
+        FileTypeConstants.XLS: XLSFileType,
+        FileTypeConstants.XLSX: XLSXFileType,
     }
     if not filetype:
         filetype = get_filetype(path)
