@@ -388,4 +388,14 @@ with dag:
     )
     # [END load_file_example_28]
 
+    # [START load_file_example_29]
+    load_xlsv_file_in_postgres = aql.load_file(
+        task_id="local_xls_to_postgress",
+        input_file=File(path=str(CWD.parent) + "/tests/data/sample.xlsx", filetype=FileType.XLSX),
+        output_table=Table(
+            conn_id=ASTRO_POSTGRESS_CONN_ID,
+        ),
+    )
+    # [END load_file_example_29]
+
     aql.cleanup()
