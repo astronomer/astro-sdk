@@ -21,5 +21,5 @@ COPY ../pyproject.toml  ${AIRFLOW_HOME}/astro_sdk/
 COPY ../README.md  ${AIRFLOW_HOME}/astro_sdk/
 COPY ../src/astro/__init__.py  ${AIRFLOW_HOME}/astro_sdk/src/astro/__init__.py
 
-RUN pip install --upgrade --force-reinstall  -e "${AIRFLOW_HOME}/astro_sdk[all]"
+RUN pip install --upgrade --force-reinstall  -e "${AIRFLOW_HOME}/astro_sdk[all,tests,doc]"
 USER astro
