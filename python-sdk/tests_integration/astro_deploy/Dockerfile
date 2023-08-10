@@ -10,7 +10,8 @@ RUN apt-get install -y --no-install-recommends \
         freetds-dev \
         libssl-dev \
         libkrb5-dev \
-        libmariadb-dev
+        libmariadb-dev \
+        pkg-config
 
 ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 

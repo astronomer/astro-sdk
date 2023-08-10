@@ -10,6 +10,7 @@ from airflow.decorators import dag
 from astro import sql as aql
 from astro.files import File
 from astro.options import SnowflakeLoadOptions
+from astro.query_modifier import QueryModifier
 from astro.table import Metadata, Table
 
 
@@ -19,7 +20,10 @@ def combine_data(center_1: Table, center_2: Table):
     UNION SELECT * FROM {{center_2}}"""
 
 
-@aql.transform(assume_schema_exists=True)
+@aql.transform(
+    assume_schema_exists=True,
+    query_modifier=QueryModifier(pre_queries=["ALTER SESSION SET query_tag='not_guinea_pig';"]),
+)
 def clean_data(input_table: Table):
     return """SELECT *
     FROM {{input_table}} WHERE type NOT LIKE 'Guinea Pig'
@@ -81,6 +85,7 @@ def example_amazon_s3_snowflake_transform():
                 copy_options={"ON_ERROR": "CONTINUE"},
             )
         ],
+        use_native_support=False,
     )
     temp_table_2 = aql.load_file(
         input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
@@ -91,6 +96,7 @@ def example_amazon_s3_snowflake_transform():
                 copy_options={"ON_ERROR": "CONTINUE"},
             )
         ],
+        use_native_support=False,
     )
 
     combined_data = combine_data(
