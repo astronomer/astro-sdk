@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/astro-runtime:8.1.0-base
+FROM quay.io/astronomer/astro-runtime:8.8.0-base
 
 
 USER root
@@ -11,7 +11,8 @@ RUN apt-get install -y --no-install-recommends \
         freetds-dev \
         libssl-dev \
         libkrb5-dev \
-        libmariadb-dev
+        libmariadb-dev \
+        pkg-config
 
 ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 
@@ -20,5 +21,5 @@ COPY ../pyproject.toml  ${AIRFLOW_HOME}/astro_sdk/
 COPY ../README.md  ${AIRFLOW_HOME}/astro_sdk/
 COPY ../src/astro/__init__.py  ${AIRFLOW_HOME}/astro_sdk/src/astro/__init__.py
 
-RUN pip install -e "${AIRFLOW_HOME}/astro_sdk[all,tests,doc]"
+RUN pip install --upgrade --force-reinstall  -e "${AIRFLOW_HOME}/astro_sdk[all]"
 USER astro
