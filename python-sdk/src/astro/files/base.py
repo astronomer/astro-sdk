@@ -57,7 +57,7 @@ class File(LoggingMixin, Dataset):
         Setter of all the load_options. load_options is a container with for the custom option passed by user for a
          third-party integrations like pandas, azure etc.
         """
-        self._load_options = value
+        self._load_options = value  # type: ignore[misc]
 
     @property
     def location(self) -> BaseFileLocation:
