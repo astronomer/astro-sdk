@@ -42,25 +42,27 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
         message_list: List[str] = []
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
-        if IS_RUNTIME_RELEASE:
-            airflow_version_message = (
-                f"Results generated for latest Runtime version {os.environ['ASTRONOMER_RUNTIME_VERSION']} "
-                f"with {os.environ['AIRFLOW__CORE__EXECUTOR']}  \n\n"
-            )
-        else:
-            airflow_version_message = (
-                f"Airflow version for the below astro-sdk run is `{airflow_version}` "
-                f"with {os.environ['AIRFLOW__CORE__EXECUTOR']} \n\n"
-            )
-        master_dag_deployment_link = (
-            f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}"
-            f"/dags/example_master_dag/grid?search=example_master_dag"
-        )
+        airflow_executor = context["ti"].xcom_pull(task_ids="get_airflow_executor")
+        astro_sdk_version = context["ti"].xcom_pull(task_ids="get_astro_sdk_version")
+        astro_cloud_provider = context["ti"].xcom_pull(task_ids="get_astro_cloud_provider")
 
-        deployment_message = (
-            f"\n <{master_dag_deployment_link}|Link> "
-            f"to the master DAG for the above run on Astro Cloud deployment \n"
-        )
+        report_details = [
+            f"*{header}:* `{value}`\n"
+            for header, value in [
+                ("Runtime version", os.getenv("ASTRONOMER_RUNTIME_VERSION", "N/A")),
+                ("Python version", os.getenv("PYTHON_VERSION", "N/A")),
+                ("Airflow version", airflow_version),
+                ("Executor", airflow_executor),
+                ("Astro-SDK version", astro_sdk_version),
+                ("Cloud provider", astro_cloud_provider),
+            ]
+        ]
+
+        report_details.insert(0, "Results generated for:\n\n")
+        report_details.append("\n")  # Adding an additional newline at the end
+
+        master_dag_deployment_link = f"{os.environ['AIRFLOW__WEBSERVER__BASE_URL']}/dags/example_master_dag/grid?search=example_master_dag"
+        deployment_message = f"\n <{master_dag_deployment_link}|Link> to the master DAG for the above run on Astro Cloud deployment \n"
 
         dag_count, failed_dag_count = 0, 0
         for dr in last_dags_runs:
@@ -69,7 +71,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
             failed_tasks = []
             for ti in dr.get_task_instances():
                 task_code = ":black_circle: "
-                if ti.task_id not in ["end", "get_report"]:
+                if not ((ti.task_id == "end") or (ti.task_id == "get_report")):
                     if ti.state == "success":
                         continue
                     elif ti.state == "failed":
@@ -86,14 +88,26 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
                 failed_dag_count += 1
 
         output_list = [
-            airflow_version_message,
             f"*Total DAGS*: {dag_count} \n",
-            f"*Success DAGS*: {dag_count - failed_dag_count} :green_apple: \n",
+            f"*Success DAGS*: {dag_count-failed_dag_count} :green_apple: \n",
             f"*Failed DAGS*: {failed_dag_count} :apple: \n \n",
         ]
+        output_list = report_details + output_list
         if failed_dag_count > 0:
             output_list.append("*Failure Details:* \n")
             output_list.extend(message_list)
+        dag_run = context["dag_run"]
+        task_instances = dag_run.get_task_instances()
+
+        task_failure_message_list: List[str] = [
+            f":red_circle: {ti.task_id} \n" for ti in task_instances if ti.state == "failed"
+        ]
+
+        if task_failure_message_list:
+            output_list.append(
+                "\nSome of Master DAG tasks failed, please check with deployment link below \n"
+            )
+            output_list.extend(task_failure_message_list)
         output_list.append(deployment_message)
         logging.info("%s", "".join(output_list))
         # Send dag run report on Slack
@@ -249,6 +263,29 @@ with DAG(
         task_id="get_airflow_version", bash_command="airflow version", do_xcom_push=True
     )
 
+    get_airflow_executor = BashOperator(
+        task_id="get_airflow_executor",
+        bash_command="airflow config get-value core executor",
+        do_xcom_push=True,
+    )
+
+    get_astro_sdk_version = BashOperator(
+        task_id="get_astro_sdk_version",
+        bash_command="airflow providers get astro-sdk-python -o json | jq '.[0].Version'",
+        do_xcom_push=True,
+    )
+
+    get_astro_cloud_provider = BashOperator(
+        task_id="get_astro_cloud_provider",
+        bash_command=(
+            "[[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *azure* ]] && echo 'azure' ||"
+            "([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *s3* ]] && echo 'aws' ||"
+            "([[ $AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID == *gcs* ]] && echo 'gcs' ||"
+            "echo 'unknown'))"
+        ),
+        do_xcom_push=True,
+    )
+
     start_sftp_ftp_services = PythonOperator(
         task_id="start_sftp_ftp_services",
         python_callable=start_sftp_ftp_services_method,
@@ -359,6 +396,9 @@ with DAG(
         >> [  # skipcq PYL-W0104
             list_installed_pip_packages,
             get_airflow_version,
+            get_airflow_executor,
+            get_astro_sdk_version,
+            get_astro_cloud_provider,
             load_file_trigger_tasks[0],
             transform_trigger_tasks[0],
             dataframe_trigger_tasks[0],
@@ -374,6 +414,9 @@ with DAG(
     last_task = [
         list_installed_pip_packages,
         get_airflow_version,
+        get_airflow_executor,
+        get_astro_sdk_version,
+        get_astro_cloud_provider,
         load_file_trigger_tasks[-1],
         transform_trigger_tasks[-1],
         dataframe_trigger_tasks[-1],
