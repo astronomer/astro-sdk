@@ -5,9 +5,12 @@ import pathlib
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.files.types.csv import CSVFileType
+from astro.files.types.excel import ExcelFileType  # noqa: F401 # skipcq: PY-W2000
 from astro.files.types.json import JSONFileType
 from astro.files.types.ndjson import NDJSONFileType
 from astro.files.types.parquet import ParquetFileType
+from astro.files.types.xls import XLSFileType
+from astro.files.types.xlsx import XLSXFileType
 from astro.options import LoadOptionsList
 
 
@@ -23,6 +26,8 @@ def create_file_type(
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
+        FileTypeConstants.XLS: XLSFileType,
+        FileTypeConstants.XLSX: XLSXFileType,
     }
     if not filetype:
         filetype = get_filetype(path)
@@ -49,7 +54,7 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
 
     :param filepath: URI or Path to a file
     :type filepath: str or pathlib.PosixPath
-    :return: The filetype (e.g. csv, ndjson, json, parquet)
+    :return: The filetype (e.g. csv, ndjson, json, parquet, excel)
     :rtype: astro.constants.FileType
     """
     if isinstance(filepath, pathlib.PosixPath):
@@ -67,6 +72,6 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
         )
 
     try:
-        return FileTypeConstants(extension)
+        return FileTypeConstants(extension.lower())
     except ValueError:
         raise ValueError(f"Unsupported filetype '{extension}' from file '{filepath}'.")

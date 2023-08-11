@@ -87,7 +87,8 @@ ftp = [
 ]
 openlineage = ["openlineage-airflow>=0.17.0"]
 
-databricks = ["databricks-cli",
+databricks = [
+    "databricks-cli",
     "apache-airflow-providers-databricks",
     # TODO: Remove this once https://github.com/databricks/databricks-sql-python/pull/191 released
     "databricks-sql-connector<2.9.0",

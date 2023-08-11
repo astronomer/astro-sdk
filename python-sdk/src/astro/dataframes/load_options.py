@@ -16,6 +16,7 @@ class PandasLoadOptions(LoadOptions):
      1. CSV file type - https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html
      2. NDJSON/JSON file type - https://pandas.pydata.org/docs/reference/api/pandas.read_json.html
      3. Parquet file type - https://pandas.pydata.org/docs/reference/api/pandas.read_parquet.html
+     4. Excel file type: https://pandas.pydata.org/docs/reference/api/pandas.read_excel.html
 
     :param delimiter: Delimiter to use. Defaults to None
     :param dtype: Data type for data or columns.

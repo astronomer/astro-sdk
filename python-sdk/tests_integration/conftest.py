@@ -301,13 +301,19 @@ def method_map_fixture(method, base_path, classes, get):
 def type_method_map_fixture(request):
     """Get paths for type's package for methods"""
     method = request.param["method"]
-    classes = ["JSONFileType", "CSVFileType", "NDJSONFileType", "ParquetFileType"]
+    classes = [
+        "JSONFileType",
+        "CSVFileType",
+        "NDJSONFileType",
+        "ParquetFileType",
+        "XLSXFileType",
+        "XLSFileType",
+    ]
     base_path = ("astro.files.types",)
-    suffix = "FileType"
 
     yield method_map_fixture(
         method=method,
         classes=classes,
         base_path=base_path,
-        get=lambda x: FileType(x.rstrip(suffix).lower()),
+        get=lambda x: FileType(x[0:-8].lower()),  # remove FileType suffix
     )

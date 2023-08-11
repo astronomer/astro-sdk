@@ -834,7 +834,7 @@ def test_load_file_bigquery_error_out(sample_dag, database_table_fixture):
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "duckdb", "mysql"],
 )
-@pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
+@pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv", "xlsx"])
 def test_load_file(sample_dag, database_table_fixture, file_type):
     db, test_table = database_table_fixture
 
