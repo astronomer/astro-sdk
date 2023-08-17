@@ -75,9 +75,11 @@ def load_to_dataframe(filepath, file_type):
         "csv": pd.read_csv,
         "json": pd.read_json,
         "ndjson": pd.read_json,
+        "xlsx": pd.read_excel,
+        "xls": pd.read_excel,
     }
     read_params = {"ndjson": {"lines": True}}
-    mode = {"parquet": "rb"}
+    mode = {"parquet": "rb", "xls": "rb", "xlsx": "rb"}
     with open(filepath, mode.get(file_type, "r")) as fp:
         return read[file_type](fp, **read_params.get(file_type, {}))
 

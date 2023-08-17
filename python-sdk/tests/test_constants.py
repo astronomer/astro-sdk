@@ -7,7 +7,7 @@ def test_supported_file_locations():
 
 
 def test_supported_file_types():
-    expected = {"csv", "json", "ndjson", "parquet"}
+    expected = {"csv", "json", "ndjson", "parquet", "xls", "xlsx"}
     assert set(SUPPORTED_FILE_TYPES) == expected
 
 
