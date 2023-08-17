@@ -275,7 +275,7 @@ with DAG(
 
     get_astro_sdk_version = BashOperator(
         task_id="get_astro_sdk_version",
-        bash_command="airflow providers get astro-sdk-python -o json | jq '.[0].Version'",
+        bash_command="pip show astro-sdk-python | grep -i version | awk '{print $2}'",
         do_xcom_push=True,
     )
 
