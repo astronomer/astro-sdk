@@ -1,0 +1,117 @@
+---
+name: Update runtime image tag
+
+on:  # yamllint disable-line rule:truthy
+  schedule:
+    - cron: '0 0 * * *'  # Run every day at midnight UTC
+  workflow_dispatch:
+    inputs:
+      quay_repo:
+        description: 'Quay Repository'
+        default: 'astronomer/astro-runtime'
+
+jobs:
+  runtime-image-tag-update-job:
+    runs-on: 'ubuntu-20.04'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests semantic-version
+
+      - name: Get current tag from Dockerfile
+        id: get_current_tag
+        # yamllint disable rule:line-length
+        run: |
+          CURRENT_TAG=$(awk -F: '/quay.io\/astronomer\/astro-runtime/ {print $NF}' ./python-sdk/dev/Dockerfile)
+          echo "CURRENT_TAG=$CURRENT_TAG"
+          echo "tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
+        # yamllint enable rule:line-length
+
+      - name: Get latest tag from Quay.io
+        id: get_latest_tag
+        # yamllint disable rule:line-length
+        run: |
+          LATEST_TAG=$(python ./.github/scripts/get_latest_runtime_image_tag.py ${{ github.event.inputs.quay_repo }})
+          echo "LATEST_TAG=$LATEST_TAG"
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+        # yamllint enable rule:line-length
+
+      - name: Check if tag was updated
+        id: check_tag_updated
+        run: |
+          if [ "${{ steps.get_current_tag.outputs.tag }}" != "${{ steps.get_latest_tag.outputs.tag }}" ]; then
+            echo "Tag was updated"
+            echo "tag_updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "Tag was not updated"
+            echo "tag_updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create runtime image tag update branch
+        id: create_runtime_image_update_branch
+        run: |
+          BRANCH_NAME="update-runtime-image-tag-${{ steps.get_latest_tag.outputs.tag }}"
+          git fetch origin main
+          git checkout main
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME"
+          echo "runtime_image_update_branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Replace tag in dev Dockerfile
+        if: steps.check_tag_updated.outputs.tag_updated == 'true'
+        # yamllint disable rule:line-length
+        run: |
+          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./python-sdk/dev/Dockerfile
+          echo "::group::cat Dockerfile"
+          cat  ./python-sdk/dev/Dockerfile
+          echo "::endgroup::"
+        # yamllint enable rule:line-length
+
+      - name: Replace tag in Astro Dockerfile
+        if: steps.check_tag_updated.outputs.tag_updated == 'true'
+        # yamllint disable rule:line-length
+        run: |
+          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./python-sdk/tests_integration/astro_deploy/Dockerfile
+          echo "::group::cat ./python-sdk/tests_integration/astro_deploy/Dockerfile"
+          cat ./python-sdk/tests_integration/astro_deploy/Dockerfile
+          echo "::endgroup::"
+        # yamllint enable rule:line-length
+
+      - name: Replace tag in Astro Dockerfile single worker
+        if: steps.check_tag_updated.outputs.tag_updated == 'true'
+        # yamllint disable rule:line-length
+        run: |
+          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./python-sdk/tests_integration/astro_deploy/Dockerfile.single_worker
+          echo "::group::cat ./python-sdk/tests_integration/astro_deploy/Dockerfile"
+          cat ./python-sdk/tests_integration/astro_deploy/Dockerfile.single_worker
+          echo "::endgroup::"
+        # yamllint enable rule:line-length
+
+      - name: Setup Github Actions git user
+        if: steps.check_tag_updated.outputs.tag_updated == 'true'
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Commit changes and create a pull request
+        if: steps.check_tag_updated.outputs.tag_updated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # yamllint disable rule:line-length
+        run: |
+          set -e
+          git add ./python-sdk/tests_integration/astro_deploy/ ./python-sdk/dev/Dockerfile
+          git commit -m "Update runtime image tag to ${{ steps.get_latest_tag.outputs.tag }}"
+          git push origin ${{ steps.create_runtime_image_update_branch.outputs.runtime_image_update_branch }}
+          gh pr create --base main \
+            --title "Update runtime image tag to ${{ steps.get_latest_tag.outputs.tag }}" \
+            --body "This pull request updates the runtime image tag in the `Dockerfile` to the latest tag." --fill
+        # yamllint enable rule:line-length
