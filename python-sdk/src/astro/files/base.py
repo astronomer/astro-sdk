@@ -57,7 +57,7 @@ class File(LoggingMixin, Dataset):
         Setter of all the load_options. load_options is a container with for the custom option passed by user for a
          third-party integrations like pandas, azure etc.
         """
-        self._load_options = value
+        self._load_options = value  # type: ignore[misc]
 
     @property
     def location(self) -> BaseFileLocation:
@@ -92,7 +92,11 @@ class File(LoggingMixin, Dataset):
 
         :return: True or False
         """
-        result: bool = self.type.name == constants.FileType.PARQUET
+        result: bool = self.type.name in (
+            constants.FileType.PARQUET,
+            constants.FileType.XLSX,
+            constants.FileType.XLS,
+        )
         return result
 
     def is_local(self) -> bool:

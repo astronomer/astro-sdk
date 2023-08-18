@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/astro-runtime:8.1.0-base
+FROM quay.io/astronomer/astro-runtime:8.8.0-base
 
 USER root
 RUN apt-get update -y && apt-get install -y git
@@ -10,7 +10,8 @@ RUN apt-get install -y --no-install-recommends \
         freetds-dev \
         libssl-dev \
         libkrb5-dev \
-        libmariadb-dev
+        libmariadb-dev \
+        pkg-config
 
 ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 

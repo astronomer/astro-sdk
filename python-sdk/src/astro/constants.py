@@ -39,6 +39,8 @@ class FileType(Enum):
     JSON = "json"
     NDJSON = "ndjson"
     PARQUET = "parquet"
+    XLS = "xls"
+    XLSX = "xlsx"
     # [END filetypes]
 
     def __str__(self) -> str:
