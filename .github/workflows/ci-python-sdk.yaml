@@ -203,7 +203,7 @@ jobs:
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
-  Run-Unit-tests-Airflow-2-6:
+  Run-Unit-tests-Airflow-2-7:
     strategy:
       matrix:
         version: [ '3.8', '3.9', '3.10', '3.11' ]
