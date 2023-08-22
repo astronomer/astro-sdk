@@ -1,0 +1,200 @@
+---
+name: (Reusable workflows) Deploy to astro cloud
+
+on:  # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      git_rev:
+        description: 'The git revision to deploy'
+        required: false
+        type: string
+        default: ''
+      environment_to_deploy:
+        description: 'astro cloud deployment to deploy to'
+        required: true
+        type: string
+    secrets:
+      docker_registry:
+        description: 'astro cloud docker registry'
+        required: true
+      organization_id:
+        description: 'astro cloud organization_id'
+        required: true
+      deployment_id:
+        description: 'astro cloud deployment_id'
+        required: true
+      astronomer_key_id:
+        description: 'astro cloud astronomer_key_id'
+        required: true
+      astronomer_key_secret:
+        description: 'astro cloud astronomer_key_secret'
+        required: true
+      SLACK_WEBHOOK_URL:
+        description: 'slack webhook url for sending notification'
+        required: true
+
+jobs:
+  deploy-to-astro-cloud:
+    runs-on: 'ubuntu-20.04'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.git_rev }}
+
+      - name: get git revision
+        id: get_git_revision
+        run: echo "git_rev=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: deploy
+        working-directory: python-sdk/tests_integration/astro_deploy
+        run: |
+          echo "deploying ${{ inputs.git_rev }} to ${{ inputs.environment_to_deploy }}"
+          bash deploy.sh astro-cloud \
+            ${{ secrets.docker_registry }} \
+            ${{ secrets.organization_id }} \
+            ${{ secrets.deployment_id }} \
+            ${{ secrets.astronomer_key_id }} \
+            ${{ secrets.astronomer_key_secret }}
+
+      - name: send succeeded notification to Slack
+        if: success() && github.event_name == 'workflow_dispatch'
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          # yamllint disable rule:line-length
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ Deploy succeeded"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment to deploy:*\n ${{ inputs.environment_to_deploy }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Deployed git revision*:\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ steps.get_git_revision.outputs.git_rev }}|${{ steps.get_git_revision.outputs.git_rev }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Link to workflow run:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|link>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Triggered by:*\n<${{ github.server_url }}/${{ github.triggering_actor }}|${{ github.triggering_actor }}>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*---Workflow Detail---*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow name:*\n<${{ github.server_url }}/${{ github.repository }}/actions/workflows/${{ github.workflow }}|${{ github.workflow }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Event name:*\n${{ github.event_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow Ref:*\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow Sha:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                    }
+                  ]
+                }
+              ]
+            }
+          # yamllint enable rule:line-length
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: send failure notification to Slack
+        if: failure()
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          # yamllint disable rule:line-length
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ Deploy failed"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment to deploy:*\n ${{ inputs.environment_to_deploy }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Deployed git revision*:\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ steps.get_git_revision.outputs.git_rev }}|${{ steps.get_git_revision.outputs.git_rev }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Link to workflow run:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}|link>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Triggered by:*\n<${{ github.server_url }}/${{ github.triggering_actor }}|${{ github.triggering_actor }}>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*---Workflow Detail---*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow name:*\n<${{ github.server_url }}/${{ github.repository }}/actions/workflows/${{ github.workflow }}|${{ github.workflow }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Event name:*\n${{ github.event_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow Ref:*\n<${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref }}|${{ github.ref_name }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow Sha:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                    }
+                  ]
+                }
+              ]
+            }
+          # yamllint enable rule:line-length
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

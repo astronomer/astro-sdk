@@ -1,0 +1,81 @@
+---
+name: (Reusable workflows) Wait for deployment and trigger dags
+
+on:  # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      git_rev:
+        description: 'The git revision to deploy'
+        required: false
+        type: string
+        default: ''
+      dags_to_trigger_after_deployment:
+        description: |
+          Comma separated list of dag_ids to trigger after deployment
+          (e.g. "example_mssql_transform, example_load_file")
+        required: false
+        type: string
+        default: ''
+    secrets:
+      astro_subdomain:
+        description: 'astro cloud subdomain'
+        required: true
+      deployment_id:
+        description: 'astro cloud deployment_id'
+        required: true
+      astronomer_key_id:
+        description: 'astro cloud astronomer_key_id'
+        required: true
+      astronomer_key_secret:
+        description: 'astro cloud astronomer_key_secret'
+        required: true
+      organization_id:
+        description: 'astro cloud organization_id'
+        required: true
+      bearer_token:
+        description: 'workspace bearer token'
+        required: true
+
+jobs:
+  wait-for-deployment-to-be-ready-and-trigger-dag:
+    runs-on: 'ubuntu-20.04'
+    steps:
+
+      - name: Wait for deployment to be healthy
+        run: |
+          astro_core_api="https://api.astronomer.io/v1alpha1/organizations/${{secrets.organization_id }}/\
+          deployments"
+          tries=15
+          health_flag=false
+
+          while [[ $tries -gt 0 && $health_flag == false ]]; do
+              sleep 120
+              response=$(curl -s -H "Authorization: Bearer ${{ secrets.bearer_token }}" -X GET \
+              "$astro_core_api?deploymentIds=${{ secrets.deployment_id }}")
+              deployment_status=$(echo "$response" | jq -r '.deployments[0].status')
+              echo "Deployment status is: $deployment_status"
+              echo "Waiting for deployment to be in ready state!!!"
+              if [[ $deployment_status == "HEALTHY" ]]; then
+                  health_flag=true
+              fi
+              tries=$((tries - 1))
+          done
+          if [[ $health_flag == false ]]; then
+              echo "Timed out waiting for deployment ${{ secrets.deployment_id }} to be HEALTHY"
+              exit 1
+          fi
+          echo "${{ secrets.deployment_id }} is in HEALTHY state now"
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.git_rev }}
+
+      - name: Trigger DAG(s)
+        run: |
+          python3 python-sdk/dev/integration_test_scripts/trigger_dag.py \
+            ${{ secrets.astro_subdomain }} \
+            ${{ secrets.deployment_id }} \
+            ${{ secrets.astronomer_key_id }} \
+            ${{ secrets.astronomer_key_secret }} \
+            --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"
