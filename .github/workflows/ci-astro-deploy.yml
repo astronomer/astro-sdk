@@ -1,4 +1,4 @@
-name: "Deploy integration tests to astro cloud"
+name: "Astro Deploy"
 on:
   schedule:
     - cron: '0 0 * * *'
