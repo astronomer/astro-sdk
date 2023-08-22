@@ -50,8 +50,7 @@ jobs:
         working-directory: python-sdk/tests_integration/astro_deploy
         run: |
           echo "deploying ${{ inputs.git_rev }} to ${{ inputs.environment_to_deploy }}"
-          bash deploy.sh astro-cloud \
-            ${{ secrets.docker_registry }} \
+          bash deploy.sh  ${{ secrets.docker_registry }}\
             ${{ secrets.organization_id }} \
             ${{ secrets.deployment_id }} \
             ${{ secrets.astronomer_key_id }} \
