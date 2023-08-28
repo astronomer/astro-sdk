@@ -260,6 +260,14 @@ class SnowflakeDatabase(BaseDatabase):
     )
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
+    METADATA_COLUMNS_DATATYPE = {
+        "METADATA$FILENAME": "VARCHAR",
+        "METADATA$FILE_ROW_NUMBER": "NUMBER",
+        "METADATA$FILE_CONTENT_KEY": "VARCHAR",
+        "METADATA$FILE_LAST_MODIFIED": "TIMESTAMP_NTZ",
+        "METADATA$START_SCAN_TIME": "TIMESTAMP_LTZ",
+    }
+
     def __init__(
         self,
         conn_id: str = DEFAULT_CONN_ID,
@@ -460,6 +468,21 @@ class SnowflakeDatabase(BaseDatabase):
         )
         return is_file_type_supported and is_file_location_supported
 
+    def create_table(self, table: BaseTable, *args, **kwargs):
+        """Override create_table to add metadata columns to the table if specified in load_options"""
+        super().create_table(table, *args, **kwargs)
+        if self.load_options is None or not self.load_options.metadata_columns:
+            return
+        table_name = self.get_table_qualified_name(table)
+        metadata_columns = ",".join(
+            [
+                "IF NOT EXISTS " + f"{col} {self.METADATA_COLUMNS_DATATYPE[col]}"
+                for col in self.load_options.metadata_columns
+            ]
+        )
+        sql_statement = f"ALTER TABLE {table_name} ADD COLUMN {metadata_columns};"
+        self.hook.run(sql_statement, autocommit=True)
+
     def create_table_using_native_schema_autodetection(
         self,
         table: BaseTable,
@@ -622,6 +645,26 @@ class SnowflakeDatabase(BaseDatabase):
         )
         self.evaluate_results(rows)
 
+    def _get_copy_into_with_metadata_sql_statement(
+        self, file_path: str, target_table: BaseTable, stage: SnowflakeStage
+    ):
+        """Return the sql statement for copy into with metadata columns."""
+        if self.load_options is None or not self.load_options.metadata_columns:
+            raise ValueError("Error: Requires metadata columns to be set in load options")
+        table_name = target_table.name.upper()
+        sql_statement = f"SELECT count(*) from INFORMATION_SCHEMA.columns where table_name='{table_name}';"
+        table_columns_count = self.hook.run(sql_statement, handler=lambda cur: cur.fetchone())[0]
+        non_metadata_columns_count = table_columns_count - len(self.load_options.metadata_columns)
+        select_non_metadata_columns = [f"${col}" for col in range(1, non_metadata_columns_count + 1)]
+        select_columns_list = select_non_metadata_columns + self.load_options.metadata_columns
+        select_columns = ",".join(select_columns_list)
+        sql_statement = (
+            f"COPY INTO {table_name} "
+            "FROM "
+            f"(SELECT {select_columns} FROM @{stage.qualified_name}/{file_path}) "
+        )
+        return sql_statement
+
     def _copy_into_table_from_stage(self, source_file, target_table, stage):
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
@@ -629,6 +672,8 @@ class SnowflakeDatabase(BaseDatabase):
 
         self._validate_before_copy_into(source_file, target_table, stage)
 
+        if self.load_options is not None and self.load_options.metadata_columns:
+            sql_statement = self._get_copy_into_with_metadata_sql_statement(file_path, target_table, stage)
         # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
         # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
         # if we pass the handler provider raises an exception AttributeError

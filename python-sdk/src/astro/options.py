@@ -64,11 +64,14 @@ class SnowflakeLoadOptions(LoadOptions):
     """
     Load options to load file to snowflake using native approach.
 
+    :param copy_options: Specify one or more of the copy option as key-value pair. Read more at:
+        https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions
     :param file_options: Depending on the file format type specified, use one or more of the
         format-specific options as key-value pair. Read more at:
         https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#format-type-options-formattypeoptions
-    :param copy_options: Specify one or more of the copy option as key-value pair. Read more at:
-        https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions
+    :param metadata_columns: Specify one or more metadata columns to be included from Snowflake stage into the target
+        table. Read more at:
+        https://docs.snowflake.com/en/user-guide/querying-metadata#example-3-loading-metadata-columns-into-a-table
     :param storage_integration: Specify the previously created Snowflake storage integration
     :param validation_mode: Defaults to `validation_mode=None`. This instructs the COPY command to validate the data
         files instead of loading them into the specified table; i.e. the COPY command tests the files for errors but
@@ -86,12 +89,18 @@ class SnowflakeLoadOptions(LoadOptions):
           to `CONTINUE` during the load.
 
         Read more at: https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#optional-parameters
+
+    .. note::
+        If you specify `validation_mode` and `metadata_columns` together, `metadata_columns` will not be loaded as the
+        transformed `COPY INTO` command fails with SQL compilation error, and the load file operation will fall back to
+        the non-native approach using pandas.
     """
 
-    file_options: dict = attr.field(init=True, factory=dict)
     copy_options: dict = attr.field(init=True, factory=dict)
-    validation_mode: str = attr.field(default=None)
+    file_options: dict = attr.field(init=True, factory=dict)
+    metadata_columns: list[str] = attr.field(default=None)
     storage_integration: str = attr.field(default=None)
+    validation_mode: str = attr.field(default=None)
 
     def empty(self):
         return not self.file_options and not self.copy_options
