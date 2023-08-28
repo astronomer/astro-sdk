@@ -647,7 +647,7 @@ class SnowflakeDatabase(BaseDatabase):
 
     def _get_copy_into_with_metadata_sql_statement(
         self, file_path: str, target_table: BaseTable, stage: SnowflakeStage
-    ):
+    ) -> str:
         """Return the sql statement for copy into with metadata columns."""
         if self.load_options is None or not self.load_options.metadata_columns:
             raise ValueError("Error: Requires metadata columns to be set in load options")
