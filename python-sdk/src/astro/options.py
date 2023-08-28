@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from __future__ import annotations
 
 import attr
 
@@ -15,14 +15,14 @@ class LoadOptions:
         return attr.asdict(self)
 
 
-def contains_required_option(load_options: Optional[LoadOptions], option_name: str) -> bool:
+def contains_required_option(load_options: LoadOptions | None, option_name: str) -> bool:
     """
     Check required options in load_option class
     """
     return bool(load_options and getattr(load_options, option_name, None))
 
 
-def list_to_dict(value: Optional[List[LoadOptions]]) -> Optional[Dict[str, LoadOptions]]:
+def list_to_dict(value: list[LoadOptions] | None) -> dict[str, LoadOptions] | None:
     """
     Convert list object to dict
     """
@@ -33,9 +33,9 @@ def list_to_dict(value: Optional[List[LoadOptions]]) -> Optional[Dict[str, LoadO
 
 @attr.define
 class LoadOptionsList:
-    _load_options: Optional[Dict[str, LoadOptions]] = attr.field(converter=list_to_dict)
+    _load_options: dict[str, LoadOptions] | None = attr.field(converter=list_to_dict)
 
-    def get(self, option_class) -> Optional[LoadOptions]:
+    def get(self, option_class) -> LoadOptions | None:
         """
         Check `LOAD_OPTIONS_CLASS_NAME` attribute and select the correct load_options
         :param option_class: FileType | FileLocation | BaseDatabase
@@ -49,7 +49,7 @@ class LoadOptionsList:
                 break
         return cls
 
-    def get_by_class_name(self, option_class_name) -> Optional[LoadOptions]:
+    def get_by_class_name(self, option_class_name) -> LoadOptions | None:
         """
         Get load_option by class name
         :return:
