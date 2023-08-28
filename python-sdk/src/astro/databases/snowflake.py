@@ -652,10 +652,21 @@ class SnowflakeDatabase(BaseDatabase):
         if self.load_options is None or not self.load_options.metadata_columns:
             raise ValueError("Error: Requires metadata columns to be set in load options")
         table_name = target_table.name.upper()
-        sql_statement = "SELECT count(*) from INFORMATION_SCHEMA.columns where table_name=%(table_name)s;"
-        table_columns_count = self.hook.run(
-            sql_statement, parameters={"table_name": table_name}, handler=lambda cur: cur.fetchone()
-        )[0]
+        sql_statement = (
+            "SELECT count(*) COLUMN_COUNT from INFORMATION_SCHEMA.columns where table_name=%(table_name)s"
+        )
+        try:
+            table_columns_count = self.hook.run(
+                sql_statement, parameters={"table_name": table_name}, handler=lambda cur: cur.fetchone()
+            )[0]
+        except AttributeError:
+            # For apache-airflow-providers-snowflake <3.2.0.
+            try:
+                table_columns_count = self.hook.run(sql_statement, parameters={"table_name": table_name})[0][
+                    "COLUMN_COUNT"
+                ]
+            except ValueError as exe:
+                raise DatabaseCustomError from exe
         non_metadata_columns_count = table_columns_count - len(self.load_options.metadata_columns)
         select_non_metadata_columns = [f"${col}" for col in range(1, non_metadata_columns_count + 1)]
         select_columns_list = select_non_metadata_columns + self.load_options.metadata_columns
