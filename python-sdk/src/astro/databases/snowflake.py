@@ -659,7 +659,7 @@ class SnowflakeDatabase(BaseDatabase):
             table_columns_count = self.hook.run(
                 sql_statement, parameters={"table_name": table_name}, handler=lambda cur: cur.fetchone()
             )[0]
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             # For apache-airflow-providers-snowflake <3.2.0.
             try:
                 table_columns_count = self.hook.run(sql_statement, parameters={"table_name": table_name})[0][
