@@ -150,6 +150,22 @@ def test_snowflake_load_options_default():
     assert "COPY_OPTIONS=()" in database.run_sql.call_args[0][0]
 
 
+def test_snowflake_load_options_metadata_columns_create_table():
+    database = SnowflakeDatabase(
+        conn_id="fake-conn", load_options=SnowflakeLoadOptions(metadata_columns=["METADATA$FILENAME"])
+    )
+    database.create_table_using_schema_autodetection = MagicMock()
+    database.hook = MagicMock()
+    with mock.patch(
+        "astro.databases.snowflake.SnowflakeStage.qualified_name", new_callable=PropertyMock
+    ) as mock_q_name:
+        mock_q_name.return_value = "foo"
+        table = Table()
+        database.create_table(table)
+    expected_sql = f"ALTER TABLE {table.name} ADD COLUMN IF NOT EXISTS METADATA$FILENAME VARCHAR;"
+    assert database.hook.run.call_args_list[0].args[0] == expected_sql
+
+
 def test_snowflake_load_options_wrong_options():
     file = File(path=LOCAL_CSV_FILE)
     with pytest.raises(ValueError, match="Error: Requires a SnowflakeLoadOptions"):
@@ -238,3 +254,35 @@ def test_load_file_to_table_skips_schema_check():
     table = Table(conn_id="fake-conn", metadata=Metadata(schema="abc"))
     database.load_file_to_table(input_file=file_, output_table=table, assume_schema_exists=True)
     assert not database.hook.run.call_count
+
+
+def test_get_copy_into_with_metadata_sql_statement():
+    database = SnowflakeDatabase(
+        conn_id="fake-conn", load_options=SnowflakeLoadOptions(metadata_columns=["METADATA$FILENAME"])
+    )
+    database.hook = MagicMock()
+    file_path = File(path=LOCAL_CSV_FILE).path
+    table = Table(conn_id="fake-conn", metadata=Metadata(schema="abc"))
+    stage = SnowflakeStage(
+        name="mock_stage",
+        url="gcs://bucket/prefix",
+        metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
+    )
+
+    sql_statement = database._get_copy_into_with_metadata_sql_statement(file_path, table, stage)
+    exp_sq = f"COPY INTO {table.name.upper()} FROM (SELECT METADATA$FILENAME FROM @{stage.qualified_name}/{file_path}) "
+    assert sql_statement == exp_sq
+
+
+def test_get_copy_into_with_metadata_sql_statement_no_metadata_columns():
+    database = SnowflakeDatabase(conn_id="fake-conn", load_options=SnowflakeLoadOptions())
+    database.hook = MagicMock()
+    file_path = File(path=LOCAL_CSV_FILE).path
+    table = Table(conn_id="fake-conn", metadata=Metadata(schema="abc"))
+    stage = SnowflakeStage(
+        name="mock_stage",
+        url="gcs://bucket/prefix",
+        metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
+    )
+    with pytest.raises(ValueError, match="Error: Requires metadata columns to be set in load options"):
+        database._get_copy_into_with_metadata_sql_statement(file_path, table, stage)
