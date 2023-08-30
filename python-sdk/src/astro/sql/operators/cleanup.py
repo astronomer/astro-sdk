@@ -19,8 +19,7 @@ except ImportError:  # pragma: no cover
     MappedOperator = None
 
 
-from airflow.models.taskinstance import TaskInstance
-from airflow.utils.state import State
+from airflow.models.taskinstance import TaskInstance, TaskInstanceState
 
 from astro.databases import create_database
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
@@ -134,7 +133,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         failed_tasks = [
             (ti.task_id, ti.state)
             for ti in task_instances
-            if ti.task_id != self.task_id and ti.state == State.FAILED
+            if ti.task_id != self.task_id and ti.state == TaskInstanceState.FAILED
         ]
         if failed_tasks:
             self.log.info(
