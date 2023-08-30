@@ -651,15 +651,19 @@ class SnowflakeDatabase(BaseDatabase):
             "SELECT count(*) COLUMN_COUNT from INFORMATION_SCHEMA.columns where table_name=%(table_name)s"
         )
         try:
-            table_columns_count = self.hook.run(
-                sql_statement, parameters={"table_name": table_name}, handler=lambda cur: cur.fetchone()
-            )[0]
+            table_columns_count = int(
+                self.hook.run(
+                    sql_statement, parameters={"table_name": table_name}, handler=lambda cur: cur.fetchone()
+                )[0]
+            )
         except AttributeError:  # pragma: no cover
             # For apache-airflow-providers-snowflake <3.2.0.
+            # Versions >=3.2.0 have the handler param in the run method due to the move to common.sql provider. However,
+            # versions <3.2 raise an exception AttributeError 'sfid' if we pass the handler.
             try:
-                table_columns_count = self.hook.run(sql_statement, parameters={"table_name": table_name})[0][
-                    "COLUMN_COUNT"
-                ]
+                table_columns_count = int(
+                    self.hook.run(sql_statement, parameters={"table_name": table_name})[0]["COLUMN_COUNT"]
+                )
             except ValueError as exe:
                 raise DatabaseCustomError from exe
         return table_columns_count
