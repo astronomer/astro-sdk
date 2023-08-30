@@ -163,8 +163,7 @@ class CleanupOperator(AstroSQLBaseOperator):
                 State.FAILED,
                 State.SKIPPED,
                 State.UPSTREAM_FAILED,
-                State.REMOVED,
-                State.SHUTDOWN,
+                State.REMOVED
             ]
         ]
         if running_tasks:
