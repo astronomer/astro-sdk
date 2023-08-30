@@ -9,13 +9,13 @@
 - Support loading metadata columns from stage into table for Snowflake [#2023](https://github.com/astronomer/astro-sdk/pull/2023)
 
 ### Bug Fixes
-- Add openlineage_dataset_uri in databricks db [#1919](https://github.com/astronomer/astro-sdk/pull/1919)
+- Add `openlineage_dataset_uri` in databricks [#1919](https://github.com/astronomer/astro-sdk/pull/1919)
 - Fix QueryModifier issue on Snowflake [#1962](https://github.com/astronomer/astro-sdk/pull/1962)
 - Fix AstroCustomXcomBackend circular import issue [#1943](https://github.com/astronomer/astro-sdk/pull/1943)
 
 ### Misc
 - Add an example DAG for using dynamic task with dataframe [#1912](https://github.com/astronomer/astro-sdk/pull/1912)
-- Improve example_load_file DAG tasks names [#1958](https://github.com/astronomer/astro-sdk/pull/1958)
+- Improve `example_load_file` DAG tasks names [#1958](https://github.com/astronomer/astro-sdk/pull/1958)
 - Limit `databricks-sql-connector<2.9.0` [#2013](https://github.com/astronomer/astro-sdk/pull/2013)
 
 ### Docs
