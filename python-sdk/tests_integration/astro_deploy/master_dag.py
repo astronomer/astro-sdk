@@ -5,13 +5,13 @@ from datetime import datetime
 from typing import Any, List
 
 from airflow import DAG, settings
-from airflow.contrib.operators.slack_webhook_operator import SlackWebhookOperator
 from airflow.models import Connection, DagRun
 from airflow.models.baseoperator import chain
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator, get_current_context
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from airflow.utils.session import create_session
 
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
@@ -118,7 +118,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:  # noqa: C901
         try:
             SlackWebhookOperator(
                 task_id="slack_alert",
-                http_conn_id=SLACK_WEBHOOK_CONN,
+                slack_webhook_conn_id=SLACK_WEBHOOK_CONN,
                 message="".join(output_list),
                 channel=SLACK_CHANNEL,
                 username=SLACK_USERNAME,
