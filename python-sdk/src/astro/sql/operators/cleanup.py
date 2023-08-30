@@ -158,7 +158,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             for ti in task_instances
             if ti.task_id != self.task_id
             and ti.state
-            not in [State.SUCCESS, State.FAILED, State.SKIPPED, State.UPSTREAM_FAILED, State.REMOVED]
+            not in [TaskInstanceState.SUCCESS, TaskInstanceState.FAILED, TaskInstanceState.SKIPPED, TaskInstanceState.UPSTREAM_FAILED, TaskInstanceState.REMOVED]
         ]
         if running_tasks:
             self.log.info(
