@@ -645,13 +645,8 @@ class SnowflakeDatabase(BaseDatabase):
         )
         self.evaluate_results(rows)
 
-    def _get_copy_into_with_metadata_sql_statement(
-        self, file_path: str, target_table: BaseTable, stage: SnowflakeStage
-    ) -> str:
-        """Return the sql statement for copy into with metadata columns."""
-        if self.load_options is None or not self.load_options.metadata_columns:
-            raise ValueError("Error: Requires metadata columns to be set in load options")
-        table_name = target_table.name.upper()
+    def _get_table_columns_count(self, table_name: str) -> int:
+        """Return the number of columns in a table."""
         sql_statement = (
             "SELECT count(*) COLUMN_COUNT from INFORMATION_SCHEMA.columns where table_name=%(table_name)s"
         )
@@ -667,6 +662,16 @@ class SnowflakeDatabase(BaseDatabase):
                 ]
             except ValueError as exe:
                 raise DatabaseCustomError from exe
+        return table_columns_count
+
+    def _get_copy_into_with_metadata_sql_statement(
+        self, file_path: str, target_table: BaseTable, stage: SnowflakeStage
+    ) -> str:
+        """Return the sql statement for copy into with metadata columns."""
+        if self.load_options is None or not self.load_options.metadata_columns:
+            raise ValueError("Error: Requires metadata columns to be set in load options")
+        table_name = target_table.name.upper()
+        table_columns_count = self._get_table_columns_count(table_name)
         non_metadata_columns_count = table_columns_count - len(self.load_options.metadata_columns)
         select_non_metadata_columns = [f"${col}" for col in range(1, non_metadata_columns_count + 1)]
         select_columns_list = select_non_metadata_columns + self.load_options.metadata_columns
