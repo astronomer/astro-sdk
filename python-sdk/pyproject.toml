@@ -39,6 +39,7 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
 [project.optional-dependencies]
@@ -55,12 +56,12 @@ tests = [
 ]
 google = [
     "protobuf",
-    "apache-airflow-providers-google==10.7.0rc1",
+    "apache-airflow-providers-google==10.8.0rc1",
     "sqlalchemy-bigquery>=1.3.0",
     "smart-open[gcs]>=5.2.1"
 ]
 snowflake = [
-    "apache-airflow-providers-snowflake==5.0.0rc1",
+    "apache-airflow-providers-snowflake==5.0.1rc1",
     "snowflake-sqlalchemy>=1.2.0",
     "snowflake-connector-python[pandas]"
 ]
@@ -68,28 +69,28 @@ postgres = [
     "apache-airflow-providers-postgres",
 ]
 amazon = [
-    "apache-airflow-providers-amazon==8.6.0rc1",
+    "apache-airflow-providers-amazon==8.7.0rc1",
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
 azure = [
-    "apache-airflow-providers-microsoft-azure==6.3.0rc1",
+    "apache-airflow-providers-microsoft-azure==7.0.0rc1",
     "azure-storage-blob",
     "smart-open[azure]>=5.2.1",
 ]
 sftp = [
-    "apache-airflow-providers-sftp==4.6.0rc1",
+    "apache-airflow-providers-sftp==4.6.1rc1",
     "smart-open[ssh]>=5.2.1",
 ]
 ftp = [
-    "apache-airflow-providers-ftp==3.5.1rc1",
+    "apache-airflow-providers-ftp==3.5.2rc1",
     "smart-open>=5.2.1",
 ]
 openlineage = ["openlineage-airflow>=0.17.0"]
 
 databricks = [
     "databricks-cli",
-    "apache-airflow-providers-databricks==4.4.0rc1",
+    "apache-airflow-providers-databricks==4.5.0rc1",
     # TODO: Remove this once https://github.com/databricks/databricks-sql-python/pull/191 released
     "databricks-sql-connector<2.9.0",
 ]
@@ -99,7 +100,7 @@ mssql = [
 ]
 
 mysql = [
-    "apache-airflow-providers-mysql==5.3.0rc1",
+    "apache-airflow-providers-mysql==5.3.1rc1",
 ]
 
 duckdb = [
@@ -107,28 +108,28 @@ duckdb = [
 ]
 
 all = [
-    "apache-airflow-providers-amazon==8.6.0rc1",
-    "apache-airflow-providers-google==10.7.0rc1",
-    "apache-airflow-providers-ftp==3.5.1rc1",
+    "apache-airflow-providers-amazon==8.7.0rc1",
+    "apache-airflow-providers-google==10.8.0rc1",
+    "apache-airflow-providers-ftp==3.5.2rc1",
     "apache-airflow-providers-postgres",
-    "apache-airflow-providers-snowflake==5.0.0rc1",
-    "apache-airflow-providers-sftp==4.6.0rc1",
+    "apache-airflow-providers-snowflake==5.0.1rc1",
+    "apache-airflow-providers-sftp==4.6.1rc1",
     "smart-open[all]>=5.2.1",
     "snowflake-connector-python[pandas]",
     "snowflake-sqlalchemy>=1.2.0",
     "sqlalchemy-bigquery>=1.3.0",
     "databricks-cli",
-    "apache-airflow-providers-databricks==4.4.0rc1",
+    "apache-airflow-providers-databricks==4.5.0rc1",
     # TODO: Remove this once https://github.com/databricks/databricks-sql-python/pull/191 released
     "databricks-sql-connector<2.9.0",
     "s3fs",
     "protobuf",
     "openlineage-airflow>=0.17.0",
-    "apache-airflow-providers-microsoft-azure==6.3.0rc1",
+    "apache-airflow-providers-microsoft-azure==7.0.0rc1",
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
-    "apache-airflow-providers-mysql==5.3.0rc1"
+    "apache-airflow-providers-mysql==5.3.1rc1"
 ]
 doc = [
     "myst-parser>=0.17",
