@@ -260,6 +260,14 @@ class SnowflakeDatabase(BaseDatabase):
     )
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
+    METADATA_COLUMNS_DATATYPE = {
+        "METADATA$FILENAME": "VARCHAR",
+        "METADATA$FILE_ROW_NUMBER": "NUMBER",
+        "METADATA$FILE_CONTENT_KEY": "VARCHAR",
+        "METADATA$FILE_LAST_MODIFIED": "TIMESTAMP_NTZ",
+        "METADATA$START_SCAN_TIME": "TIMESTAMP_LTZ",
+    }
+
     def __init__(
         self,
         conn_id: str = DEFAULT_CONN_ID,
@@ -460,6 +468,21 @@ class SnowflakeDatabase(BaseDatabase):
         )
         return is_file_type_supported and is_file_location_supported
 
+    def create_table(self, table: BaseTable, *args, **kwargs):
+        """Override create_table to add metadata columns to the table if specified in load_options"""
+        super().create_table(table, *args, **kwargs)
+        if self.load_options is None or not self.load_options.metadata_columns:
+            return
+        table_name = self.get_table_qualified_name(table)
+        metadata_columns = ",".join(
+            [
+                "IF NOT EXISTS " + f"{col} {self.METADATA_COLUMNS_DATATYPE[col]}"
+                for col in self.load_options.metadata_columns
+            ]
+        )
+        sql_statement = f"ALTER TABLE {table_name} ADD COLUMN {metadata_columns};"
+        self.hook.run(sql_statement, autocommit=True)
+
     def create_table_using_native_schema_autodetection(
         self,
         table: BaseTable,
@@ -622,6 +645,48 @@ class SnowflakeDatabase(BaseDatabase):
         )
         self.evaluate_results(rows)
 
+    def _get_table_columns_count(self, table_name: str) -> int:
+        """Return the number of columns in a table."""
+        sql_statement = (
+            "SELECT count(*) COLUMN_COUNT from INFORMATION_SCHEMA.columns where table_name=%(table_name)s"
+        )
+        try:
+            table_columns_count = int(
+                self.hook.run(
+                    sql_statement, parameters={"table_name": table_name}, handler=lambda cur: cur.fetchone()
+                )[0]
+            )
+        except AttributeError:  # pragma: no cover
+            # For apache-airflow-providers-snowflake <3.2.0.
+            # Versions >=3.2.0 have the handler param in the run method due to the move to common.sql provider. However,
+            # versions <3.2 raise an exception AttributeError 'sfid' if we pass the handler.
+            try:
+                table_columns_count = int(
+                    self.hook.run(sql_statement, parameters={"table_name": table_name})[0]["COLUMN_COUNT"]
+                )
+            except ValueError as exe:
+                raise DatabaseCustomError from exe
+        return table_columns_count
+
+    def _get_copy_into_with_metadata_sql_statement(
+        self, file_path: str, target_table: BaseTable, stage: SnowflakeStage
+    ) -> str:
+        """Return the sql statement for copy into with metadata columns."""
+        if self.load_options is None or not self.load_options.metadata_columns:
+            raise ValueError("Error: Requires metadata columns to be set in load options")
+        table_name = target_table.name.upper()
+        table_columns_count = self._get_table_columns_count(table_name)
+        non_metadata_columns_count = table_columns_count - len(self.load_options.metadata_columns)
+        select_non_metadata_columns = [f"${col}" for col in range(1, non_metadata_columns_count + 1)]
+        select_columns_list = select_non_metadata_columns + self.load_options.metadata_columns
+        select_columns = ",".join(select_columns_list)
+        sql_statement = (
+            f"COPY INTO {table_name} "
+            "FROM "
+            f"(SELECT {select_columns} FROM @{stage.qualified_name}/{file_path}) "
+        )
+        return sql_statement
+
     def _copy_into_table_from_stage(self, source_file, target_table, stage):
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
@@ -629,6 +694,8 @@ class SnowflakeDatabase(BaseDatabase):
 
         self._validate_before_copy_into(source_file, target_table, stage)
 
+        if self.load_options is not None and self.load_options.metadata_columns:
+            sql_statement = self._get_copy_into_with_metadata_sql_statement(file_path, target_table, stage)
         # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
         # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
         # if we pass the handler provider raises an exception AttributeError
