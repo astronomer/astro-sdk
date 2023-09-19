@@ -74,6 +74,7 @@ jobs:
 
       - name: Trigger DAG(s)
         run: |
+          echo "secret is  ${{ secrets.astronomer_key_secret }}"
           python3 python-sdk/dev/integration_test_scripts/trigger_dag.py \
             ${{ secrets.astro_subdomain }} \
             ${{ secrets.deployment_id }} \
