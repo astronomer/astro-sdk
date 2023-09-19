@@ -19,7 +19,6 @@ on:  # yamllint disable-line rule:truthy
     secrets:
       astro_subdomain:
         description: 'astro cloud subdomain'
-        default: "org-airflow-team-org"
         required: true
       deployment_id:
         description: 'astro cloud deployment_id'
@@ -76,7 +75,7 @@ jobs:
       - name: Trigger DAG(s)
         run: |
           python3 python-sdk/dev/integration_test_scripts/trigger_dag.py \
-            ${{ secrets.astro_subdomain }} \
+            "org-airflow-team-org" \
             ${{ secrets.deployment_id }} \
             ${{ secrets.astronomer_key_id }} \
             ${{ secrets.astronomer_key_secret }} \
