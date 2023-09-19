@@ -1,13 +1,36 @@
 # Changelog
 
-## 1.7.0a3
+## 1.7.0
 
 ### Feature
-- Allow users to disable schema check and creation on `transform` [#1925](https://github.com/astronomer/astro-sdk/pull/1925)
 - Allow users to disable schema check and creation on `load_file` [#1922](https://github.com/astronomer/astro-sdk/pull/1922)
+- Allow users to disable schema check and creation on `transform` [#1925](https://github.com/astronomer/astro-sdk/pull/1925)
+- Add support for Excel files [#1978](https://github.com/astronomer/astro-sdk/pull/1978)
+- Support loading metadata columns from stage into table for Snowflake [#2023](https://github.com/astronomer/astro-sdk/pull/2023)
 
-### Bug fixes
+### Bug Fixes
+- Add `openlineage_dataset_uri` in databricks [#1919](https://github.com/astronomer/astro-sdk/pull/1919)
 - Fix QueryModifier issue on Snowflake [#1962](https://github.com/astronomer/astro-sdk/pull/1962)
+- Fix AstroCustomXcomBackend circular import issue [#1943](https://github.com/astronomer/astro-sdk/pull/1943)
+
+### Misc
+- Add an example DAG for using dynamic task with dataframe [#1912](https://github.com/astronomer/astro-sdk/pull/1912)
+- Improve `example_load_file` DAG tasks names [#1958](https://github.com/astronomer/astro-sdk/pull/1958)
+- Limit `databricks-sql-connector<2.9.0` [#2013](https://github.com/astronomer/astro-sdk/pull/2013)
+
+### Docs
+- Add docs about using dtype [#1903](https://github.com/astronomer/astro-sdk/pull/1903)
+- Make cleanup operator summary docs smaller [#2017](https://github.com/astronomer/astro-sdk/pull/2017)
+
+
+## 1.6.2
+
+### Bug Fixes
+
+- Fix Snowflake QueryModifier issue [#1962](https://github.com/astronomer/astro-sdk/pull/1962)
+- Add support for Pandas 2, Airflow 2.6.3 and Python 3.11 [#1989](https://github.com/astronomer/astro-sdk/pull/1989)
+- Update the WASB connection [#1994](https://github.com/astronomer/astro-sdk/pull/1994)
+
 
 ## 1.6.1
 

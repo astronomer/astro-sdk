@@ -388,4 +388,27 @@ with dag:
     )
     # [END load_file_example_28]
 
+    # [START load_file_example_29]
+    aql.load_file(
+        task_id="s3_to_snowflake_native_with_metadata_columns",
+        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id=AWS_CONN_ID),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+        ),
+        load_options=[
+            SnowflakeLoadOptions(
+                file_options={"SKIP_HEADER": 1, "SKIP_BLANK_LINES": True},
+                copy_options={"ON_ERROR": "CONTINUE"},
+                metadata_columns=[
+                    "METADATA$FILENAME",
+                    "METADATA$FILE_ROW_NUMBER",
+                    "METADATA$FILE_CONTENT_KEY",
+                    "METADATA$FILE_LAST_MODIFIED",
+                    "METADATA$START_SCAN_TIME",
+                ],
+            )
+        ],
+    )
+    # [END load_file_example_29]
+
     aql.cleanup()
