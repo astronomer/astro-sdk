@@ -18,6 +18,7 @@ ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 COPY python-sdk /tmp/python-sdk
 RUN pip install /tmp/python-sdk[all]
 RUN pip install "apache-airflow-providers-slack>=8.0.0"
+RUN pip install astronomer-starship-provider
 
 RUN mkdir -p ${AIRFLOW_HOME}/dags
 RUN mkdir -p ${AIRFLOW_HOME}/tests
