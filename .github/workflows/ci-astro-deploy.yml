@@ -57,7 +57,7 @@ jobs:
       deployment_id: ${{ secrets.ASTRO_DEPLOYMENT_ID }}
       astronomer_key_id: ${{ secrets.ASTRO_KEY_ID }}
       astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET }}
-      organization_id: ${{ secrets.ASTRO_ORGANIZATION_ID }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
 
   deploy-to-astro-sdk-integration-tests-on-KE:
@@ -70,7 +70,7 @@ jobs:
       environment_to_deploy: 'astro-sdk-integration-tests-on-KE'
     secrets:
       docker_registry:  ${{ secrets.ASTRO_DOCKER_REGISTRY }}
-      organization_id:  ${{ secrets.ASTRO_ORGANIZATION_ID }}
+      organization_id:  ${{ secrets.ORGANIZATION_ID }}
       deployment_id:  ${{ secrets.ASTRO_DEPLOYMENT_ID_KE }}
       astronomer_key_id: ${{ secrets.ASTRO_KEY_ID_KE }}
       astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET_KE }}
@@ -90,5 +90,5 @@ jobs:
       deployment_id: ${{ secrets.ASTRO_DEPLOYMENT_ID_KE }}
       astronomer_key_id: ${{ secrets.ASTRO_KEY_ID_KE }}
       astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET_KE }}
-      organization_id: ${{ secrets.ASTRO_ORGANIZATION_ID }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
