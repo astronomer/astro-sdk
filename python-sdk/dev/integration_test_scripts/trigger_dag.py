@@ -28,12 +28,12 @@ def get_access_token(api_key_id: str, api_key_secret: str) -> str:
 
 
 def trigger_dag_runs(
-    *, dag_ids: list[str], astro_subdomain: str, deployment_id: str, bearer_token: str
+    *, dag_ids_name: list[str], astro_subdomain: str, deployment_id: str, bearer_token: str
 ) -> None:
     """
     Triggers the DAG using Airflow REST API.
 
-    :param dag_ids: list of dag_id to trigger
+    :param dag_ids_name: list of dag_id to trigger
     :param astro_subdomain: subdomain of the Astro Cloud  (e.g., https://<subdomain>.astronomer.run/)
     :param deployment_id: ID of the Astro Cloud deployment. Using this, we generate the short deployment ID needed
         for the construction of Airflow endpoint to hit
@@ -47,7 +47,7 @@ def trigger_dag_runs(
         "Authorization": f"Bearer {bearer_token}",
     }
     failed_dag_ids: list[str] = []
-    for dag_id in dag_ids:
+    for dag_id in dag_ids_name:
         dag_trigger_url = f"{integration_tests_deployment_url}/api/v1/dags/{dag_id}/dagRuns"
         response = requests.post(dag_trigger_url, headers=headers, json={})
 
@@ -58,7 +58,7 @@ def trigger_dag_runs(
 
     if failed_dag_ids:
         for dag_id in failed_dag_ids:
-            logging.error(f"Failed to run DAG {dag_id}")
+            logging.error("Failed to run DAG %s",{dag_id})
         sys.exit(1)
 
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     dag_ids = [dag_id.strip() for dag_id in input_dag_ids.split(",")]
 
     trigger_dag_runs(
-        dag_ids=dag_ids,
+        dag_ids_name=dag_ids,
         astro_subdomain=args.astro_subdomain,
         deployment_id=args.deployment_id,
         bearer_token=token,
