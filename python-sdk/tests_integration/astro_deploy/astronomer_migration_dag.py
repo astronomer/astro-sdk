@@ -2,7 +2,6 @@
 from datetime import datetime
 
 from airflow import DAG
-
 from astronomer.starship.operators import AstroMigrationOperator
 
 with DAG(
