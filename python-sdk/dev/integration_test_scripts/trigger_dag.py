@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dag-ids",
         help=(
-            "Comma separated list of dag_ids to trigger"
+            "Comma separated list of dag_ids_name to trigger"
             " e.g. 'example_async_adf_run_pipeline, example_async_batch'"
         ),
         default="example_master_dag",
