@@ -1,7 +1,7 @@
 ---
 name: Test providers RC releases
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   schedule:
     - cron: "0 0,12 * * *"
   workflow_dispatch:
@@ -14,17 +14,17 @@ on:  # yamllint disable-line rule:truthy
           rc_testing_branch: existing testing branch
           (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
-        default: ''
+        default: ""
       issue_url:
         description: |
           issue_url: the GitHub issue URL that tracks the status of Providers release
           (Either rc_testing_branch or issue_url is required, and you cannot give both.)
         required: false
       base_git_rev:
-        description: 'The base git revision to test Providers RCs'
+        description: "The base git revision to test Providers RCs"
         required: false
         type: string
-        default: 'main'
+        default: "main"
 defaults:
   run:
     working-directory: python-sdk
@@ -32,7 +32,6 @@ defaults:
 jobs:
   check-airflow-provider-rc-release:
     uses: astronomer/astronomer-providers/.github/workflows/reuse-wf-check-rc-release.yaml@main
-    working-directory: python-sdk
     with:
       rc_testing_branch: ${{ inputs.rc_testing_branch }}
       issue_url: ${{ inputs.issue_url }}
