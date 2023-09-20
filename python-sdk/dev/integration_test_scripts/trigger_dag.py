@@ -58,7 +58,7 @@ def trigger_dag_runs(
 
     if failed_dag_ids:
         for dag_id in failed_dag_ids:
-            logging.error("Failed to run DAG %s",{dag_id})
+            logging.error("Failed to run DAG %s", {dag_id})
         sys.exit(1)
 
 
