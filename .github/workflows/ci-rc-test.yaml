@@ -51,3 +51,4 @@ jobs:
     with:
        environment_to_deploy: "both"
        dags_to_trigger_after_deployment: "example_master_dag"
+       git_rev: ${{ needs.check-airflow-provider-rc-release.outputs.rc_testing_branch }}
