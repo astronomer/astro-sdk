@@ -43,44 +43,6 @@ on:
         required: false
         type: string
         default: ''
-#    secrets:
-#      ASTRO_SUBDOMAIN:
-#        description: 'astro cloud subdomain'
-#        required: true
-#      ASTRO_DEPLOYMENT_ID:
-#        description: 'astro cloud deployment_id'
-#        required: true
-#      ASTRO_KEY_ID:
-#        description: 'astro cloud astronomer_key_id'
-#        required: true
-#      ASTRO_KEY_SECRET:
-#        description: 'astro cloud astronomer_key_secret'
-#        required: true
-#      ORGANIZATION_ID:
-#        description: 'astro cloud organization_id'
-#        required: true
-#      BEARER_TOKEN:
-#        description: 'workspace bearer token'
-#        required: true
-#      ASTRO_DOCKER_REGISTRY:
-#        description: 'docker registry'
-#        required: true
-#      SLACK_WEBHOOK_URL:
-#        description: 'slack webhook'
-#        required: true
-#      ASTRO_DEPLOYMENT_ID_KE:
-#        description: 'astro cloud deployment_id key'
-#        required: true
-#      ASTRO_KEY_ID_KE:
-#        description: 'astro cloud astronomer_key_id'
-#        required: true
-#      ASTRO_KEY_SECRET_KE:
-#        description: 'astro cloud astronomer_key_secret'
-#        required: true
-
-
-
-
 
 jobs:
   deploy-to-astro-sdk-integration-tests:
