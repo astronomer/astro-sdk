@@ -52,4 +52,15 @@ jobs:
        environment_to_deploy: "both"
        dags_to_trigger_after_deployment: "example_master_dag"
        git_rev: ${{ needs.check-airflow-provider-rc-release.outputs.rc_testing_branch }}
-
+    secrets:
+      ASTRO_DOCKER_REGISTRY: ${{ secrets.ASTRO_DOCKER_REGISTRY }}
+      ORGANIZATION_ID: ${{ secrets.ORGANIZATION_ID }}
+      ASTRO_DEPLOYMENT_ID: ${{ secrets.ASTRO_DEPLOYMENT_ID }}
+      ASTRO_KEY_ID: ${{ secrets.ASTRO_KEY_ID }}
+      ASTRO_KEY_SECRET: ${{ secrets.ASTRO_KEY_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      ASTRO_SUBDOMAIN: ${{ secrets.ASTRO_SUBDOMAIN }}
+      BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
+      ASTRO_DEPLOYMENT_ID_KE:  ${{ secrets.ASTRO_DEPLOYMENT_ID_KE }}
+      ASTRO_KEY_ID_KE: ${{ secrets.ASTRO_KEY_ID_KE }}
+      ASTRO_KEY_SECRET_KE: ${{ secrets.ASTRO_KEY_SECRET_KE }}
