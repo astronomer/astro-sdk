@@ -9,34 +9,86 @@ on:
         required: false
         default: ''
 
-jobs:
-  deploy:
-    env:
-      ASTRO_DOCKER_REGISTRY:  ${{ secrets.ASTRO_DOCKER_REGISTRY }}
-      ASTRO_ORGANIZATION_ID:  ${{ secrets.ASTRO_ORGANIZATION_ID }}
-      ASTRO_DEPLOYMENT_ID:  ${{ secrets.ASTRO_DEPLOYMENT_ID }}
-      ASTRO_KEY_ID: ${{ secrets.ASTRO_KEY_ID }}
-      ASTRO_KEY_SECRET: ${{ secrets.ASTRO_KEY_SECRET }}
-      ASTRO_DEPLOYMENT_ID_SINGLE_WORKER: ${{ secrets.ASTRO_DEPLOYMENT_ID_SINGLE_WORKER }}
-      ASTRO_KEY_ID_SINGLE_WORKER: ${{ secrets.ASTRO_KEY_ID_SINGLE_WORKER }}
-      ASTRO_KEY_SECRET_SINGLE_WORKER: ${{ secrets.ASTRO_KEY_SECRET_SINGLE_WORKER }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.git_rev }}
+      environment_to_deploy:
+        description: 'astro cloud deployment to deploy to'
+        required: true
+        type: choice
+        options:
+          - both
+          - astro-sdk-integration-tests
+          - astro-sdk-integration-tests-on-KE
+      dags_to_trigger_after_deployment:
+        description: |
+          Comma separated list of dag_ids to trigger after deployment
+          (e.g. "example_mssql_transform, example_load_file")
+        required: false
+        type: string
+        default: ''
 
-      - name: deploy
-        working-directory: python-sdk/tests_integration/astro_deploy
-        run: |
-          echo "deploying ${{ inputs.git_rev }}"
-          bash deploy.sh \
-            $ASTRO_DOCKER_REGISTRY \
-            $ASTRO_ORGANIZATION_ID \
-            $ASTRO_DEPLOYMENT_ID \
-            $ASTRO_KEY_ID \
-            $ASTRO_KEY_SECRET \
-            $ASTRO_DEPLOYMENT_ID_SINGLE_WORKER \
-            $ASTRO_KEY_ID_SINGLE_WORKER \
-            $ASTRO_KEY_SECRET_SINGLE_WORKER
+
+jobs:
+  deploy-to-astro-sdk-integration-tests:
+    if: |
+      contains(fromJSON('["both", "astro-sdk-integration-tests"]'), inputs.environment_to_deploy) ||
+      github.event_name == 'schedule'
+    uses: ./.github/workflows/reuse-wf-deploy-to-astro-cloud.yaml
+    with:
+      git_rev: ${{ inputs.git_rev }}
+      environment_to_deploy: 'astro-sdk-integration-tests'
+    secrets:
+      docker_registry:  ${{ secrets.ASTRO_DOCKER_REGISTRY }}
+      organization_id:  ${{ secrets.ORGANIZATION_ID }}
+      deployment_id:  ${{ secrets.ASTRO_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  wait-for-deployment-to-be-ready-and-trigger-dags-for-astro-sdk-integration-tests:
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
+    needs: deploy-to-astro-sdk-integration-tests
+    uses: ./.github/workflows/reuse-wf-trigger-dag.yaml
+    with:
+      git_rev: ${{ inputs.git_rev }}
+      dags_to_trigger_after_deployment: ${{ inputs.dags_to_trigger_after_deployment }}
+    secrets:
+      astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
+      deployment_id: ${{ secrets.ASTRO_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
+
+  deploy-to-astro-sdk-integration-tests-on-KE:
+    if: |
+      contains(fromJSON('["both", "astro-sdk-integration-tests-on-KE"]'), inputs.environment_to_deploy) ||
+      github.event_name == 'schedule'
+    uses: ./.github/workflows/reuse-wf-deploy-to-astro-cloud.yaml
+    with:
+      git_rev: ${{ inputs.git_rev }}
+      environment_to_deploy: 'astro-sdk-integration-tests-on-KE'
+    secrets:
+      docker_registry:  ${{ secrets.ASTRO_DOCKER_REGISTRY }}
+      organization_id:  ${{ secrets.ORGANIZATION_ID }}
+      deployment_id:  ${{ secrets.ASTRO_DEPLOYMENT_ID_KE }}
+      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID_KE }}
+      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET_KE }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  wait-for-deployment-to-be-ready-and-trigger-dags-for-astro-sdk-integration-tests-on-KE:
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.dags_to_trigger_after_deployment != '')
+    needs: deploy-to-astro-sdk-integration-tests-on-KE
+    uses: ./.github/workflows/reuse-wf-trigger-dag.yaml
+    with:
+      git_rev: ${{ inputs.git_rev }}
+      dags_to_trigger_after_deployment: ${{ inputs.dags_to_trigger_after_deployment }}
+    secrets:
+      astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
+      deployment_id: ${{ secrets.ASTRO_DEPLOYMENT_ID_KE }}
+      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID_KE }}
+      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET_KE }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
