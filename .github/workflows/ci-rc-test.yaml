@@ -41,3 +41,15 @@ jobs:
       working_directory: "python-sdk"
     secrets:
       BOT_ACCESS_TOKEN: ${{ secrets.BOT_ACCESS_TOKEN }}
+
+  deploy-and-trigger-example-dag:
+    needs: check-airflow-provider-rc-release
+    if: |
+      always() &&
+      needs.check-airflow-provider-rc-release.result == 'success'
+    uses:  ./.github/workflows/ci-astro-deploy.yml
+    with:
+       environment_to_deploy: "both"
+       dags_to_trigger_after_deployment: "example_master_dag"
+       git_rev: ${{ needs.check-airflow-provider-rc-release.outputs.rc_testing_branch }}
+    secrets: inherit

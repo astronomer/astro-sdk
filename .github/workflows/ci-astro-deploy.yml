@@ -24,7 +24,25 @@ on:
         required: false
         type: string
         default: ''
-
+  workflow_call:
+    inputs:
+      git_rev:
+        description: 'The git revision to deploy'
+        type: string
+        required: false
+        default: ''
+      environment_to_deploy:
+        description: 'astro cloud deployment to deploy to'
+        required: true
+        type: string
+        default: both
+      dags_to_trigger_after_deployment:
+        description: |
+          Comma separated list of dag_ids to trigger after deployment
+          (e.g. "example_mssql_transform, example_load_file")
+        required: false
+        type: string
+        default: ''
 
 jobs:
   deploy-to-astro-sdk-integration-tests:
