@@ -28,6 +28,7 @@ on:
     inputs:
       git_rev:
         description: 'The git revision to deploy'
+        type: string
         required: false
         default: ''
       environment_to_deploy:
