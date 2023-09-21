@@ -43,6 +43,13 @@ on:
         required: false
         type: string
         default: ''
+    secrets:
+      astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
+      deployment_id: ${{ secrets.ASTRO_DEPLOYMENT_ID }}
+      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID }}
+      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
 
 
 jobs:
