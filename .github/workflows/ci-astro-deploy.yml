@@ -30,15 +30,11 @@ on:
         description: 'The git revision to deploy'
         required: false
         default: ''
-
       environment_to_deploy:
         description: 'astro cloud deployment to deploy to'
         required: true
         type: choice
-        options:
-          - both
-          - astro-sdk-integration-tests
-          - astro-sdk-integration-tests-on-KE
+        default: both
       dags_to_trigger_after_deployment:
         description: |
           Comma separated list of dag_ids to trigger after deployment
