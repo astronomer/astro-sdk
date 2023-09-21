@@ -65,6 +65,10 @@ on:
       docker_registry:
         description: 'docker registry'
         required: true
+      SLACK_WEBHOOK_URL:
+        description: 'slack webhook'
+        required: true
+
 
 
 
