@@ -47,30 +47,24 @@ on:
       astro_subdomain:
         description: 'astro cloud subdomain'
         required: true
-        default: ${{ secrets.ASTRO_SUBDOMAIN }}
       deployment_id:
         description: 'astro cloud deployment_id'
         required: true
-        default: ${{ secrets.ASTRO_DEPLOYMENT_ID }}
       astronomer_key_id:
         description: 'astro cloud astronomer_key_id'
         required: true
-        default: ${{ secrets.ASTRO_KEY_ID }}
       astronomer_key_secret:
         description: 'astro cloud astronomer_key_secret'
         required: true
-        default: ${{ secrets.ASTRO_KEY_SECRET }}
       organization_id:
         description: 'astro cloud organization_id'
         required: true
-        default: ${{ secrets.ORGANIZATION_ID }}
       bearer_token:
         description: 'workspace bearer token'
         required: true
       docker_registry:
         description: 'docker registry'
         required: true
-        default: ${{ secrets.ASTRO_DOCKER_REGISTRY }}
 
 
 
