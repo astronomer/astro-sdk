@@ -33,6 +33,7 @@ on:
       environment_to_deploy:
         description: 'astro cloud deployment to deploy to'
         required: true
+        type: string
         default: both
       dags_to_trigger_after_deployment:
         description: |
