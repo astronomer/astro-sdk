@@ -56,7 +56,7 @@ tests = [
 ]
 google = [
     "protobuf",
-    "apache-airflow-providers-google>=6.4.0",
+    "apache-airflow-providers-google==10.9.0rc1",
     "sqlalchemy-bigquery>=1.3.0",
     "smart-open[gcs]>=5.2.1"
 ]
@@ -69,7 +69,7 @@ postgres = [
     "apache-airflow-providers-postgres",
 ]
 amazon = [
-    "apache-airflow-providers-amazon>=5.0.0",
+    "apache-airflow-providers-amazon==8.7.1rc1",
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
@@ -108,8 +108,8 @@ duckdb = [
 ]
 
 all = [
-    "apache-airflow-providers-amazon",
-    "apache-airflow-providers-google>=6.4.0",
+    "apache-airflow-providers-amazon==8.7.1rc1",
+    "apache-airflow-providers-google==10.9.0rc1",
     "apache-airflow-providers-ftp",
     "apache-airflow-providers-postgres",
     "apache-airflow-providers-snowflake",
