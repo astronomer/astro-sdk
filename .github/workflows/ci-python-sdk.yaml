@@ -51,7 +51,6 @@ env:
   SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
   SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
-  AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
   AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
   AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
   AIRFLOW_VAR_FOO: templated_file_name
@@ -117,6 +116,61 @@ jobs:
       - run: pip3 install nox
       - run: nox -s build_docs
 
+  Create-Databricks-Cluster:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) ||
+      (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
+      ) ||
+      (
+        github.event_name == 'release'
+      )
+    runs-on: ubuntu-latest
+    outputs:
+      databricks_cluster_id: ${{ steps.create_databricks_cluster_and_wait.outputs.databricks_cluster_id}}
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+
+      - name: Install dependencies
+        working-directory: python-sdk/dev/scripts
+        run: pip install -r requirements.txt
+
+      - name: Create databricks cluster and wait
+        id: create_databricks_cluster_and_wait
+        working-directory: python-sdk/dev/scripts
+        run: |
+          CLUSTER_ID=`python databricks.py create_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN`
+          echo $CLUSTER_ID
+          echo "databricks_cluster_id=${CLUSTER_ID}" >> "$GITHUB_OUTPUT"
+          python databricks.py wait_for_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN --cluster-id $CLUSTER_ID
+    env:
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+
   Run-Optional-Packages-tests-python-sdk:
     if: >-
       github.event_name == 'push' ||
@@ -131,6 +185,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: Create-Databricks-Cluster
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -200,7 +255,7 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
@@ -221,6 +276,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: Create-Databricks-Cluster
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -249,6 +305,8 @@ jobs:
         with:
           name: coverage-unit-test
           path: ./python-sdk/.coverage
+    env:
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
 
   Run-load-file-Integration-Airflow-2-7:
     if: >-
@@ -264,6 +322,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: Create-Databricks-Cluster
     strategy:
       fail-fast: false
       matrix:
@@ -343,7 +402,7 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
 
   Run-example-dag-Integration-Airflow-2-7:
@@ -360,6 +419,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: Create-Databricks-Cluster
     strategy:
       fail-fast: false
       matrix:
@@ -439,7 +499,7 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
 
   Run-Integration-tests-Airflow-2-7:
@@ -456,6 +516,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: Create-Databricks-Cluster
     strategy:
       fail-fast: false
       matrix:
@@ -535,7 +596,7 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
@@ -553,6 +614,7 @@ jobs:
       (
         github.event_name == 'release'
       )
+    needs: Create-Databricks-Cluster
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -618,9 +680,56 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
+
+  Delete-Databricks-Cluster:
+    if: ${{ always() }}
+    needs:
+      - Create-Databricks-Cluster
+      - Run-Optional-Packages-tests-python-sdk
+      - Run-Unit-tests-Airflow-2-7
+      - Run-example-dag-tests-Airflow-2-2-5
+      - Run-Integration-tests-Airflow-2-7
+      - Run-load-file-Integration-Airflow-2-7
+      - Run-example-dag-Integration-Airflow-2-7
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+
+      - name: Install dependencies
+        working-directory: python-sdk/dev/scripts
+        run: pip install -r requirements.txt
+
+      - name: Terminate Databricks cluster
+        id: terminate_databricks_cluster_and_wait
+        working-directory: python-sdk/dev/scripts
+        run: |
+          python databricks.py terminate_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN --cluster-id $AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID
+    env:
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
 
   Generate-Constraints:
     if: (github.event_name == 'release' || github.event_name == 'push')
