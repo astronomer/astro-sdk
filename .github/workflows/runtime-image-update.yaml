@@ -1,18 +1,18 @@
 ---
 name: Update runtime image tag
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   schedule:
-    - cron: '0 0 * * *'  # Run every day at midnight UTC
+    - cron: "0 0 * * *" # Run every day at midnight UTC
   workflow_dispatch:
     inputs:
       quay_repo:
-        description: 'Quay Repository'
-        default: 'astronomer/astro-runtime'
+        description: "Quay Repository"
+        default: "astronomer/astro-runtime"
 
 jobs:
   runtime-image-tag-update-job:
-    runs-on: 'ubuntu-20.04'
+    runs-on: "ubuntu-20.04"
 
     steps:
       - name: Checkout repository
@@ -21,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: pip install requests semantic-version

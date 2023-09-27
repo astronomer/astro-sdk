@@ -1,46 +1,45 @@
 ---
 name: (Reusable workflows) Wait for deployment and trigger dags
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       git_rev:
-        description: 'The git revision to deploy'
+        description: "The git revision to deploy"
         required: false
         type: string
-        default: ''
+        default: ""
       dags_to_trigger_after_deployment:
         description: |
           Comma separated list of dag_ids to trigger after deployment
           (e.g. "example_mssql_transform, example_load_file")
         required: false
         type: string
-        default: ''
+        default: ""
     secrets:
       astro_subdomain:
-        description: 'astro cloud subdomain'
+        description: "astro cloud subdomain"
         required: true
       deployment_id:
-        description: 'astro cloud deployment_id'
+        description: "astro cloud deployment_id"
         required: true
       astronomer_key_id:
-        description: 'astro cloud astronomer_key_id'
+        description: "astro cloud astronomer_key_id"
         required: true
       astronomer_key_secret:
-        description: 'astro cloud astronomer_key_secret'
+        description: "astro cloud astronomer_key_secret"
         required: true
       organization_id:
-        description: 'astro cloud organization_id'
+        description: "astro cloud organization_id"
         required: true
       bearer_token:
-        description: 'workspace bearer token'
+        description: "workspace bearer token"
         required: true
 
 jobs:
   wait-for-deployment-to-be-ready-and-trigger-dag:
-    runs-on: 'ubuntu-20.04'
+    runs-on: "ubuntu-20.04"
     steps:
-
       - name: Wait for deployment to be healthy
         run: |
           astro_core_api="https://api.astronomer.io/v1alpha1/organizations/${{secrets.organization_id }}/\
