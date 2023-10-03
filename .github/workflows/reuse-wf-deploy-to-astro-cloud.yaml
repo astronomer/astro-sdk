@@ -1,41 +1,41 @@
 ---
 name: (Reusable workflows) Deploy to astro cloud
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       git_rev:
-        description: 'The git revision to deploy'
+        description: "The git revision to deploy"
         required: false
         type: string
-        default: ''
+        default: ""
       environment_to_deploy:
-        description: 'astro cloud deployment to deploy to'
+        description: "astro cloud deployment to deploy to"
         required: true
         type: string
     secrets:
       docker_registry:
-        description: 'astro cloud docker registry'
+        description: "astro cloud docker registry"
         required: true
       organization_id:
-        description: 'astro cloud organization_id'
+        description: "astro cloud organization_id"
         required: true
       deployment_id:
-        description: 'astro cloud deployment_id'
+        description: "astro cloud deployment_id"
         required: true
       astronomer_key_id:
-        description: 'astro cloud astronomer_key_id'
+        description: "astro cloud astronomer_key_id"
         required: true
       astronomer_key_secret:
-        description: 'astro cloud astronomer_key_secret'
+        description: "astro cloud astronomer_key_secret"
         required: true
       SLACK_WEBHOOK_URL:
-        description: 'slack webhook url for sending notification'
+        description: "slack webhook url for sending notification"
         required: true
 
 jobs:
   deploy-to-astro-cloud:
-    runs-on: 'ubuntu-20.04'
+    runs-on: "ubuntu-20.04"
     steps:
       - name: checkout
         uses: actions/checkout@v3
