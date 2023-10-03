@@ -163,13 +163,14 @@ jobs:
         id: create_databricks_cluster_and_wait
         working-directory: python-sdk/dev/scripts
         run: |
-          CLUSTER_ID=`python databricks.py create_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN`
+          CLUSTER_ID=`python databricks.py create_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN --cluster-config $DATABRICKS_CLUSTER_CONFIG`
           echo $CLUSTER_ID
           echo "databricks_cluster_id=${CLUSTER_ID}" >> "$GITHUB_OUTPUT"
           python databricks.py wait_for_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN --cluster-id $CLUSTER_ID
     env:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_CLUSTER_CONFIG: ${{ secrets.DATABRICKS_CLUSTER_CONFIG }}
 
   Run-Optional-Packages-tests-python-sdk:
     if: >-
