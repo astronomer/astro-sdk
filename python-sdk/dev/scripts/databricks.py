@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 from datetime import datetime
 from time import sleep
+from typing import Any
 
 import httpx
 
@@ -15,17 +17,10 @@ def build_headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def create_cluster(host: str, headers: dict[str, str]) -> str:
+def create_cluster(host: str, headers: dict[str, str], cluster_config: dict[str, Any]) -> str:
     """Create databricks cluster and return cluster_id"""
     create_cluster_url = f"https://{host}/{create_cluster_endpoint}"
-    json = {
-        "cluster_name": "astro-sdk-testing",
-        "spark_version": "12.2.x-scala2.12",
-        "node_type_id": "i3.xlarge",
-        "autoscale": {"min_workers": 1, "max_workers": 8},
-        "runtime_engine": "PHOTON",
-    }
-    resp = httpx.post(create_cluster_url, json=json, headers=headers)
+    resp = httpx.post(create_cluster_url, json=cluster_config, headers=headers)
     return resp.json()["cluster_id"]
 
 
@@ -51,11 +46,14 @@ if __name__ == "__main__":
     parser.add_argument("host")
     parser.add_argument("token")
     parser.add_argument("--cluster-id")
+    parser.add_argument("--cluster-config")
     args = parser.parse_args()
 
     operation = args.operation
     if operation == "create_cluster":
-        databricks_cluster_id = create_cluster(args.host, build_headers(args.token))
+        databricks_cluster_id = create_cluster(
+            args.host, build_headers(args.token), json.loads(args.cluster_config)
+        )
         print(databricks_cluster_id)
     elif operation == "wait_for_cluster":
         wait_for_cluster(args.host, args.cluster_id, build_headers(args.token))
