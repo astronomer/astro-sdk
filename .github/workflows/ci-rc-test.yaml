@@ -1,55 +1,604 @@
 ---
-name: Test providers RC releases
-
-on: # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 0,12 * * *"
+name: Build and test astro Python SDK
+on:
   workflow_dispatch:
-    inputs:
-      rc_testing_branch:
-        # If a branch is given, the workflow will use it for deployment and testing.
-        # If no branch is provided, the workflow will create a new rc testing branch
-        # for deployment and testing.
-        description: |
-          rc_testing_branch: existing testing branch
-          (Either rc_testing_branch or issue_url is required, and you cannot give both.)
-        required: false
-        default: ""
-      issue_url:
-        description: |
-          issue_url: the GitHub issue URL that tracks the status of Providers release
-          (Either rc_testing_branch or issue_url is required, and you cannot give both.)
-        required: false
-      base_git_rev:
-        description: "The base git revision to test Providers RCs"
-        required: false
-        type: string
-        default: "main"
 defaults:
   run:
     working-directory: python-sdk
 
-jobs:
-  check-airflow-provider-rc-release:
-    uses: astronomer/astronomer-providers/.github/workflows/reuse-wf-check-rc-release.yaml@main
-    with:
-      rc_testing_branch: ${{ inputs.rc_testing_branch }}
-      issue_url: ${{ inputs.issue_url }}
-      base_git_rev: ${{ inputs.base_git_rev }}
-      git_email: "airflow-oss-bot@astronomer.io"
-      git_username: "airflow-oss-bot"
-      working_directory: "python-sdk"
-    secrets:
-      BOT_ACCESS_TOKEN: ${{ secrets.BOT_ACCESS_TOKEN }}
+# This allows a subsequently queued workflow run to interrupt and cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
-  deploy-and-trigger-example-dag:
-    needs: check-airflow-provider-rc-release
-    if: |
-      always() &&
-      needs.check-airflow-provider-rc-release.result == 'success'
-    uses: ./.github/workflows/ci-astro-deploy.yml
-    with:
-      environment_to_deploy: "both"
-      dags_to_trigger_after_deployment: "example_master_dag"
-      git_rev: ${{ needs.check-airflow-provider-rc-release.outputs.rc_testing_branch }}
-    secrets: inherit
+# This list should only have non-sensitive env vars
+# Env vars with secrets should be in the specific jobs
+env:
+  SETUPTOOLS_USE_DISTUTILS: stdlib
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
+  REDSHIFT_DATABASE: dev
+  REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+  SNOWFLAKE_SCHEMA: ASTROFLOW_CI
+  SNOWFLAKE_DATABASE: SANDBOX
+  SNOWFLAKE_WAREHOUSE: DEMO
+  SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+  SNOWFLAKE_ACCOUNT: gp21411
+  SNOWFLAKE_REGION: us-east-1
+  SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+  SFTP_HOSTNAME: ${{ secrets.SFTP_HOSTNAME }}
+  SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+  SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+  AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
+  AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
+  AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+  AIRFLOW_VAR_FOO: templated_file_name
+  AWS_BUCKET: tmp9
+  GOOGLE_BUCKET: dag-authoring
+  FORCE_COLOR: "true"
+  MSSQL_DB: ${{ secrets.MSSQL_DB }}
+  MSSQL_HOST: ${{ secrets.MSSQL_HOST }}
+  MSSQL_LOGIN: ${{ secrets.MSSQL_LOGIN }}
+  MSSQL_PASSWORD: ${{ secrets.MSSQL_PASSWORD }}
+  MYSQL_DB: ${{ secrets.MYSQL_DB }}
+  MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+  MYSQL_LOGIN: ${{ secrets.MYSQL_LOGIN }}
+  MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+
+jobs:
+  Markdown-link-check:
+    if: github.event.action != 'labeled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          config-file: ".github/workflows/mlc_config.json"
+
+  Type-Check:
+    if: github.event.action != 'labeled'
+    runs-on: ubuntu-latest
+    env:
+      MYPY_FORCE_COLOR: 1
+      TERM: xterm-color
+      SETUPTOOLS_USE_DISTUTILS: stdlib
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+          architecture: "x64"
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}
+      - run: pip3 install nox
+      - run: nox -s type_check
+
+  Create-Databricks-Cluster:
+    runs-on: ubuntu-latest
+    outputs:
+      databricks_cluster_id: ${{ steps.create_databricks_cluster_and_wait.outputs.databricks_cluster_id}}
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+
+      - name: Install dependencies
+        working-directory: python-sdk/dev/scripts
+        run: pip install -r requirements.txt
+
+      - name: Create databricks cluster and wait
+        id: create_databricks_cluster_and_wait
+        working-directory: python-sdk/dev/scripts
+        run: |
+          CLUSTER_ID=`python databricks.py create_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN --cluster-config $DATABRICKS_CLUSTER_CONFIG`
+          echo $CLUSTER_ID
+          echo "databricks_cluster_id=${CLUSTER_ID}" >> "$GITHUB_OUTPUT"
+          python databricks.py wait_for_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN --cluster-id $CLUSTER_ID
+    env:
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_CLUSTER_CONFIG: ${{ secrets.DATABRICKS_CLUSTER_CONFIG }}
+
+  Run-Optional-Packages-tests-python-sdk:
+    needs: Create-Databricks-Cluster
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+          architecture: "x64"
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s test_examples_by_dependency -- --cov=src --cov-report=xml --cov-branch
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage${{ matrix.group }}
+          path: ./python-sdk/.coverage
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
+
+  Run-Unit-tests-Airflow-2-7:
+    strategy:
+      matrix:
+        version: ["3.8", "3.9", "3.10", "3.11"]
+    needs: Create-Databricks-Cluster
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.version }}
+          architecture: "x64"
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.7-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-${{ matrix.version }}(airflow='2.7')" -- tests/ --cov=src --cov-report=xml --cov-branch
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-unit-test
+          path: ./python-sdk/.coverage
+    env:
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
+
+  Run-load-file-Integration-Airflow-2-7:
+    needs: Create-Databricks-Cluster
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Docker Hub image
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+          architecture: "x64"
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-3.10(airflow='2.7')" -- tests_integration/ -k "test_load_file.py and not redshift" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: cat /tmp/durations-${{ matrix.group }}
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-${{ matrix.group }}-integration-tests
+          path: ./python-sdk/.coverage
+      - name: Collect pytest durations
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest_durations_load_file_${{ matrix.group }}
+          path: /tmp/durations-${{ matrix.group }}
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+
+  Run-example-dag-Integration-Airflow-2-7:
+    needs: Create-Databricks-Cluster
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Docker Hub image
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+          architecture: "x64"
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.7-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-3.10(airflow='2.7')" -- tests_integration/ -k "test_example_dags.py and not redshift" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: cat /tmp/durations-${{ matrix.group }}
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-${{ matrix.group }}-integration-tests
+          path: ./python-sdk/.coverage
+      - name: Collect pytest durations
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest_durations_example_dags_${{ matrix.group }}
+          path: /tmp/durations-${{ matrix.group }}
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+
+  Run-Integration-tests-Airflow-2-7:
+    needs: Create-Databricks-Cluster
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Docker Hub image
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+          architecture: "x64"
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.7-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-3.10(airflow='2.7')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py and not redshift" --splits 11 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: cat /tmp/durations-${{ matrix.group }}
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-${{ matrix.group }}-integration-tests
+          path: ./python-sdk/.coverage
+      - name: Collect pytest durations
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest_durations_integration_tests_${{ matrix.group }}
+          path: /tmp/durations-${{ matrix.group }}
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
+
+  Run-example-dag-tests-Airflow-2-2-5:
+    needs: Create-Databricks-Cluster
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Docker Hub image
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests_integration/test_example_dags.py" "tests_integration/integration_test_dag.py" -k "not redshift"
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
+
+  Delete-Databricks-Cluster:
+    if: ${{ always() }}
+    needs:
+      - Create-Databricks-Cluster
+      - Run-Optional-Packages-tests-python-sdk
+      - Run-Unit-tests-Airflow-2-7
+      - Run-example-dag-tests-Airflow-2-2-5
+      - Run-Integration-tests-Airflow-2-7
+      - Run-load-file-Integration-Airflow-2-7
+      - Run-example-dag-Integration-Airflow-2-7
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+          architecture: "x64"
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+
+      - name: Install dependencies
+        working-directory: python-sdk/dev/scripts
+        run: pip install -r requirements.txt
+
+      - name: Terminate Databricks cluster
+        id: terminate_databricks_cluster_and_wait
+        working-directory: python-sdk/dev/scripts
+        run: |
+          python databricks.py terminate_cluster $DATABRICKS_HOST $DATABRICKS_TOKEN --cluster-id $AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID
+    env:
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ needs.Create-Databricks-Cluster.outputs.databricks_cluster_id }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
