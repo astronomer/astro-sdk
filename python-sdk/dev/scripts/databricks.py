@@ -51,6 +51,7 @@ if __name__ == "__main__":
 
     operation = args.operation
     if operation == "create_cluster":
+        print(args.cluster_config)
         databricks_cluster_id = create_cluster(
             args.host, build_headers(args.token), json.loads(args.cluster_config)
         )
