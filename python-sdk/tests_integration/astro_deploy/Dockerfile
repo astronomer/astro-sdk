@@ -30,3 +30,5 @@ COPY astronomer_migration_dag.py/ ${AIRFLOW_HOME}/dags/
 COPY tests/ ${AIRFLOW_HOME}/tests/
 
 RUN ls ${AIRFLOW_HOME}/dags/
+# we have an issue with connexion==3.0.0, so for now pinning previous stable version
+RUN pip install connexion==2.14.2
