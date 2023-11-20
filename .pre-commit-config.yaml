@@ -15,7 +15,7 @@ repos:
       - id: check-hooks-apply
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-merge-conflict
       - id: check-toml
@@ -55,7 +55,7 @@ repos:
         exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.11.0
     hooks:
       - id: black
         args: ["--config", "./python-sdk/pyproject.toml"]
@@ -68,14 +68,14 @@ repos:
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.0.287'
+    rev: 'v0.1.6'
     hooks:
       - id: ruff
         args:
         - --config=./ruff.toml
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.5
+    rev: v2.2.6
     hooks:
       - id: codespell
         name: Run codespell to check for common misspellings in files
@@ -83,7 +83,7 @@ repos:
         types: [text]
         exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/modified_constraint_file.txt$|^python-sdk/tests/benchmark/Makefile$
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v1.5.1'
+      rev: 'v1.7.0'
       hooks:
       - id: mypy
         name: mypy-python-sdk
@@ -91,7 +91,7 @@ repos:
         files: "^python-sdk/"
 
   -   repo: https://github.com/asottile/pyupgrade
-      rev: v3.10.1
+      rev: v3.15.0
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
