@@ -56,14 +56,13 @@ function deploy(){
 
     # Build image and deploy
     BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')
-
     # Enforce registry name to be in lowercase
     docker_registry_astro=$(echo $docker_registry_astro | tr '[:upper:]' '[:lower:]')
     organization_id=$(echo $organization_id | tr '[:upper:]' '[:lower:]')
     deployment_id=$(echo $deployment_id | tr '[:upper:]' '[:lower:]')
     IMAGE_NAME=${docker_registry_astro}/${organization_id}/${deployment_id}:ci-${BUILD_NUMBER}
     docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${dockerfile} "${SCRIPT_PATH}"
-    docker login "${DOCKER_REGISTRY}" -u "cli" -p "${TOKEN}"
+    docker login "${docker_registry_astro}" -u "cli" -p "$TOKEN"
     docker push "${IMAGE_NAME}"
 
     # Create the Image
@@ -75,7 +74,7 @@ function deploy(){
             \"query\" : \"mutation CreateImage(\n    \$input: CreateImageInput!\n) {\n    createImage (\n    input: \$input\n) {\n    id\n    tag\n    repository\n    digest\n    env\n    labels\n    deploymentId\n  }\n}\",
             \"variables\" : {
                 \"input\" : {
-                    \"deploymentId\" : \"$DEPLOYMENT_ID\",
+                    \"deploymentId\" : \"$deployment_id\",
                     \"tag\" : \"ci-$BUILD_NUMBER\"
                     }
                 }
@@ -89,10 +88,10 @@ function deploy(){
               \"query\" : \"mutation DeployImage(\n    \$input: DeployImageInput!\n  ) {\n    deployImage(\n      input: \$input\n    ) {\n      id\n      deploymentId\n      digest\n      env\n      labels\n      name\n      tag\n      repository\n    }\n}\",
               \"variables\" : {
                   \"input\" : {
-                      \"deploymentId\" : \"$DEPLOYMENT_ID\",
+                      \"deploymentId\" : \"$deployment_id\",
                       \"imageId\" : \"$IMAGE\",
                       \"tag\" : \"ci-$BUILD_NUMBER\",
-                      \"repository\" : \"images.astronomer-stage.cloud/$ORGANIZATION_ID/$DEPLOYMENT_ID\",
+                      \"repository\" : \"images.astronomer-stage.cloud/$organization_id/$deployment_id\",
                       \"dagDeployEnabled\":false
                       }
                   }
