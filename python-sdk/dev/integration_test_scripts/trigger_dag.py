@@ -61,7 +61,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    token =args.token.strip()
+    token = args.token.strip()
 
     input_dag_ids = args.dag_ids
     dag_ids = [dag_id.strip() for dag_id in input_dag_ids.split(",")]
