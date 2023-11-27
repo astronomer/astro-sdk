@@ -87,7 +87,7 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
         "NUMBER(38,0)",
         "COLUMN",
         "N",
-        "IDENTITY START 1 INCREMENT 1",
+        "IDENTITY START 1 INCREMENT 1 ORDER",
         "Y",
         "N",
         None,
@@ -108,7 +108,6 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
         None,
         None,
     )
-
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
