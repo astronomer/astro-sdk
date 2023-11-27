@@ -109,6 +109,7 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
         None,
     )
 
+
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
