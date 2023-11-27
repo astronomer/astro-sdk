@@ -23,12 +23,6 @@ on:  # yamllint disable-line rule:truthy
       deployment_id:
         description: 'astro cloud deployment_id'
         required: true
-      astronomer_key_id:
-        description: 'astro cloud astronomer_key_id'
-        required: true
-      astronomer_key_secret:
-        description: 'astro cloud astronomer_key_secret'
-        required: true
       organization_id:
         description: 'astro cloud organization_id'
         required: true
@@ -43,8 +37,8 @@ jobs:
 
       - name: Wait for deployment to be healthy
         run: |
-          astro_core_api="https://api.astronomer.io/v1alpha1/organizations/${{secrets.organization_id }}/\
-          deployments"
+          astro_core_api="https://api.astronomer-stage.io/v1alpha1/organizations/\
+          ${{secrets.organization_id }}/deployments"
           tries=15
           health_flag=false
 
@@ -75,8 +69,7 @@ jobs:
       - name: Trigger DAG(s)
         run: |
           python3 python-sdk/dev/integration_test_scripts/trigger_dag.py \
-            "org-airflow-team-org" \
+            ${{secrets.organization_id }} \
             ${{ secrets.deployment_id }} \
-            ${{ secrets.astronomer_key_id }} \
-            ${{ secrets.astronomer_key_secret }} \
+            ${{ secrets.bearer_token }} \
             --dag-ids "${{ inputs.dags_to_trigger_after_deployment }}"

@@ -9,24 +9,6 @@ import requests
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-def get_access_token(api_key_id: str, api_key_secret: str) -> str:
-    """
-    Gets bearer access token for the Astro Cloud deployment needed for REST API authentication.
-
-    :param api_key_id: API key ID of the Astro Cloud deployment
-    :param api_key_secret: API key secret of the Astro Cloud deployment
-    """
-    request_json = {
-        "client_id": api_key_id,
-        "client_secret": api_key_secret,
-        "audience": "astronomer-ee",
-        "grant_type": "client_credentials",
-    }
-    response = requests.post("https://auth.astronomer.io/oauth/token", json=request_json)
-    response_json = response.json()
-    return response_json["access_token"]
-
-
 def trigger_dag_runs(
     *, dag_ids_name: list[str], astro_subdomain: str, deployment_id: str, bearer_token: str
 ) -> None:
@@ -40,7 +22,7 @@ def trigger_dag_runs(
     :param bearer_token: bearer token to be used for authentication with the Airflow REST API
     """
     short_deployment_id = f"d{deployment_id[-7:]}"
-    integration_tests_deployment_url = f"https://{astro_subdomain}.astronomer.run/{short_deployment_id}"
+    integration_tests_deployment_url = f"https://{astro_subdomain}.astronomer-stage.run/{short_deployment_id}"
     headers = {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache",
@@ -66,8 +48,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("astro_subdomain", help="subdomain of the Astro Cloud", type=str)
     parser.add_argument("deployment_id", help="ID of the deployment in Astro Cloud", type=str)
-    parser.add_argument("astronomer_key_id", help="Key ID of the Astro Cloud deployment", type=str)
-    parser.add_argument("astronomer_key_secret", help="Key secret of the Astro Cloud deployment", type=str)
+    parser.add_argument("token", help="Key ID of the Astro Cloud deployment", type=str)
     parser.add_argument(
         "--dag-ids",
         help=(
@@ -80,7 +61,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    token = get_access_token(args.astronomer_key_id.strip(), args.astronomer_key_secret.strip())
+    token = args.token.strip()
 
     input_dag_ids = args.dag_ids
     dag_ids = [dag_id.strip() for dag_id in input_dag_ids.split(",")]

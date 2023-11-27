@@ -57,8 +57,7 @@ jobs:
       docker_registry:  ${{ secrets.ASTRO_DOCKER_REGISTRY }}
       organization_id:  ${{ secrets.ORGANIZATION_ID }}
       deployment_id:  ${{ secrets.ASTRO_DEPLOYMENT_ID }}
-      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID }}
-      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   wait-for-deployment-to-be-ready-and-trigger-dags-for-astro-sdk-integration-tests:
@@ -73,10 +72,8 @@ jobs:
     secrets:
       astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
       deployment_id: ${{ secrets.ASTRO_DEPLOYMENT_ID }}
-      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID }}
-      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET }}
-      organization_id: ${{ secrets.ORGANIZATION_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
+      organization_id: ${{ secrets.ORGANIZATION_ID }}
 
   deploy-to-astro-sdk-integration-tests-on-KE:
     if: |
@@ -90,9 +87,8 @@ jobs:
       docker_registry:  ${{ secrets.ASTRO_DOCKER_REGISTRY }}
       organization_id:  ${{ secrets.ORGANIZATION_ID }}
       deployment_id:  ${{ secrets.ASTRO_DEPLOYMENT_ID_KE }}
-      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID_KE }}
-      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET_KE }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      bearer_token: ${{ secrets.BEARER_TOKEN }}
 
   wait-for-deployment-to-be-ready-and-trigger-dags-for-astro-sdk-integration-tests-on-KE:
     if: |
@@ -106,7 +102,5 @@ jobs:
     secrets:
       astro_subdomain: ${{ secrets.ASTRO_SUBDOMAIN }}
       deployment_id: ${{ secrets.ASTRO_DEPLOYMENT_ID_KE }}
-      astronomer_key_id: ${{ secrets.ASTRO_KEY_ID_KE }}
-      astronomer_key_secret: ${{ secrets.ASTRO_KEY_SECRET_KE }}
       organization_id: ${{ secrets.ORGANIZATION_ID }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
