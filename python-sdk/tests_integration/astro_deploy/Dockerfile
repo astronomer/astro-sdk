@@ -27,8 +27,6 @@ COPY example_dags/ ${AIRFLOW_HOME}/dags/
 COPY master_dag.py/ ${AIRFLOW_HOME}/dags/
 COPY example_snowflake_cleanup.py/ ${AIRFLOW_HOME}/dags/
 COPY astronomer_migration_dag.py/ ${AIRFLOW_HOME}/dags/
-COPY astro_sdk_connections_template.yaml/ ${AIRFLOW_HOME}/dags/connections_template.yaml
-COPY create_connections.py/ ${AIRFLOW_HOME}/dags/
 COPY tests/ ${AIRFLOW_HOME}/tests/
 
 RUN ls ${AIRFLOW_HOME}/dags/
