@@ -2,7 +2,6 @@ from typing import Any, Dict, Optional
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from airflow.providers.common.sql.hooks.sql import DbApiHook
 from airflow.providers.common.sql.operators.sql import SQLTableCheckOperator
 
 from astro.databases import create_database

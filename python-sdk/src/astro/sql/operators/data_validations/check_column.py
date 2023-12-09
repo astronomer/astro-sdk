@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional, Union
 import pandas
 from airflow import AirflowException
 from airflow.decorators.base import get_unique_task_id
-from airflow.providers.common.sql.hooks.sql import DbApiHook
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
 from astro.databases import create_database
