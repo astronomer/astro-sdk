@@ -78,7 +78,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             task_id=task_id if task_id is not None else get_unique_task_id("check_column"),
         )
 
-    def get_db_hook(self) -> DbApiHook:
+    def get_db_hook(self) -> Any:
         """
         Get the database hook for the connection.
 

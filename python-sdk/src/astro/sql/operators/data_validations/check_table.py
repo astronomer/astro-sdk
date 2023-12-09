@@ -65,7 +65,7 @@ class SQLCheckOperator(SQLTableCheckOperator):
             self.sql = f"SELECT * FROM {self.table};"
         super().execute(context)
 
-    def get_db_hook(self) -> DbApiHook:
+    def get_db_hook(self) -> Any:
         """
         Get the database hook for the connection.
 
