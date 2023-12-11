@@ -31,6 +31,8 @@ def delete_secret_scope(scope_name: str, api_client: ApiClient) -> None:
     try:
         secrets.delete_scope(scope_name)
     except HTTPError as http_error:
+        if http_error.response is None:
+            raise http_error
         # We don't care if the resource doesn't exist since we're trying to delete it
         if not http_error.response.json().get("error_code", "") == "RESOURCE_DOES_NOT_EXIST":
             raise http_error

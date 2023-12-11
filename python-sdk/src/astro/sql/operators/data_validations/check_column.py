@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional, Union
 import pandas
 from airflow import AirflowException
 from airflow.decorators.base import get_unique_task_id
-from airflow.providers.common.sql.hooks.sql import DbApiHook
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
 from astro.databases import create_database
@@ -78,7 +77,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             task_id=task_id if task_id is not None else get_unique_task_id("check_column"),
         )
 
-    def get_db_hook(self) -> DbApiHook:
+    def get_db_hook(self) -> Any:
         """
         Get the database hook for the connection.
 
