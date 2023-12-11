@@ -844,7 +844,7 @@ class BaseDatabase(ABC):
 
     def parameterize_variable(self, variable: str):
         """
-        While most databases use sqlalchemy, we want to open up how we paramaterize variables for databases
+        While most databases use sqlalchemy, we want to open up how we parameterize variables for databases
         that a) do not use sqlalchemy and b) have different parameterization schemes (namely delta).
 
         :param variable: The variable to parameterize.

@@ -3,7 +3,7 @@ Pre-requisites for load_file_example_19:
  - Install dependencies for Astro Python SDK with Google, refer to README.md
  - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
     with the file path to the service account.
- - In the connection we need to specfiy the scopes.
+ - In the connection we need to specify the scopes.
     Connection variable is ``extra__google_cloud_default__scope``
     or in Airflow Connections UI ``Scopes (comma separated)``
     For ex:- https://www.googleapis.com/auth/drive.readonly

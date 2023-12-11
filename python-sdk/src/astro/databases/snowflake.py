@@ -1106,7 +1106,7 @@ def is_valid_snow_identifier(name: str) -> bool:
     The following method ensures that a string follows the expected identifier syntax.
 
     .. seealso::
-        `Snowflake official documentation on indentifiers syntax
+        `Snowflake official documentation on identifiers syntax
         <https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html>`_
 
     """
