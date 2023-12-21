@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/astro-runtime:9.5.0-base
+FROM quay.io/astronomer/astro-runtime:10.0.0-base
 ARG GCP_SERVICE_ACCOUNT_JSON
 USER root
 RUN apt-get update -y && apt-get install -y git
