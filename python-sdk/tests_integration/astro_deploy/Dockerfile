@@ -22,6 +22,7 @@ RUN pip install astronomer-starship-provider
 
 RUN mkdir -p ${AIRFLOW_HOME}/dags
 RUN mkdir -p ${AIRFLOW_HOME}/tests
+RUN mkdir -p ${AIRFLOW_HOME}/include
 
 COPY example_dags/ ${AIRFLOW_HOME}/dags/
 COPY master_dag.py/ ${AIRFLOW_HOME}/dags/
@@ -30,4 +31,4 @@ COPY astronomer_migration_dag.py/ ${AIRFLOW_HOME}/dags/
 COPY tests/ ${AIRFLOW_HOME}/tests/
 
 RUN ls ${AIRFLOW_HOME}/dags/
-RUN echo $GCP_SERVICE_ACCOUNT_JSON > $AIRFLOW_HOME/include/astro_sdk_gcp_cred.json"
+RUN echo $GCP_SERVICE_ACCOUNT_JSON > $AIRFLOW_HOME/include/astro_sdk_gcp_cred.json
