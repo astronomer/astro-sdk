@@ -339,6 +339,7 @@ with dag:
             DeltaLoadOptions(
                 copy_into_format_options={"header": "true", "inferSchema": "true"},
                 copy_into_copy_options={"mergeSchema": "true"},
+                load_secrets=True,
             )
         ],
     )
