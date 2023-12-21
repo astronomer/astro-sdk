@@ -29,6 +29,10 @@ on:  # yamllint disable-line rule:truthy
       SLACK_WEBHOOK_URL:
         description: 'slack webhook url for sending notification'
         required: true
+      GCP_SERVICE_ACCOUNT_JSON:
+        description: 'GCP service account json'
+        required: true
+
 
 jobs:
   deploy-to-astro-cloud:
