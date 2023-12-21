@@ -90,6 +90,7 @@ jobs:
       deployment_id:  ${{ secrets.ASTRO_DEPLOYMENT_ID_KE }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       bearer_token: ${{ secrets.BEARER_TOKEN }}
+      GCP_SERVICE_ACCOUNT_JSON: ${{ secrets.GCP_SERVICE_ACCOUNT_JSON }}
 
   wait-for-deployment-to-be-ready-and-trigger-dags-for-astro-sdk-integration-tests-on-KE:
     if: |
