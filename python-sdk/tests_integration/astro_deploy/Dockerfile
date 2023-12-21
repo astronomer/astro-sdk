@@ -1,5 +1,4 @@
 FROM quay.io/astronomer/astro-runtime:10.0.0-base
-ARG GCP_SERVICE_ACCOUNT_JSON
 USER root
 RUN apt-get update -y && apt-get install -y git
 RUN apt-get install -y --no-install-recommends \
@@ -31,4 +30,4 @@ COPY astronomer_migration_dag.py/ ${AIRFLOW_HOME}/dags/
 COPY tests/ ${AIRFLOW_HOME}/tests/
 
 RUN ls ${AIRFLOW_HOME}/dags/
-RUN echo $GCP_SERVICE_ACCOUNT_JSON > $AIRFLOW_HOME/include/astro_sdk_gcp_cred.json
+COPY service-account-key.json  $AIRFLOW_HOME/include/astro_sdk_gcp_cred.json
