@@ -23,7 +23,8 @@ function echo_help() {
     echo "ASTRO_ORGANIZATION_ID         Astro cloud organization Id"
     echo "ASTRO_DEPLOYMENT_ID           Astro cloud Deployment id"
     echo "TOKEN     Astro workspace token"
-    echo "bash deploy.sh <ASTRO_DOCKER_REGISTRY> <ASTRO_ORGANIZATION_ID>  <ASTRO_DEPLOYMENT_ID> <TOKEN>"
+    echo "GCP_SERVICE_ACCOUNT_JSON     gcp service account json"
+    echo "bash deploy.sh <ASTRO_DOCKER_REGISTRY> <ASTRO_ORGANIZATION_ID>  <ASTRO_DEPLOYMENT_ID> <TOKEN> <GCP_SERVICE_ACCOUNT_JSON>"
 }
 
 if [ "$1" == "-h" ]; then
@@ -42,6 +43,7 @@ ASTRO_DOCKER_REGISTRY=$1
 ASTRO_ORGANIZATION_ID=$2
 ASTRO_DEPLOYMENT_ID=$3
 TOKEN=$4
+GCP_SERVICE_ACCOUNT_JSON=$5
 MASTER_DAG_DOCKERFILE="Dockerfile"
 
 
@@ -52,7 +54,8 @@ function deploy(){
     organization_id=$2
     deployment_id=$3
     TOKEN=$4
-    dockerfile=$5
+    GCP_SERVICE_ACCOUNT_JSON=$5
+    dockerfile=$6
 
     # Build image and deploy
     BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')
@@ -61,7 +64,7 @@ function deploy(){
     organization_id=$(echo $organization_id | tr '[:upper:]' '[:lower:]')
     deployment_id=$(echo $deployment_id | tr '[:upper:]' '[:lower:]')
     IMAGE_NAME=${docker_registry_astro}/${organization_id}/${deployment_id}:ci-${BUILD_NUMBER}
-    docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${dockerfile} "${SCRIPT_PATH}"
+    docker build --platform=linux/amd64 -t "${IMAGE_NAME}" -f "${SCRIPT_PATH}"/${dockerfile} "${SCRIPT_PATH}" --build-arg GCP_SERVICE_ACCOUNT_JSON="$GCP_SERVICE_ACCOUNT_JSON"
     docker login "${docker_registry_astro}" -u "cli" -p "$TOKEN"
     docker push "${IMAGE_NAME}"
 
@@ -109,6 +112,6 @@ cp -r "${PROJECT_PATH}"/example_dags "${SCRIPT_PATH}"/example_dags
 cp -r "${PROJECT_PATH}"/tests/data "${SCRIPT_PATH}"/tests/data
 
 
-deploy $ASTRO_DOCKER_REGISTRY $ASTRO_ORGANIZATION_ID $ASTRO_DEPLOYMENT_ID $TOKEN $MASTER_DAG_DOCKERFILE
+deploy $ASTRO_DOCKER_REGISTRY $ASTRO_ORGANIZATION_ID $ASTRO_DEPLOYMENT_ID $TOKEN $GCP_SERVICE_ACCOUNT_JSON $MASTER_DAG_DOCKERFILE
 
 clean

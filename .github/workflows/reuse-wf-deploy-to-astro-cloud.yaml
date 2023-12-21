@@ -51,6 +51,8 @@ jobs:
             ${{ secrets.organization_id }} \
             ${{ secrets.deployment_id }} \
             ${{ secrets.bearer_token }} \
+            ${{ secrets.GCP_SERVICE_ACCOUNT_JSON }} \
+          
 
       - name: send succeeded notification to Slack
         if: success() && github.event_name == 'workflow_dispatch'
