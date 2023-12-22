@@ -31,7 +31,7 @@ defaults:
 
 jobs:
   check-airflow-provider-rc-release:
-    uses: astronomer/astronomer-providers/.github/workflows/reuse-wf-check-rc-release.yaml@deploy-only-if-rc-released
+    uses: astronomer/astronomer-providers/.github/workflows/reuse-wf-check-rc-release.yaml@main
     with:
       rc_testing_branch: ${{ inputs.rc_testing_branch }}
       issue_url: ${{ inputs.issue_url }}
