@@ -23,7 +23,7 @@ function echo_help() {
     echo "ASTRO_ORGANIZATION_ID         Astro cloud organization Id"
     echo "ASTRO_DEPLOYMENT_ID           Astro cloud Deployment id"
     echo "TOKEN     Astro workspace token"
-    echo "bash deploy.sh <ASTRO_DOCKER_REGISTRY> <ASTRO_ORGANIZATION_ID>  <ASTRO_DEPLOYMENT_ID> <TOKEN>"
+    echo "bash deploy.sh <ASTRO_DOCKER_REGISTRY> <ASTRO_ORGANIZATION_ID>  <ASTRO_DEPLOYMENT_ID> <TOKEN> "
 }
 
 if [ "$1" == "-h" ]; then
