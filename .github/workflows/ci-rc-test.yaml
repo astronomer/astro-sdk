@@ -46,7 +46,7 @@ jobs:
     needs: check-airflow-provider-rc-release
     if: |
       always() &&
-      needs.check-airflow-provider-rc-release.outputs.rc_issue_url != ''
+      ${{ inputs.issue_url }} != ''
     uses:  ./.github/workflows/ci-astro-deploy.yml
     with:
        environment_to_deploy: "both"
