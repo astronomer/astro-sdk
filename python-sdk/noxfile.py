@@ -150,8 +150,8 @@ def build_docs(session: nox.Session) -> None:
     session.run("make", "html")
 
 
-@nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
-@nox.parametrize("airflow", ["2.2.5", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8"])
+@nox.session(python=["3.8", "3.9", "3.10", "3.11"])
+@nox.parametrize("airflow", ["2.6", "2.7", "2.8"])
 def generate_constraints(session: nox.Session, airflow) -> None:
     """Generate constraints file"""
     session.install("wheel")
