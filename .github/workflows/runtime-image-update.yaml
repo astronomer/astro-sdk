@@ -9,6 +9,9 @@ on:  # yamllint disable-line rule:truthy
       quay_repo:
         description: 'Quay Repository'
         default: 'astronomer/astro-runtime'
+defaults:
+  run:
+    working-directory: python-sdk
 
 jobs:
   runtime-image-tag-update-job:
@@ -30,7 +33,7 @@ jobs:
         id: get_current_tag
         # yamllint disable rule:line-length
         run: |
-          CURRENT_TAG=$(awk -F: '/quay.io\/astronomer\/astro-runtime/ {print $NF}' ./python-sdk/dev/Dockerfile)
+          CURRENT_TAG=$(awk -F: '/quay.io\/astronomer\/astro-runtime/ {print $NF}' ./dev/Dockerfile)
           echo "CURRENT_TAG=$CURRENT_TAG"
           echo "tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
         # yamllint enable rule:line-length
@@ -39,7 +42,7 @@ jobs:
         id: get_latest_tag
         # yamllint disable rule:line-length
         run: |
-          LATEST_TAG=$(python ./.github/scripts/get_latest_runtime_image_tag.py ${{ github.event.inputs.quay_repo }})
+          LATEST_TAG=$(python ./dev/integration_test_scripts/get_latest_runtime_image_tag.py ${{ github.event.inputs.quay_repo }})
           echo "LATEST_TAG=$LATEST_TAG"
           echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
         # yamllint enable rule:line-length
@@ -69,9 +72,9 @@ jobs:
         if: steps.check_tag_updated.outputs.tag_updated == 'true'
         # yamllint disable rule:line-length
         run: |
-          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./python-sdk/dev/Dockerfile
+          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./dev/Dockerfile
           echo "::group::cat Dockerfile"
-          cat  ./python-sdk/dev/Dockerfile
+          cat  ./dev/Dockerfile
           echo "::endgroup::"
         # yamllint enable rule:line-length
 
@@ -79,9 +82,9 @@ jobs:
         if: steps.check_tag_updated.outputs.tag_updated == 'true'
         # yamllint disable rule:line-length
         run: |
-          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./python-sdk/tests_integration/astro_deploy/Dockerfile
-          echo "::group::cat ./python-sdk/tests_integration/astro_deploy/Dockerfile"
-          cat ./python-sdk/tests_integration/astro_deploy/Dockerfile
+          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./tests_integration/astro_deploy/Dockerfile
+          echo "::group::cat Dockerfile"
+          cat ./tests_integration/astro_deploy/Dockerfile
           echo "::endgroup::"
         # yamllint enable rule:line-length
 
@@ -89,9 +92,9 @@ jobs:
         if: steps.check_tag_updated.outputs.tag_updated == 'true'
         # yamllint disable rule:line-length
         run: |
-          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./python-sdk/tests_integration/astro_deploy/Dockerfile.single_worker
-          echo "::group::cat ./python-sdk/tests_integration/astro_deploy/Dockerfile"
-          cat ./python-sdk/tests_integration/astro_deploy/Dockerfile.single_worker
+          sed -i "s@quay.io/astronomer/astro-runtime:${{ steps.get_current_tag.outputs.tag }}@quay.io/astronomer/astro-runtime:${{ steps.get_latest_tag.outputs.tag }}@g" ./tests_integration/astro_deploy/Dockerfile.single_worker
+          echo "::group::cat Dockerfile.single_worker"
+          cat ./tests_integration/astro_deploy/Dockerfile.single_worker
           echo "::endgroup::"
         # yamllint enable rule:line-length
 
@@ -108,7 +111,7 @@ jobs:
         # yamllint disable rule:line-length
         run: |
           set -e
-          git add ./python-sdk/tests_integration/astro_deploy/ ./python-sdk/dev/Dockerfile
+          git add ./tests_integration/astro_deploy/ ./dev/Dockerfile
           git commit -m "Update runtime image tag to ${{ steps.get_latest_tag.outputs.tag }}"
           git push origin ${{ steps.create_runtime_image_update_branch.outputs.runtime_image_update_branch }}
           gh pr create --base main \
