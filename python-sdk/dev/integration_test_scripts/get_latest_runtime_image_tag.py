@@ -26,8 +26,7 @@ def get_latest_tag(repository: str) -> str:
     if valid_tags:
         _latest_tag = max(valid_tags)
         return str(_latest_tag)
-    else:
-        sys.exit("No valid semantic version tags found.")
+    sys.exit("No valid semantic version tags found.")
 
 
 if __name__ == "__main__":

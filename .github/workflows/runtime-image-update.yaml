@@ -42,7 +42,7 @@ jobs:
         id: get_latest_tag
         # yamllint disable rule:line-length
         run: |
-          LATEST_TAG=$(python ../.github/scripts/get_latest_runtime_image_tag.py ${{ github.event.inputs.quay_repo }})
+          LATEST_TAG=$(python ./dev/integration_test_scripts/get_latest_runtime_image_tag.py ${{ github.event.inputs.quay_repo }})
           echo "LATEST_TAG=$LATEST_TAG"
           echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
         # yamllint enable rule:line-length
