@@ -20,7 +20,7 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
-@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5", "2.6", "2.7"])
+@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5", "2.6", "2.7", "2.8"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     env = {
@@ -151,7 +151,7 @@ def build_docs(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
-@nox.parametrize("airflow", ["2.2.5", "2.3", "2.4", "2.5", "2.6"])
+@nox.parametrize("airflow", ["2.2.5", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8"])
 def generate_constraints(session: nox.Session, airflow) -> None:
     """Generate constraints file"""
     session.install("wheel")

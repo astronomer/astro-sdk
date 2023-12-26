@@ -203,7 +203,7 @@ jobs:
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
-  Run-Unit-tests-Airflow-2-7:
+  Run-Unit-tests-Airflow-2-8:
     strategy:
       matrix:
         version: [ '3.8', '3.9', '3.10', '3.11' ]
@@ -239,17 +239,17 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.7-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+          key: ${{ runner.os }}-2.8-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-${{ matrix.version }}(airflow='2.7')" -- tests/ --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-${{ matrix.version }}(airflow='2.8')" -- tests/ --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
           name: coverage-unit-test
           path: ./python-sdk/.coverage
 
-  Run-load-file-Integration-Airflow-2-7:
+  Run-load-file-Integration-Airflow-2-8:
     if: >-
       github.event_name == 'push' ||
       (
@@ -319,7 +319,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.10(airflow='2.7')" -- tests_integration/ -k "test_load_file.py and not redshift" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.10(airflow='2.8')" -- tests_integration/ -k "test_load_file.py and not redshift" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
@@ -345,7 +345,7 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
 
-  Run-example-dag-Integration-Airflow-2-7:
+  Run-example-dag-Integration-Airflow-2-8:
     if: >-
       github.event_name == 'push' ||
       (
@@ -410,12 +410,12 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.7-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+          key: ${{ runner.os }}-2.8-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.10(airflow='2.7')" -- tests_integration/ -k "test_example_dags.py and not redshift" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.10(airflow='2.8')" -- tests_integration/ -k "test_example_dags.py and not redshift" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
@@ -441,7 +441,7 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
 
-  Run-Integration-tests-Airflow-2-7:
+  Run-Integration-tests-Airflow-2-8:
     if: >-
       github.event_name == 'push' ||
       (
@@ -506,12 +506,12 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.7-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+          key: ${{ runner.os }}-2.8-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.10(airflow='2.7')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py and not redshift" --splits 11 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.10(airflow='2.8')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py and not redshift" --splits 11 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
@@ -627,7 +627,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [ '3.7', '3.8', '3.9', '3.10' ]
-        airflow: [ '2.2.5', '2.3', '2.4', '2.5', '2.6']
+        airflow: [ '2.2.5', '2.3', '2.4', '2.5', '2.6', '2.7', '2.8']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -658,10 +658,10 @@ jobs:
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
-      - Run-Unit-tests-Airflow-2-7
-      - Run-Integration-tests-Airflow-2-7
-      - Run-load-file-Integration-Airflow-2-7
-      - Run-example-dag-Integration-Airflow-2-7
+      - Run-Unit-tests-Airflow-2-8
+      - Run-Integration-tests-Airflow-2-8
+      - Run-load-file-Integration-Airflow-2-8
+      - Run-example-dag-Integration-Airflow-2-8
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
@@ -693,9 +693,9 @@ jobs:
   collect-durations:
     runs-on: ubuntu-latest
     needs:
-      - Run-Unit-tests-Airflow-2-7
-      - Run-Integration-tests-Airflow-2-7
-      - Run-load-file-Integration-Airflow-2-7
+      - Run-Unit-tests-Airflow-2-8
+      - Run-Integration-tests-Airflow-2-8
+      - Run-load-file-Integration-Airflow-2-8
     steps:
       - uses: actions/checkout@v3
       - name: Cache
@@ -723,11 +723,11 @@ jobs:
     if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
-      - Run-Unit-tests-Airflow-2-7
+      - Run-Unit-tests-Airflow-2-8
       - Run-example-dag-tests-Airflow-2-2-5
-      - Run-Integration-tests-Airflow-2-7
-      - Run-load-file-Integration-Airflow-2-7
-      - Run-example-dag-Integration-Airflow-2-7
+      - Run-Integration-tests-Airflow-2-8
+      - Run-load-file-Integration-Airflow-2-8
+      - Run-example-dag-Integration-Airflow-2-8
       - Run-Optional-Packages-tests-python-sdk
       - Generate-Constraints
     runs-on: ubuntu-latest
