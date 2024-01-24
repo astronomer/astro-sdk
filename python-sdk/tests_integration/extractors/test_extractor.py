@@ -4,7 +4,8 @@ import pandas as pd
 import pendulum
 import pytest
 from airflow.models.taskinstance import TaskInstance
-from airflow.providers.openlineage.extractors.base import BaseExtractor, DefaultExtractor
+from airflow.providers.openlineage.extractors.base import DefaultExtractor
+from airflow.providers.openlineage.extractors.manager import ExtractorManager
 from airflow.utils import timezone
 from openlineage.client.facet import DataQualityMetricsInputDatasetFacet, OutputStatisticsOutputDatasetFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
@@ -113,7 +114,7 @@ def test_python_sdk_load_file_extract_on_complete(mock_xcom_pull):
     tzinfo = pendulum.timezone("UTC")
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=load_file_operator, run_id=execution_date)
-    python_sdk_extractor = BaseExtractor().get_extractor_class(LoadFileOperator)
+    python_sdk_extractor = ExtractorManager().get_extractor_class(LoadFileOperator)
     assert python_sdk_extractor is DefaultExtractor
 
     task_meta_extract = python_sdk_extractor(load_file_operator).extract()
@@ -155,7 +156,7 @@ def test_python_sdk_export_file_extract_on_complete():
     )
 
     task_instance = TaskInstance(task=export_file_operator)
-    python_sdk_extractor = BaseExtractor().get_extractor_class(ExportToFileOperator)
+    python_sdk_extractor = ExtractorManager().get_extractor_class(ExportToFileOperator)
     assert python_sdk_extractor is DefaultExtractor
     task_meta_extract = python_sdk_extractor(export_file_operator).extract()
     assert task_meta_extract is None
@@ -202,7 +203,7 @@ def test_append_op_extract_on_complete():
     tzinfo = pendulum.timezone("UTC")
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=op, run_id=execution_date)
-    python_sdk_extractor = BaseExtractor().get_extractor_class(AppendOperator)
+    python_sdk_extractor = ExtractorManager().get_extractor_class(AppendOperator)
     assert python_sdk_extractor is DefaultExtractor
     task_meta_extract = python_sdk_extractor(op).extract()
     assert task_meta_extract is None
@@ -245,7 +246,7 @@ def test_merge_op_extract_on_complete():
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=op, run_id=execution_date)
 
-    python_sdk_extractor = BaseExtractor().get_extractor_class(MergeOperator)
+    python_sdk_extractor = ExtractorManager().get_extractor_class(MergeOperator)
     assert python_sdk_extractor is DefaultExtractor
     task_meta_extract = python_sdk_extractor(op).extract()
     assert task_meta_extract is None
@@ -289,7 +290,7 @@ def test_python_sdk_transform_extract_on_complete():
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=task.operator, run_id=execution_date)
 
-    python_sdk_extractor = BaseExtractor().get_extractor_class(TransformOperator)
+    python_sdk_extractor = ExtractorManager().get_extractor_class(TransformOperator)
     assert python_sdk_extractor is DefaultExtractor
     task_meta_extract = python_sdk_extractor(task.operator).extract()
     assert task_meta_extract is None
@@ -342,7 +343,7 @@ def test_python_sdk_dataframe_op_extract_on_complete():
     tzinfo = pendulum.timezone("UTC")
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=task[0].operator, run_id=execution_date)
-    python_sdk_extractor = BaseExtractor().get_extractor_class(DataframeOperator)
+    python_sdk_extractor = ExtractorManager().get_extractor_class(DataframeOperator)
     assert python_sdk_extractor is DefaultExtractor
     task_meta_extract = python_sdk_extractor(task[0].operator).extract()
     assert task_meta_extract is None
