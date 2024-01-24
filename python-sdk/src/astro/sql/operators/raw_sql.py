@@ -7,7 +7,7 @@ from typing import Any, Callable
 try:
     from airflow.decorators.base import TaskDecorator
 except ImportError:
-    from airflow.decorators import _TaskDecorator as TaskDecorator
+    from airflow.decorators import _TaskDecorator as TaskDecorator  # type: ignore[attr-defined]
 
 import airflow
 import pandas as pd
