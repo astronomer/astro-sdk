@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 try:
     from airflow.decorators.base import TaskDecorator
-except ImportError:
+except ImportError:  # pragma: no cover
     from airflow.decorators import _TaskDecorator as TaskDecorator  # type: ignore[attr-defined]
 
 import airflow
