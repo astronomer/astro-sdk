@@ -87,8 +87,8 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
     assert rows[0][1] == "NUMBER(38,0)"
     assert rows[0][2] == "COLUMN"
 
-    assert rows[1][0] == "ID"
-    assert rows[1][1] == "NUMBER(60)"
+    assert rows[1][0] == "NAME"
+    assert rows[1][1] == "VARCHAR(60)"
     assert rows[1][2] == "COLUMN"
 
 
