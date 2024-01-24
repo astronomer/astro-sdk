@@ -4,8 +4,8 @@ import pandas as pd
 import pendulum
 import pytest
 from airflow.models.taskinstance import TaskInstance
-from airflow.utils import timezone
 from airflow.providers.openlineage.extractors.base import BaseExtractor, DefaultExtractor
+from airflow.utils import timezone
 from openlineage.client.facet import DataQualityMetricsInputDatasetFacet, OutputStatisticsOutputDatasetFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
 
