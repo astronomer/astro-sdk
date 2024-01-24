@@ -87,7 +87,7 @@ ftp = [
     "apache-airflow-providers-ftp>=3.0.0",
     "smart-open>=5.2.1",
 ]
-openlineage = ["openlineage-airflow>=0.17.0"]
+openlineage = ["apache-airflow-providers-openlineage>=1.4.0"]
 
 databricks = [
     "databricks-cli",
@@ -125,7 +125,7 @@ all = [
     "databricks-sql-connector<2.9.0",
     "s3fs",
     "protobuf",
-    "openlineage-airflow>=0.17.0",
+    "apache-airflow-providers-openlineage>=1.4.0",
     "apache-airflow-providers-microsoft-azure",
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
