@@ -19,34 +19,17 @@ def dev(session: nox.Session) -> None:
     session.install("-e", ".[all,tests]")
 
 
-@nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
-@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5", "2.6", "2.7", "2.8"])
+@nox.session(python=["3.8", "3.9", "3.10", "3.11"])
+@nox.parametrize("airflow", ["2.7", "2.8"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     env = {
         "AIRFLOW_HOME": f"~/airflow-{airflow}-python-{session.python}",
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.*",
     }
 
-    if airflow == "2.2.5":
-        env[
-            "AIRFLOW__CORE__XCOM_BACKEND"
-        ] = "astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend"
-        env["AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV"] = "True"
-
-        # If you need a pinned version of a provider to be present in a nox session then
-        # update the constraints file used below with that  version of provider
-        # For example as part of MSSQL support we need apache-airflow-providers-microsoft-mssql>=3.2 and this
-        # has been updated in the below constraint file.
-        session.install(f"apache-airflow=={airflow}", "-c", "tests/modified_constraint_file.txt")
-        session.install("-e", ".[all,tests]", "-c", "tests/modified_constraint_file.txt")
-        session.install("apache-airflow-providers-common-sql==1.2.0")
-        # install smart-open 6.3.0 since it has FTP implementation
-        session.install("smart-open>=6.3.0")
-    else:
-        env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
-
-        session.install(f"apache-airflow~={airflow}")
-        session.install("-e", ".[all,tests]")
+    session.install(f"apache-airflow~={airflow}")
+    session.install("-e", ".[all,tests]")
 
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
@@ -150,8 +133,8 @@ def build_docs(session: nox.Session) -> None:
     session.run("make", "html")
 
 
-@nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
-@nox.parametrize("airflow", ["2.2.5", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8"])
+@nox.session(python=["3.8", "3.9", "3.10", "3.11"])
+@nox.parametrize("airflow", ["2.7", "2.8"])
 def generate_constraints(session: nox.Session, airflow) -> None:
     """Generate constraints file"""
     session.install("wheel")

@@ -538,96 +538,14 @@ jobs:
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
       AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
-  Run-example-dag-tests-Airflow-2-2-5:
-    if: >-
-      github.event_name == 'push' ||
-      (
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.fork == false
-      ) ||
-      (
-        github.event_name == 'pull_request_target' &&
-        contains(github.event.pull_request.labels.*.name, 'safe to test')
-      )||
-      (
-        github.event_name == 'release'
-      )
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        # Docker Hub image
-        image: dimberman/pagila-test
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      sftp:
-        image: ghcr.io/astronomer/astro-sdk/sftp_docker
-        ports:
-          - 2222:22
-      ftp:
-        image: ghcr.io/astronomer/astro-sdk/ftp_docker
-        ports:
-          - 21:21
-          - 30000-30009:30000-30009
-        env:
-          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
-          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
-          FTP_USER_HOME: /home/foo
-          PUBLICHOST: "localhost"
-    steps:
-      - uses: actions/checkout@v3
-        if: github.event_name != 'pull_request_target'
-
-      - name: Checkout pull/${{ github.event.number }}
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-        if: github.event_name == 'pull_request_target'
-
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.8'
-          architecture: 'x64'
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/pip
-            .nox
-          key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
-      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
-      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
-      - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests_integration/test_example_dags.py" "tests_integration/integration_test_dag.py" -k "not redshift"
-    env:
-      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
-      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
-      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
-      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
-      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
-      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
-      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
-      AZURE_WASB_ACCESS_KEY: ${{ secrets.AZURE_WASB_ACCESS_KEY }}
 
   Generate-Constraints:
     if: (github.event_name == 'release' || github.event_name == 'push')
     strategy:
       fail-fast: false
       matrix:
-        python: [ '3.7', '3.8', '3.9', '3.10' ]
-        airflow: [ '2.2.5', '2.3', '2.4', '2.5', '2.6', '2.7', '2.8']
+        python: [ '3.8', '3.9', '3.10', '3.11' ]
+        airflow: [ '2.7', '2.8']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -724,7 +642,6 @@ jobs:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
       - Run-Unit-tests-Airflow-2-8
-      - Run-example-dag-tests-Airflow-2-2-5
       - Run-Integration-tests-Airflow-2-8
       - Run-load-file-Integration-Airflow-2-8
       - Run-example-dag-Integration-Airflow-2-8
