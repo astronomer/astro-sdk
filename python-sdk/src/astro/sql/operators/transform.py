@@ -6,7 +6,7 @@ from typing import Any, Callable
 try:
     from airflow.decorators.base import TaskDecorator
 except ImportError:
-    from airflow.decorators import _TaskDecorator as TaskDecorator
+    from airflow.decorators import _TaskDecorator as TaskDecorator  # type: ignore[attr-defined]
 
 from airflow.decorators.base import get_unique_task_id, task_decorator_factory
 from airflow.models.xcom_arg import XComArg

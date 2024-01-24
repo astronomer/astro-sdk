@@ -13,7 +13,7 @@ from astro.dataframes.pandas import PandasDataframe
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
 except ImportError:  # pragma: no cover
-    from airflow.decorators import _TaskDecorator as TaskDecorator
+    from airflow.decorators import _TaskDecorator as TaskDecorator  # type: ignore[attr-defined]
     from airflow.decorators.base import task_decorator_factory
 
 from astro.constants import ColumnCapitalization, LoadExistStrategy
