@@ -207,12 +207,26 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql", "mysql", "duckdb"],
 )
-def test_aql_replace_existing_table(sample_dag, database_table_fixture):
+def test_aql_replace_existing_table(sample_dag, database_table_fixture, request):
+    import time
+
+    test_id = request.node.callspec.id
+
     db, test_table = database_table_fixture
     data_path_1 = str(CWD) + "/../../data/homes.csv"
     data_path_2 = str(CWD) + "/../../data/homes2.csv"
     with sample_dag:
+        # Bigquery rate limits the number of tables operations per 10s to 5 table operations.
+        # See more here: https://cloud.google.com/bigquery/quotas#standard_tables
+        # Hence, introduce a sleep for 10s to avoid rate limit errors.
+        if test_id == "bigquery":
+            time.sleep(10)
+
         task_1 = load_file(input_file=File(data_path_1), output_table=test_table)
+
+        if test_id == "bigquery":
+            time.sleep(10)
+
         task_2 = load_file(input_file=File(data_path_2), output_table=test_table)
         task_1 >> task_2  # skipcq: PYL-W0104
     test_utils.run_dag(sample_dag)
