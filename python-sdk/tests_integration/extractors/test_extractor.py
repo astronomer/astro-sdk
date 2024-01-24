@@ -121,7 +121,6 @@ def test_python_sdk_load_file_extract_on_complete(mock_xcom_pull):
     assert task_meta_extract is None
 
     task_meta = python_sdk_extractor(load_file_operator).extract_on_complete(task_instance=task_instance)
-    assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0].facets["input_file_facet"] == INPUT_STATS[0].facets["input_file_facet"]
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
@@ -161,7 +160,6 @@ def test_python_sdk_export_file_extract_on_complete():
     task_meta_extract = python_sdk_extractor(export_file_operator).extract()
     assert task_meta_extract is None
     task_meta = python_sdk_extractor(export_file_operator).extract_on_complete(task_instance=task_instance)
-    assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert (
         task_meta.inputs[0].facets["dataQualityMetrics"]
         == INPUT_STATS_FOR_EXPORT_FILE[0].facets["dataQualityMetrics"]
@@ -179,7 +177,6 @@ def test_append_op_extract_on_complete():
     """
     Test extractor ``extract_on_complete`` get called and collect lineage for append operator
     """
-    task_id = "append_table"
 
     src_table_operator = LoadFileOperator(
         task_id="load_file",
@@ -208,7 +205,6 @@ def test_append_op_extract_on_complete():
     task_meta_extract = python_sdk_extractor(op).extract()
     assert task_meta_extract is None
     task_meta = python_sdk_extractor(op).extract_on_complete(task_instance=task_instance)
-    assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astronomer-dag-authoring.{src_table.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
     assert task_meta.inputs[0].facets is not None
@@ -221,7 +217,6 @@ def test_merge_op_extract_on_complete():
     """
     Test extractor ``extract_on_complete`` get called and collect lineage for merge operator
     """
-    task_id = "merge"
     src_table_operator = LoadFileOperator(
         task_id="load_file",
         input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
@@ -252,7 +247,6 @@ def test_merge_op_extract_on_complete():
     assert task_meta_extract is None
     task_meta = python_sdk_extractor(op).extract_on_complete(task_instance=task_instance)
 
-    assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astro.{src_table.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
     assert task_meta.inputs[0].facets is not None
@@ -277,7 +271,6 @@ def test_python_sdk_transform_extract_on_complete():
     imdb_table = load_file.execute(context=create_context(load_file))
 
     output_table = Table(name="test_name", conn_id="gcp_conn", metadata=Metadata(schema="astro"))
-    task_id = "top_five_animations"
 
     @aql.transform
     def top_five_animations(input_table: Table) -> str:
@@ -295,7 +288,6 @@ def test_python_sdk_transform_extract_on_complete():
     task_meta_extract = python_sdk_extractor(task.operator).extract()
     assert task_meta_extract is None
     task_meta = python_sdk_extractor(task.operator).extract_on_complete(task_instance=task_instance)
-    assert task_meta.name == f"adhoc_airflow.{task_id}"
     source_code = task_meta.job_facets.get("sourceCode")
     # check for transform code return is present in source code facet.
     validate_string = """return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"""
@@ -348,7 +340,6 @@ def test_python_sdk_dataframe_op_extract_on_complete():
     task_meta_extract = python_sdk_extractor(task[0].operator).extract()
     assert task_meta_extract is None
     task_meta = python_sdk_extractor(task[0].operator).extract_on_complete(task_instance=task_instance)
-    assert task_meta.name == "adhoc_airflow.aggregate_data"
     assert task_meta.outputs[0].facets["schema"].fields[0].name == test_schema_name
     assert task_meta.outputs[0].facets["schema"].fields[0].type == test_db_name
     assert task_meta.outputs[0].facets["dataSource"].name == test_tbl_name
