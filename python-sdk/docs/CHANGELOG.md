@@ -8,7 +8,7 @@
 - Bump up minimum version of `Python` to 3.8 [#2103](https://github.com/astronomer/astro-sdk/pull/2103)
 
 ### Bug Fixes
-- Limit `pandas` version to `<2.2.0` due to an open issue for the release `pandas==2.2.0` https://github.com/pandas-dev/pandas/issues/57053 [#2105] (https://github.com/astronomer/astro-sdk/pull/2105)
+- Limit `pandas` version to `<2.2.0` due to an open issue [#57053](https://github.com/pandas-dev/pandas/issues/57053) for the release `pandas==2.2.0` [#2105](https://github.com/astronomer/astro-sdk/pull/2105)
 
 
 ## 1.7.0
