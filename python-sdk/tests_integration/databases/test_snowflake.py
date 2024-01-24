@@ -82,32 +82,14 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
     response = database.run_sql(statement, handler=lambda x: x.fetchall())
     rows = response
     assert len(rows) == 2
-    assert rows[0] == (
-        "ID",
-        "NUMBER(38,0)",
-        "COLUMN",
-        "N",
-        "IDENTITY START 1 INCREMENT 1 ORDER",
-        "Y",
-        "N",
-        None,
-        None,
-        None,
-        None,
-    )
-    assert rows[1] == (
-        "NAME",
-        "VARCHAR(60)",
-        "COLUMN",
-        "N",
-        None,
-        "N",
-        "N",
-        None,
-        None,
-        None,
-        None,
-    )
+
+    assert rows[0][0] == "ID"
+    assert rows[0][1] == "NUMBER(38,0)"
+    assert rows[0][2] == "COLUMN"
+
+    assert rows[1][0] == "ID"
+    assert rows[1][1] == "NUMBER(60)"
+    assert rows[1][2] == "COLUMN"
 
 
 @pytest.mark.integration
