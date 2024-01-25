@@ -1,6 +1,5 @@
-import os
-
 import logging
+import os
 
 from airflow.configuration import conf
 
@@ -33,6 +32,6 @@ try:
         SqlJobFacet,
     )
     from openlineage.client.run import Dataset as OpenlineageDataset
-except ImportError as e:
+except ImportError:
     if not _is_disabled():
         logging.error("openlineage-airflow python dependency is missing")
