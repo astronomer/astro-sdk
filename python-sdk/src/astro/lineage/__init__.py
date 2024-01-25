@@ -16,4 +16,4 @@ try:
     )
     from openlineage.client.run import Dataset as OpenlineageDataset
 except ImportError:
-    logging.debug("openlineage-airflow python dependency is missing")
+    logging.debug("apache-airflow-providers-openlineage python dependency is missing")
