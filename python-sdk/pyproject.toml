@@ -85,7 +85,9 @@ ftp = [
     "apache-airflow-providers-ftp>=3.0.0",
     "smart-open>=5.2.1",
 ]
-openlineage = ["apache-airflow-providers-openlineage>=1.4.0"]
+openlineage = [
+    "apache-airflow-providers-openlineage>=1.4.0",
+]
 
 databricks = [
     "databricks-cli",
