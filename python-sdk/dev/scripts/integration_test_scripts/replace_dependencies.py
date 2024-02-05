@@ -60,9 +60,11 @@ def parse_providers_release_testing_gh_issue(issue_url: str) -> list[str]:
     h2_titles = first_comment.find_all("h2")
     package_urls = [_parse_pypi_url_from_h2_title(h2_title) for h2_title in h2_titles]
     pinned_packages = [
-        _parse_pinned_package_from_pypi_url(url)
-        if "apache-airflow-providers-cncf-kubernetes" not in url
-        else _parse_pinned_pacakge_from_cncf(url)
+        (
+            _parse_pinned_package_from_pypi_url(url)
+            if "apache-airflow-providers-cncf-kubernetes" not in url
+            else _parse_pinned_pacakge_from_cncf(url)
+        )
         for url in package_urls
     ]
     return pinned_packages

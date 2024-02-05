@@ -1,4 +1,5 @@
 """Tests specific to the MySql Database implementation."""
+
 import pathlib
 
 import pandas as pd

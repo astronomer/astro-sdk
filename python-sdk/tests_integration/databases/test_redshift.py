@@ -1,4 +1,5 @@
 """Tests specific to the Sqlite Database implementation."""
+
 import os
 import pathlib
 import re

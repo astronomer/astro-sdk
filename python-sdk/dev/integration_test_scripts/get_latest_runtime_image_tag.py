@@ -1,4 +1,5 @@
 """This script fetches the latest runtime image tag from the provided Quay.io repository URL."""
+
 from __future__ import annotations
 
 import sys

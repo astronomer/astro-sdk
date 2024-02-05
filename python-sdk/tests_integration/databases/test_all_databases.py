@@ -1,4 +1,5 @@
 """Tests all Database implementations."""
+
 import pathlib
 from unittest import mock
 

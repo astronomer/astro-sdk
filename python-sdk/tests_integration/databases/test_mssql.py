@@ -1,4 +1,5 @@
 """Tests specific to the SqlServer Database implementation."""
+
 import pathlib
 import re
 from urllib.parse import urlparse

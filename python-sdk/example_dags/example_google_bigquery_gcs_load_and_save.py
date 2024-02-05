@@ -12,6 +12,7 @@ Pre-requisites:
  - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
     with the file path to the service account.
 """
+
 import os
 
 import pandas as pd
