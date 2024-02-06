@@ -1,4 +1,5 @@
 """Postgres database implementation."""
+
 from __future__ import annotations
 
 import io

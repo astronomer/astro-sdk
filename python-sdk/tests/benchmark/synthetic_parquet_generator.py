@@ -1,6 +1,7 @@
 """
 Function to generate PARQUET files of various sizes
 """
+
 import pandas as pd
 from faker import Faker
 

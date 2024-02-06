@@ -1,6 +1,7 @@
 """
 This DAG is to benchmark GCSToBigQueryOperator for various dataset
 """
+
 import os
 from datetime import datetime, timedelta
 
@@ -83,9 +84,11 @@ load_five_gb = GCSToBigQueryOperator(
     task_id="load_five_gb",
     bucket="astro-sdk",
     source_objects=[
-        f"benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000{str(i)}.ndjson"
-        if i >= 10
-        else f"benchmark/trimmed/pypi/pypi-downloads-2021-03-28-00000000000{str(i)}.ndjson"
+        (
+            f"benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000{str(i)}.ndjson"
+            if i >= 10
+            else f"benchmark/trimmed/pypi/pypi-downloads-2021-03-28-00000000000{str(i)}.ndjson"
+        )
         for i in range(20)
     ],
     destination_project_dataset_table=f"{DATASET_NAME}.{TABLE_NAME}",

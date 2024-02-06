@@ -120,9 +120,11 @@ class ExportToFileOperator(AstroSQLBaseOperator):
                     ),
                     "dataSource": DataSourceDatasetFacet(name=self.output_file.path, uri=output_uri),
                     "outputStatistics": OutputStatisticsOutputDatasetFacet(
-                        rowCount=self.input_data.row_count
-                        if isinstance(self.input_data, BaseTable)
-                        else len(self.input_data),
+                        rowCount=(
+                            self.input_data.row_count
+                            if isinstance(self.input_data, BaseTable)
+                            else len(self.input_data)
+                        ),
                         size=self.output_file.size,
                     ),
                 },

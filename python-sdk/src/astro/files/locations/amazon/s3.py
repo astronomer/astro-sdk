@@ -81,9 +81,9 @@ class S3Location(BaseFileLocation):
             "fs.s3a.secret.key": credentials.secret_key,
         }
         if credentials.token:
-            cred_dict[
-                "fs.s3a.aws.credentials.provider"
-            ] = "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider"
+            cred_dict["fs.s3a.aws.credentials.provider"] = (
+                "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider"
+            )
             cred_dict["fs.s3a.session.token"] = credentials.token
         return cred_dict
 

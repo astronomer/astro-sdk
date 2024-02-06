@@ -1,4 +1,5 @@
 """Tests specific to the Snowflake Database implementation."""
+
 import pathlib
 from unittest import mock
 from unittest.mock import MagicMock, PropertyMock, patch

@@ -247,9 +247,11 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                             fields=[
                                 SchemaField(
                                     name=self.schema if self.schema else self.output_table.metadata.schema,
-                                    type=self.database
-                                    if self.database
-                                    else self.output_table.metadata.database,
+                                    type=(
+                                        self.database
+                                        if self.database
+                                        else self.output_table.metadata.database
+                                    ),
                                 )
                             ]
                         ),

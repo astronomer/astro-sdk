@@ -1,4 +1,5 @@
 """Astronomer migration DAG to transform metadata from source deployment to target Astro Cloud deployment."""
+
 from datetime import datetime
 
 from airflow import DAG

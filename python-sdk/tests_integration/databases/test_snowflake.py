@@ -1,4 +1,5 @@
 """Tests specific to the Snowflake Database implementation."""
+
 import os
 import pathlib
 from unittest import mock

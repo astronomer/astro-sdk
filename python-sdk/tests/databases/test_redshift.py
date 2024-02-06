@@ -1,4 +1,5 @@
 """Tests specific to the Sqlite Database implementation."""
+
 from unittest import mock
 
 from airflow.models import Connection
