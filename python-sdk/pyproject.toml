@@ -68,7 +68,7 @@ postgres = [
     "apache-airflow-providers-postgres",
 ]
 amazon = [
-    "apache-airflow-providers-amazon>=5.0.0",
+    "apache-airflow-providers-amazon==8.18.0rc2",
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
@@ -109,7 +109,7 @@ duckdb = [
 ]
 
 all = [
-    "apache-airflow-providers-amazon",
+    "apache-airflow-providers-amazon==8.18.0rc2",
     "apache-airflow-providers-google>=6.4.0",
     "apache-airflow-providers-ftp",
     "apache-airflow-providers-postgres",
