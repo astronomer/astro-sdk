@@ -60,7 +60,7 @@ def find_worst_covid_month(dfs: List[pd.DataFrame]):
     """
     res = {}
     for covid_month_data in dfs:
-        if ALLOWED_DESERIALIZATION_CLASSES == "airflow\\.* astro\\.*":
+        if ALLOWED_DESERIALIZATION_CLASSES == "airflow.* astro.*":
             covid_month = datetime.fromtimestamp(covid_month_data.Date_YMD.iloc[0] / 1e3).strftime("%Y-%m")
         else:
             covid_month = covid_month_data.Date_YMD.iloc[0].__format__("%Y-%m")
