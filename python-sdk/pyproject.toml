@@ -75,7 +75,7 @@ amazon = [
 azure = [
     "apache-airflow-providers-microsoft-azure",
     "azure-storage-blob",
-    "smart-open[azure]>=5.2.1,7<7.0.0",
+    "smart-open[azure]>=5.2.1,<7.0.0",
 ]
 sftp = [
     "apache-airflow-providers-sftp>=4.0.0",
