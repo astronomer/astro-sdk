@@ -25,7 +25,7 @@ def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     env = {
         "AIRFLOW_HOME": f"~/airflow-{airflow}-python-{session.python}",
-        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.*",
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow.* astro.*",
     }
 
     session.install(f"apache-airflow~={airflow}")
@@ -73,7 +73,7 @@ def test_examples_by_dependency(session: nox.Session, extras):
 
     env = {
         "AIRFLOW_HOME": "~/airflow-latest-python-latest",
-        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.*",
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow.* astro.*",
     }
 
     session.install("-e", f".[{pypi_deps}]")
