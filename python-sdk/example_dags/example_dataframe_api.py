@@ -28,7 +28,7 @@ if airflow.__version__ == "2.2.5":
     ALLOWED_DESERIALIZATION_CLASSES = os.getenv("AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES")
 else:
     ALLOWED_DESERIALIZATION_CLASSES = os.getenv(
-        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES", default="airflow\\.* astro\\.*"
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES", default="airflow.* astro.*"
     )
 
 
