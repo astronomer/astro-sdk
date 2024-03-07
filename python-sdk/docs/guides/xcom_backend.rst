@@ -69,10 +69,10 @@ in airflow’s config file as shown below.
 .. code-block:: ini
 
    [core]
-   allowed_deserialization_classes = airflow\.* astro\.*
+   allowed_deserialization_classes = airflow.* astro.*
 
 or we can also set env variables like
 
 .. code-block:: ini
 
-   AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES = airflow\.* astro\.*
+   AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES = airflow.* astro.*
