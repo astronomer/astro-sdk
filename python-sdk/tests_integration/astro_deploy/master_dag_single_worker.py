@@ -84,7 +84,7 @@ def prepare_dag_dependency(task_info, execution_time):
 
 with DAG(
     dag_id="example_master_dag_single_worker",
-    schedule_interval="@daily",
+    schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
     tags=["master_dag_single_worker"],
