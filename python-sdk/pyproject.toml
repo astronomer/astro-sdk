@@ -92,7 +92,6 @@ openlineage = [
 databricks = [
     "databricks-cli",
     "apache-airflow-providers-databricks",
-    "databricks-sql-connector",
 ]
 
 mssql = [
