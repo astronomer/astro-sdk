@@ -92,8 +92,7 @@ openlineage = [
 databricks = [
     "databricks-cli",
     "apache-airflow-providers-databricks",
-    # TODO: Remove this once https://github.com/databricks/databricks-sql-python/pull/191 released
-    "databricks-sql-connector<2.9.0",
+    "databricks-sql-connector",
 ]
 
 mssql = [
@@ -121,8 +120,7 @@ all = [
     "sqlalchemy-bigquery>=1.3.0",
     "databricks-cli",
     "apache-airflow-providers-databricks",
-    # TODO: Remove this once https://github.com/databricks/databricks-sql-python/pull/191 released
-    "databricks-sql-connector<2.9.0",
+    "databricks-sql-connector",
     "s3fs",
     "protobuf",
     "apache-airflow-providers-openlineage>=1.4.0",
