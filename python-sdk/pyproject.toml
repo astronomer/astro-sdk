@@ -119,7 +119,6 @@ all = [
     "sqlalchemy-bigquery>=1.3.0",
     "databricks-cli",
     "apache-airflow-providers-databricks",
-    "databricks-sql-connector",
     "s3fs",
     "protobuf",
     "apache-airflow-providers-openlineage>=1.4.0",
