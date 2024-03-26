@@ -68,7 +68,7 @@ repos:
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.3.3'
+    rev: 'v0.3.4'
     hooks:
       - id: ruff
         args:
@@ -91,7 +91,7 @@ repos:
         files: "^python-sdk/"
 
   -   repo: https://github.com/asottile/pyupgrade
-      rev: v3.15.1
+      rev: v3.15.2
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
