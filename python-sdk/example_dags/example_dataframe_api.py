@@ -28,7 +28,7 @@ if airflow.__version__ == "2.2.5":
     ALLOWED_DESERIALIZATION_CLASSES = os.getenv("AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES")
 else:
     ALLOWED_DESERIALIZATION_CLASSES = os.getenv(
-        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES", default="airflow\\.* astro\\.*"
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES", default="airflow.* astro.*"
     )
 
 
@@ -60,7 +60,7 @@ def find_worst_covid_month(dfs: List[pd.DataFrame]):
     """
     res = {}
     for covid_month_data in dfs:
-        if ALLOWED_DESERIALIZATION_CLASSES == "airflow\\.* astro\\.*":
+        if ALLOWED_DESERIALIZATION_CLASSES == "airflow.* astro.*":
             covid_month = datetime.fromtimestamp(covid_month_data.Date_YMD.iloc[0] / 1e3).strftime("%Y-%m")
         else:
             covid_month = covid_month_data.Date_YMD.iloc[0].__format__("%Y-%m")

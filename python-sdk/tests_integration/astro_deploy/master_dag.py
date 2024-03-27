@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from datetime import datetime
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
 from airflow import DAG, settings
 from airflow.models import Connection, DagRun
@@ -14,11 +14,13 @@ from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from airflow.utils.session import create_session
 
+if TYPE_CHECKING:
+    from airflow.models.taskinstance import TaskInstance
+
+
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#provider-alert")
 SLACK_WEBHOOK_CONN = os.getenv("SLACK_WEBHOOK_CONN", "http_slack")
 SLACK_USERNAME = os.getenv("SLACK_USERNAME", "airflow_app")
-IS_RUNTIME_RELEASE = os.getenv("IS_RUNTIME_RELEASE", default="False")
-IS_RUNTIME_RELEASE = bool(IS_RUNTIME_RELEASE)
 AWS_S3_CREDS = {
     "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID", "not_set"),
     "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY", "not_set"),
@@ -243,13 +245,9 @@ def terminate_instance(task_instance: "TaskInstance") -> None:  # noqa: F821
     )
 
 
-if IS_RUNTIME_RELEASE:
-    schedule_interval = None
-else:
-    schedule_interval = "@daily"
 with DAG(
     dag_id="example_master_dag",
-    schedule_interval=schedule_interval,
+    schedule_interval=None,
     start_date=datetime(2023, 1, 1),
     catchup=False,
     tags=["master_dag"],
