@@ -1,7 +1,10 @@
 name: "Astro Deploy"
 on:
-  schedule:
-    - cron: '0 19 * * *'
+  # Since we have a job to test upstream RCs, and additionally our CI runs integrations tests on every PR,
+  # we can disable this scheduled job for now. In the future, in case we need to run this on schedule, we
+  # can enable it again by uncommenting the below schedule.
+  # schedule:
+  #   - cron: '0 19 * * *'
   workflow_dispatch:
     inputs:
       git_rev:
