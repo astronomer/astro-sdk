@@ -223,15 +223,17 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         Collect the input, output, job and run facets for DataframeOperator
         """
 
-        from astro.lineage import (
+        from airflow.providers.openlineage.extractors import OperatorLineage
+        from openlineage.client.run import Dataset as OpenlineageDataset
+        from openlineage.client.facet import (
             BaseFacet,
+            DataQualityMetricsInputDatasetFacet,
             DataSourceDatasetFacet,
-            OpenlineageDataset,
-            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
             SourceCodeJobFacet,
+            SqlJobFacet,
         )
         from astro.settings import OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE
 

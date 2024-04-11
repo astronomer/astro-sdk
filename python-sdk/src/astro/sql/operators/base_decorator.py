@@ -275,11 +275,11 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         Returns the lineage data
         """
-        from astro.lineage import (
+        from airflow.providers.openlineage.extractors import OperatorLineage
+        from openlineage.client.run import Dataset as OpenlineageDataset
+        from openlineage.client.facet import (
             BaseFacet,
             DataSourceDatasetFacet,
-            OpenlineageDataset,
-            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
