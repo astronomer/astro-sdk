@@ -55,12 +55,12 @@ tests = [
 ]
 google = [
     "protobuf",
-    "apache-airflow-providers-google>=6.4.0",
+    "apache-airflow-providers-google==10.17.0rc1",
     "sqlalchemy-bigquery>=1.3.0",
     "smart-open[gcs]>=5.2.1,<7.0.0"
 ]
 snowflake = [
-    "apache-airflow-providers-snowflake",
+    "apache-airflow-providers-snowflake==5.4.0rc1",
     "snowflake-sqlalchemy>=1.2.0",
     "snowflake-connector-python[pandas]"
 ]
@@ -68,30 +68,30 @@ postgres = [
     "apache-airflow-providers-postgres",
 ]
 amazon = [
-    "apache-airflow-providers-amazon>=5.0.0",
+    "apache-airflow-providers-amazon==8.20.0rc1",
     "s3fs",
     "smart-open[s3]>=5.2.1,<7.0.0",
 ]
 azure = [
-    "apache-airflow-providers-microsoft-azure",
+    "apache-airflow-providers-microsoft-azure==10.0.0rc1",
     "azure-storage-blob",
     "smart-open[azure]>=5.2.1,<7.0.0",
 ]
 sftp = [
-    "apache-airflow-providers-sftp>=4.0.0",
+    "apache-airflow-providers-sftp==4.9.1rc1",
     "smart-open[ssh]>=5.2.1,<7.0.0",
 ]
 ftp = [
-    "apache-airflow-providers-ftp>=3.0.0",
+    "apache-airflow-providers-ftp==3.8.0rc2",
     "smart-open>=5.2.1,<7.0.0",
 ]
 openlineage = [
-    "apache-airflow-providers-openlineage>=1.4.0",
+    "apache-airflow-providers-openlineage==1.7.0rc1",
 ]
 
 databricks = [
     "databricks-cli",
-    "apache-airflow-providers-databricks",
+    "apache-airflow-providers-databricks==6.3.0rc1",
 ]
 
 mssql = [
@@ -107,22 +107,22 @@ duckdb = [
 ]
 
 all = [
-    "apache-airflow-providers-amazon",
-    "apache-airflow-providers-google>=6.4.0",
-    "apache-airflow-providers-ftp",
+    "apache-airflow-providers-amazon==8.20.0rc1",
+    "apache-airflow-providers-google==10.17.0rc1",
+    "apache-airflow-providers-ftp==3.8.0rc2",
     "apache-airflow-providers-postgres",
-    "apache-airflow-providers-snowflake",
-    "apache-airflow-providers-sftp",
+    "apache-airflow-providers-snowflake==5.4.0rc1",
+    "apache-airflow-providers-sftp==4.9.1rc1",
     "smart-open[all]>=5.2.1,<7.0.0",
     "snowflake-connector-python[pandas]",
     "snowflake-sqlalchemy>=1.2.0",
     "sqlalchemy-bigquery>=1.3.0",
     "databricks-cli",
-    "apache-airflow-providers-databricks",
+    "apache-airflow-providers-databricks==6.3.0rc1",
     "s3fs",
     "protobuf",
-    "apache-airflow-providers-openlineage>=1.4.0",
-    "apache-airflow-providers-microsoft-azure",
+    "apache-airflow-providers-openlineage==1.7.0rc1",
+    "apache-airflow-providers-microsoft-azure==10.0.0rc1",
     "azure-storage-blob",
     "apache-airflow-providers-microsoft-mssql>=3.2",
     "airflow-provider-duckdb>=0.0.2",
