@@ -68,7 +68,6 @@ class ExportToFileOperator(AstroSQLBaseOperator):
         """
 
         from airflow.providers.openlineage.extractors import OperatorLineage
-        from openlineage.client.run import Dataset as OpenlineageDataset
         from openlineage.client.facet import (
             BaseFacet,
             DataQualityMetricsInputDatasetFacet,
@@ -76,9 +75,9 @@ class ExportToFileOperator(AstroSQLBaseOperator):
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
-            SourceCodeJobFacet,
-            SqlJobFacet,
         )
+        from openlineage.client.run import Dataset as OpenlineageDataset
+
         from astro.lineage.facets import ExportFileFacet
 
         input_dataset: list[OpenlineageDataset] = []

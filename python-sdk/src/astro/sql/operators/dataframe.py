@@ -224,17 +224,16 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         """
 
         from airflow.providers.openlineage.extractors import OperatorLineage
-        from openlineage.client.run import Dataset as OpenlineageDataset
         from openlineage.client.facet import (
             BaseFacet,
-            DataQualityMetricsInputDatasetFacet,
             DataSourceDatasetFacet,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
             SourceCodeJobFacet,
-            SqlJobFacet,
         )
+        from openlineage.client.run import Dataset as OpenlineageDataset
+
         from astro.settings import OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE
 
         output_dataset: list[OpenlineageDataset] = []

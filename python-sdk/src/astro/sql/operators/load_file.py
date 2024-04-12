@@ -248,17 +248,14 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
 
         from airflow.providers.openlineage.extractors import OperatorLineage
-        from openlineage.client.run import Dataset as OpenlineageDataset
         from openlineage.client.facet import (
             BaseFacet,
-            DataQualityMetricsInputDatasetFacet,
             DataSourceDatasetFacet,
-            OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
-            SourceCodeJobFacet,
-            SqlJobFacet,
         )
+        from openlineage.client.run import Dataset as OpenlineageDataset
+
         from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 
         # if the input_file is a folder or pattern, it needs to be resolved to

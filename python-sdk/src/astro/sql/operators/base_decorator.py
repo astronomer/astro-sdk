@@ -276,7 +276,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         Returns the lineage data
         """
         from airflow.providers.openlineage.extractors import OperatorLineage
-        from openlineage.client.run import Dataset as OpenlineageDataset
         from openlineage.client.facet import (
             BaseFacet,
             DataSourceDatasetFacet,
@@ -286,6 +285,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             SourceCodeJobFacet,
             SqlJobFacet,
         )
+        from openlineage.client.run import Dataset as OpenlineageDataset
+
         from astro.settings import OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE
 
         input_dataset: list[OpenlineageDataset] = []
