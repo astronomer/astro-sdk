@@ -3,7 +3,7 @@ from __future__ import annotations
 import attr
 
 from astro.constants import ExportExistsStrategy, FileType, MergeConflictStrategy
-from astro.lineage import BaseFacet
+from openlineage.client.facet import BaseFacet
 from astro.table import Column, Metadata
 
 
