@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import attr
+from openlineage.client.facet import BaseFacet
 
 from astro.constants import ExportExistsStrategy, FileType, MergeConflictStrategy
-from openlineage.client.facet import BaseFacet
 from astro.table import Column, Metadata
 
 
