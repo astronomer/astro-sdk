@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/astro-runtime:10.6.0-python-3.9-base
+FROM quay.io/astronomer/astro-runtime:11.2.0-slim-base
 
 
 USER root
