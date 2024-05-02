@@ -9,15 +9,11 @@ try:
 except ImportError:  # pragma: no cover
     from airflow.decorators import _TaskDecorator as TaskDecorator  # type: ignore[attr-defined]
 
-import airflow
 import pandas as pd
 from airflow.decorators.base import task_decorator_factory
 from sqlalchemy.engine import ResultProxy
 
-if airflow.__version__ >= "2.3":
-    from sqlalchemy.engine.row import LegacyRow as SQLAlcRow
-else:
-    from sqlalchemy.engine.result import RowProxy as SQLAlcRow
+from sqlalchemy.engine.row import LegacyRow as SQLAlcRow
 
 from astro import settings
 from astro.constants import RunRawSQLResultFormat
