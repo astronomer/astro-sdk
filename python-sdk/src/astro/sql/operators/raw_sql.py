@@ -12,7 +12,6 @@ except ImportError:  # pragma: no cover
 import pandas as pd
 from airflow.decorators.base import task_decorator_factory
 from sqlalchemy.engine import ResultProxy
-
 from sqlalchemy.engine.row import LegacyRow as SQLAlcRow
 
 from astro import settings
