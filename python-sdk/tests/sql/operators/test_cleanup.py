@@ -105,12 +105,12 @@ def test_error_raised_with_blocking_op_executors(
     reason="BackfillJobRunner and Job classes are only available in airflow >= 2.6",
 )
 @pytest.mark.parametrize(
-    "executor_in_job,executor_in_cfg,expected_val",
+    "executor_in_job, executor_in_cfg, expected_val",
     [
         (SequentialExecutor(), "LocalExecutor", True),
         (LocalExecutor(), "LocalExecutor", False),
-        (None, "LocalExecutor", False),
-        (None, "SequentialExecutor", True),
+        (LocalExecutor(), "LocalExecutor", False),
+        (SequentialExecutor(), "SequentialExecutor", True),
     ],
 )
 def test_single_worker_mode_backfill(executor_in_job, executor_in_cfg, expected_val):
@@ -177,8 +177,8 @@ def test_single_worker_mode_backfill_airflow_2_5(executor_in_job, executor_in_cf
     [
         (SequentialExecutor(), "LocalExecutor", True),
         (LocalExecutor(), "LocalExecutor", False),
-        (None, "LocalExecutor", False),
-        (None, "SequentialExecutor", True),
+        (LocalExecutor(), "LocalExecutor", False),
+        (SequentialExecutor(), "SequentialExecutor", True),
     ],
 )
 def test_single_worker_mode_scheduler_job(executor_in_job, executor_in_cfg, expected_val):

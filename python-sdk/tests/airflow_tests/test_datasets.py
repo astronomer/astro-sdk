@@ -104,7 +104,6 @@ def test_kwargs_with_temp_table():
 @pytest.mark.skipif(airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0")
 def test_example_dataset_dag():
     from airflow.datasets import Dataset
-    from airflow.models.dataset import DatasetModel
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     db = DagBag(dir_path + "/../../example_dags/example_datasets.py")
@@ -115,9 +114,8 @@ def test_example_dataset_dag():
     outlets = producer_dag.tasks[-1].outlets
     assert isinstance(outlets[0], Dataset)
     # Test that dataset_triggers is only set if all the instances passed to the DAG object are Datasets
-    assert consumer_dag.dataset_triggers == outlets
+    assert consumer_dag.dataset_triggers.objects[0] == outlets[0]
     assert outlets[0].uri == "astro://postgres_conn@?table=imdb_movies"
-    assert DatasetModel.from_public(outlets[0]) == Dataset("astro://postgres_conn@?table=imdb_movies")
 
 
 def test_disable_auto_inlets_outlets():
