@@ -81,7 +81,7 @@ class DuckdbDatabase(BaseDatabase):
         """
         Handles database-specific logic to handle index for DuckDB.
         """
-        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)  # skipcq PYL-C0209
+        return "CREATE UNIQUE INDEX merge_index ON {{table}}({})".format(",".join(parameters))
 
     def merge_table(
         self,

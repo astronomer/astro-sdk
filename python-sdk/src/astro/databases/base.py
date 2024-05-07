@@ -205,7 +205,7 @@ class BaseDatabase(ABC):
         it agnostic to database.
         """
         constraints = ",".join(parameters)
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE ({})".format(constraints)
         return sql
 
     @staticmethod
