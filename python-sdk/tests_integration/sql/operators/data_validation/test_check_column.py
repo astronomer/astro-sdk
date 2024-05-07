@@ -5,7 +5,6 @@ import pytest
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
-from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -22,7 +21,6 @@ CWD = pathlib.Path(__file__).parent
         {
             "database": Database.BIGQUERY,
             "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
-            # "table": Table(conn_id="gcp_conn_project"),
         },
         {
             "database": Database.POSTGRES,

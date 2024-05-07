@@ -56,12 +56,7 @@ class SQLCheckOperator(SQLTableCheckOperator):
         db = create_database(self.dataset.conn_id)
         self.table = db.get_table_qualified_name(self.dataset)
         self.conn_id = self.dataset.conn_id
-        # apache-airflow-providers-common-sql == 1.2.0 which is compatible with airflow 2.2.5 implements the self.sql
-        # differently compared to apache-airflow-providers-common-sql == 1.3.3
-        try:
-            self.sql = f"SELECT check_name, check_result FROM ({self._generate_sql_query()}) AS check_table"
-        except AttributeError:
-            self.sql = f"SELECT * FROM {self.table};"
+        self.sql = f"SELECT check_name, check_result FROM ({self._generate_sql_query()}) AS check_table"
         super().execute(context)
 
     def get_db_hook(self) -> Any:
