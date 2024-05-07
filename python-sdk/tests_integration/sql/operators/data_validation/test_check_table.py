@@ -22,7 +22,7 @@ CWD = pathlib.Path(__file__).parent
         {
             "database": Database.BIGQUERY,
             "file": File(path=str(CWD) + "/../../../data/homes_main.csv"),
-            "table": Table(conn_id="gcp_conn_project"),
+            # "table": Table(conn_id="gcp_conn_project"),
         },
         {
             "database": Database.POSTGRES,
