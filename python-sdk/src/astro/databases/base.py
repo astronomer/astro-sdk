@@ -205,8 +205,7 @@ class BaseDatabase(ABC):
         it agnostic to database.
         """
         constraints = ",".join(parameters)
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE ({})".format(constraints)
-        return sql
+        return f"ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE ({constraints})"
 
     @staticmethod
     def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
