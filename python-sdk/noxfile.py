@@ -8,7 +8,7 @@ nox.options.sessions = ["dev"]
 nox.options.reuse_existing_virtualenvs = True
 
 
-@nox.session(python="3.10")
+@nox.session(python="3.12")
 def dev(session: nox.Session) -> None:
     """Create a dev environment with everything installed.
 
@@ -19,8 +19,8 @@ def dev(session: nox.Session) -> None:
     session.install("-e", ".[all,tests]")
 
 
-@nox.session(python=["3.8", "3.9", "3.10", "3.11"])
-@nox.parametrize("airflow", ["2.7", "2.8"])
+@nox.session(python=["3.8", "3.9", "3.10", "3.11", "3.12"])
+@nox.parametrize("airflow", ["2.7", "2.8", "2.9"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     env = {
@@ -47,7 +47,7 @@ def test(session: nox.Session, airflow) -> None:
     )
 
 
-@nox.session(python=["3.10"])
+@nox.session(python=["3.12"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("-e", ".[all,tests]")
@@ -125,7 +125,7 @@ def build(session: nox.Session) -> None:
     session.run("python", "-m", "build", *session.posargs)
 
 
-@nox.session(python="3.10")
+@nox.session(python="3.12")
 def build_docs(session: nox.Session) -> None:
     """Build release artifacts."""
     session.install("-e", ".[doc]")
