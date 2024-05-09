@@ -211,7 +211,8 @@ class CleanupOperator(AstroSQLBaseOperator):
         job_id = current_dagrun.creating_job_id
         executor: str = conf.get("core", "EXECUTOR")
         if job_id:
-            executor = cls._get_executor_from_job_id(job_id) or executor
+            executor1 = cls._get_executor_from_job_id(job_id)
+            executor = executor1 or executor
         return executor in ["SequentialExecutor", "DebugExecutor"]
 
     @staticmethod
@@ -224,8 +225,6 @@ class CleanupOperator(AstroSQLBaseOperator):
 
         with create_session() as session:
             job = session.get(Job, job_id)
-        if job.executor_class is None and job.executor:
-            return type(job.executor).__name__
         return job.executor_class if job else None
 
     def get_all_task_outputs(self, context: Context) -> list[BaseTable]:

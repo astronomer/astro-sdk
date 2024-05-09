@@ -107,10 +107,10 @@ def test_error_raised_with_blocking_op_executors(
 @pytest.mark.parametrize(
     "executor_in_job, executor_in_cfg, expected_val",
     [
-        (SequentialExecutor(), "LocalExecutor", True),
-        (LocalExecutor(), "LocalExecutor", False),
-        (LocalExecutor(), "LocalExecutor", False),
         (SequentialExecutor(), "SequentialExecutor", True),
+        (LocalExecutor(), "LocalExecutor", False),
+        (None, "LocalExecutor", False),
+        (None, "SequentialExecutor", True),
     ],
 )
 def test_single_worker_mode_backfill(executor_in_job, executor_in_cfg, expected_val):
