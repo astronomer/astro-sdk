@@ -175,10 +175,10 @@ def test_single_worker_mode_backfill_airflow_2_5(executor_in_job, executor_in_cf
 @pytest.mark.parametrize(
     "executor_in_job,executor_in_cfg,expected_val",
     [
-        (SequentialExecutor(), "LocalExecutor", True),
-        (LocalExecutor(), "LocalExecutor", False),
-        (LocalExecutor(), "LocalExecutor", False),
         (SequentialExecutor(), "SequentialExecutor", True),
+        (LocalExecutor(), "LocalExecutor", False),
+        (None, "LocalExecutor", False),
+        (None, "SequentialExecutor", True),
     ],
 )
 def test_single_worker_mode_scheduler_job(executor_in_job, executor_in_cfg, expected_val):
