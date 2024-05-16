@@ -104,7 +104,7 @@ connections:
     host: $DATABRICKS_HOST
     password: $DATABRICKS_TOKEN
     extra:
-      http_path: /sql/1.0/warehouses/368fe30b92228713
+      http_path: $DATABRICKS_HTTP_PATH
   - conn_id: wasb_default
     conn_type: wasb
     description: null
