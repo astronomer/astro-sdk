@@ -101,7 +101,7 @@ connections:
       aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
   - conn_id: databricks_conn
     conn_type: delta
-    host: https://dbc-9c390870-65ef.cloud.databricks.com/
+    host: $DATABRICKS_HOST
     password: $DATABRICKS_TOKEN
     extra:
       http_path: /sql/1.0/warehouses/cf414a2206dfb397
