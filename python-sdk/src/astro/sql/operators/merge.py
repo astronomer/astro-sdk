@@ -85,17 +85,19 @@ class MergeOperator(AstroSQLBaseOperator):
         """
         Collect the input, output, job and run facets for merge operator
         """
-        from astro.lineage import (
+
+        from airflow.providers.openlineage.extractors import OperatorLineage
+        from openlineage.client.facet import (
             BaseFacet,
             DataQualityMetricsInputDatasetFacet,
             DataSourceDatasetFacet,
-            OpenlineageDataset,
-            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
         )
+        from openlineage.client.run import Dataset as OpenlineageDataset
+
         from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
 
         input_dataset: list[OpenlineageDataset] = []
