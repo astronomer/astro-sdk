@@ -287,3 +287,9 @@ def test_get_copy_into_with_metadata_sql_statement_no_metadata_columns():
     )
     with pytest.raises(ValueError, match="Error: Requires metadata columns to be set in load options"):
         database._get_copy_into_with_metadata_sql_statement(file_path, table, stage)
+
+
+def test_get_merge_initialization_query():
+    parameters = ("col_1", "col_2")
+    sql = SnowflakeDatabase.get_merge_initialization_query(parameters)
+    assert sql == "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (col_1,col_2)"
