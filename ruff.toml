@@ -1,38 +1,36 @@
 line-length = 120
 
-# Enable Pyflakes `E` and `F` codes by default.
-extend-select = [
-    "W",    # pycodestyle warnings
-    "I",    # isort
-    "C90",  # Complexity
-#    "B",    # flake8-bugbear
-    "C",    # flake8-comprehensions
-#    "ANN",  # flake8-comprehensions
-    "ISC",  # flake8-implicit-str-concat
-    "T10",  # flake8-debugger
-    "A",    # flake8-builtins
-    "UP",   # pyupgrade
-]
-extend-ignore = ["A002"]
-
-# Exclude a variety of commonly ignored directories.
-extend-exclude = [
-    "__pycache__",
-    "docs/source/conf.py",
-]
-
 target-version = "py37"
 fix = true
+# Exclude a variety of commonly ignored directories.
+extend-exclude = ["__pycache__", "docs/source/conf.py"]
 
-[per-file-ignores]
+[lint]
+extend-ignore = ["A002"]
+# Enable Pyflakes `E` and `F` codes by default.
+extend-select = [
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "C90", # Complexity
+    #    "B",    # flake8-bugbear
+    "C", # flake8-comprehensions
+    #    "ANN",  # flake8-comprehensions
+    "ISC", # flake8-implicit-str-concat
+    "T10", # flake8-debugger
+    "A",   # flake8-builtins
+    "UP",  # pyupgrade
+]
+
+
+[lint.per-file-ignores]
 "python-sdk/src/astro/sql/__init__.py" = ["F401"]
 "python-sdk/src/astro/lineage/__init__.py" = ["F401"]
 "python-sdk/src/astro/sql/table.py" = ["F401"]
 
 
-[mccabe]
+[lint.mccabe]
 max-complexity = 6
 
-[isort]
+[lint.isort]
 combine-as-imports = true
 known-first-party = ["astro", "tests"]

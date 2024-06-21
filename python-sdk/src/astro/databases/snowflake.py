@@ -455,7 +455,8 @@ class SnowflakeDatabase(BaseDatabase):
     # ---------------------------------------------------------
 
     def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
-        self, file: File  # skipcq: PYL-W0613
+        self,
+        file: File,  # skipcq: PYL-W0613
     ) -> bool:
         """
         Check if native auto detection of schema is available.
@@ -585,7 +586,9 @@ class SnowflakeDatabase(BaseDatabase):
         self.truncate_table(table)
 
     def is_native_load_file_available(
-        self, source_file: File, target_table: BaseTable  # skipcq PYL-W0613, PYL-R0201
+        self,
+        source_file: File,
+        target_table: BaseTable,  # skipcq PYL-W0613, PYL-R0201
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -654,7 +657,9 @@ class SnowflakeDatabase(BaseDatabase):
         try:
             table_columns_count = int(
                 self.hook.run(
-                    sql_statement, parameters={"table_name": table_name}, handler=lambda cur: cur.fetchone()
+                    sql_statement,
+                    parameters={"table_name": table_name},
+                    handler=lambda cur: cur.fetchone(),
                 )[0]
             )
         except AttributeError:  # pragma: no cover
@@ -1059,7 +1064,7 @@ class SnowflakeDatabase(BaseDatabase):
             identifier_enclosure = '"'
 
         constraints = ",".join([f"{identifier_enclosure}{p}{identifier_enclosure}" for p in parameters])
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints  # skipcq PYL-C0209
+        sql = f"ALTER TABLE {{{{table}}}} ADD CONSTRAINT airflow UNIQUE ({constraints})"
         return sql
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
