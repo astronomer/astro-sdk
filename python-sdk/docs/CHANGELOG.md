@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+
+### Misc
+-  Remove condition import for `SQLAlcRow` as minimum Airflow version has been pinned to >= 2.7 [#2146](https://github.com/astronomer/astro-sdk/pull/2146)
+
+
 ## 1.8.0
 
 ### Misc
