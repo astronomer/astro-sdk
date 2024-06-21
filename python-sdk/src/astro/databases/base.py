@@ -205,7 +205,7 @@ class BaseDatabase(ABC):
         it agnostic to database.
         """
         constraints = ",".join(parameters)
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        sql = f"ALTER TABLE {{{{table}}}} ADD CONSTRAINT airflow UNIQUE ({constraints})"
         return sql
 
     @staticmethod
@@ -319,7 +319,8 @@ class BaseDatabase(ABC):
         )
 
     def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
-        self, file: File  # skipcq: PYL-W0613
+        self,
+        file: File,  # skipcq: PYL-W0613
     ) -> bool:
         """
         Check if native auto detection of schema is available.
@@ -801,7 +802,9 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
-        self, table: BaseTable, jinja_table_identifier: str  # skipcq PYL-W0613
+        self,
+        table: BaseTable,
+        jinja_table_identifier: str,  # skipcq PYL-W0613
     ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
@@ -853,7 +856,9 @@ class BaseDatabase(ABC):
         return ":" + variable
 
     def is_native_load_file_available(  # skipcq: PYL-R0201
-        self, source_file: File, target_table: BaseTable  # skipcq: PYL-W0613
+        self,
+        source_file: File,
+        target_table: BaseTable,  # skipcq: PYL-W0613
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.

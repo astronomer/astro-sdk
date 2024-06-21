@@ -5,6 +5,7 @@ import pathlib
 import pytest
 
 from astro.constants import Database
+from astro.databases.sqlite import SqliteDatabase
 from astro.files import File
 
 DEFAULT_CONN_ID = "sqlite_default"
@@ -31,3 +32,10 @@ def test_export_table_to_file_file_already_exists_raises_exception(
         database.export_table_to_file(source_table, File(str(filepath)))
     err_msg = exception_info.value.args[0]
     assert err_msg.endswith(f"The file {filepath} already exists.")
+
+
+def test_get_merge_initialization_query():
+    parameters = ("col_1 text(4)", "col_2 text(15)")
+
+    sql = SqliteDatabase.get_merge_initialization_query(parameters)
+    assert sql == "CREATE UNIQUE INDEX merge_index ON {{table}}(col_1 text(4),col_2 text(15))"
