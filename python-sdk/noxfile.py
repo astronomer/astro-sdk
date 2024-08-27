@@ -28,7 +28,7 @@ def test(session: nox.Session, airflow) -> None:
         "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow.* astro.*",
     }
 
-    session.install(f"apache-airflow~={airflow}")
+    session.install(f"apache-airflow=={airflow}")
     session.install("-e", ".[all,tests]")
 
     # Log all the installed dependencies

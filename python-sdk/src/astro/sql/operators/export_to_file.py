@@ -67,16 +67,17 @@ class ExportToFileOperator(AstroSQLBaseOperator):
         Collect the input, output, job and run facets for export file operator
         """
 
-        from astro.lineage import (
+        from airflow.providers.openlineage.extractors import OperatorLineage
+        from openlineage.client.facet import (
             BaseFacet,
             DataQualityMetricsInputDatasetFacet,
             DataSourceDatasetFacet,
-            OpenlineageDataset,
-            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
         )
+        from openlineage.client.run import Dataset as OpenlineageDataset
+
         from astro.lineage.facets import ExportFileFacet
 
         input_dataset: list[OpenlineageDataset] = []
