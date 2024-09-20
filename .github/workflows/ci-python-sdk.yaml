@@ -1,16 +1,10 @@
 name: Build and test astro Python SDK
 on:
   push:
-    branches: [ 'main', 'release-**' ]
+    branches: [ 'main', 'release-**', 'fix-ci' ]
     paths:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
-  pull_request:
-    branches: [ 'main', 'release-**' ]
-    paths:
-      - 'python-sdk/**'
-      - '.github/workflows/ci-python-sdk.yaml'
-      - '*'
   # Run on PRs from forks
   pull_request_target:
     branches: [ 'main' ]
@@ -193,10 +187,11 @@ jobs:
       - run: pip3 install nox
       - run: nox -s test_examples_by_dependency -- --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage${{ matrix.group }}
           path: ./python-sdk/.coverage
+          include-hidden-files: true
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
@@ -258,10 +253,11 @@ jobs:
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.version }}(airflow='2.8')" -- tests/ --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-unit-test
           path: ./python-sdk/.coverage
+          include-hidden-files: true
 
   Run-load-file-Integration-Airflow-2-8:
     if: >-
@@ -339,15 +335,17 @@ jobs:
       - run: nox -s "test-3.10(airflow='2.8')" -- tests_integration/ -k "test_load_file.py and not redshift" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.group }}-integration-tests
           path: ./python-sdk/.coverage
+          include-hidden-files: true
       - name: Collect pytest durations
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: pytest_durations_load_file_${{ matrix.group }}
           path: /tmp/durations-${{ matrix.group }}
+          include-hidden-files: true
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
@@ -440,15 +438,17 @@ jobs:
       - run: nox -s "test-3.10(airflow='2.8')" -- tests_integration/ -k "test_example_dags.py and not redshift" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.group }}-integration-tests
           path: ./python-sdk/.coverage
+          include-hidden-files: true
       - name: Collect pytest durations
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: pytest_durations_example_dags_${{ matrix.group }}
           path: /tmp/durations-${{ matrix.group }}
+          include-hidden-files: true
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
@@ -541,15 +541,16 @@ jobs:
       - run: nox -s "test-3.10(airflow='2.8')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py and not redshift" --splits 11 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.group }}-integration-tests
           path: ./python-sdk/.coverage
       - name: Collect pytest durations
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: pytest_durations_integration_tests_${{ matrix.group }}
           path: /tmp/durations-${{ matrix.group }}
+          include-hidden-files: true
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
@@ -601,6 +602,7 @@ jobs:
           name: constraints-${{ matrix.python }}-${{ matrix.airflow }}
           path: ./python-sdk/constraints-${{ matrix.python }}-${{ matrix.airflow }}
           if-no-files-found: error
+          include-hidden-files: true
 
   Code-Coverage:
     if: github.event.action != 'labeled'
