@@ -93,7 +93,7 @@ class BaseDatabase(ABC):
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
 
-    @property
+    @cached_property
     def connection(self) -> sqlalchemy.engine.base.Connection:
         """Return a Sqlalchemy connection object for the given database."""
         return self.sqlalchemy_engine.connect()
