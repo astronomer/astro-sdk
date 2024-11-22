@@ -114,18 +114,20 @@ class File(LoggingMixin, Dataset):
         """
         return not pathlib.PosixPath(self.path).suffix
 
-    def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True, export_options: dict | None = None) -> None:
         """Create a file in the desired location using the values of a dataframe.
 
         :param store_as_dataframe: Whether the data should later be deserialized as a dataframe or as a file containing
             delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
+        :param export_options: additional arguments to pass to the underlying write functionality
         """
 
         self.is_dataframe = store_as_dataframe
+        opts = export_options or {}
 
         with self.location.get_stream() as stream:
-            self.type.create_from_dataframe(stream=stream, df=df)
+            self.type.create_from_dataframe(stream=stream, df=df, **opts)
 
     @property
     def openlineage_dataset_namespace(self) -> str:
