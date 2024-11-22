@@ -57,7 +57,9 @@ class ParquetFileType(FileType):
         return remote_obj_buffer
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
-    def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper, **kwargs) -> None:  # skipcq PYL-R0201
+    def create_from_dataframe(
+        self, df: pd.DataFrame, stream: io.TextIOWrapper, **kwargs
+    ) -> None:  # skipcq PYL-R0201
         """Write parquet file to one of the supported locations
 
         :param df: pandas dataframe

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
@@ -60,7 +58,9 @@ class ExportToFileOperator(AstroSQLBaseOperator):
             raise ValueError(f"Expected input_table to be Table or dataframe. Got {type(self.input_data)}")
         # Write file if overwrite == True or if file doesn't exist.
         if self.if_exists == "replace" or not self.output_file.exists():
-            self.output_file.create_from_dataframe(df, store_as_dataframe=False, export_options=self.export_options)
+            self.output_file.create_from_dataframe(
+                df, store_as_dataframe=False, export_options=self.export_options
+            )
             return self.output_file
         else:
             raise FileExistsError(f"{self.output_file.path} file already exists.")

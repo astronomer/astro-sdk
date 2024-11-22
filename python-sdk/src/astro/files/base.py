@@ -114,7 +114,9 @@ class File(LoggingMixin, Dataset):
         """
         return not pathlib.PosixPath(self.path).suffix
 
-    def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True, export_options: dict | None = None) -> None:
+    def create_from_dataframe(
+        self, df: pd.DataFrame, store_as_dataframe: bool = True, export_options: dict | None = None
+    ) -> None:
         """Create a file in the desired location using the values of a dataframe.
 
         :param store_as_dataframe: Whether the data should later be deserialized as a dataframe or as a file containing
