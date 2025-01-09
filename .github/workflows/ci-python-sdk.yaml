@@ -71,7 +71,7 @@ jobs:
     if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           config-file: '.github/workflows/mlc_config.json'
@@ -84,7 +84,7 @@ jobs:
       TERM: xterm-color
       SETUPTOOLS_USE_DISTUTILS: stdlib
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v3
         with:
           python-version: '3.10'
@@ -105,7 +105,7 @@ jobs:
     if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v3
         with:
           python-version: '3.10'
@@ -165,11 +165,11 @@ jobs:
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: github.event_name != 'pull_request_target'
 
       - name: Checkout pull/${{ github.event.number }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
         if: github.event_name == 'pull_request_target'
@@ -233,11 +233,11 @@ jobs:
       )
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: github.event_name != 'pull_request_target'
 
       - name: Checkout pull/${{ github.event.number }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
         if: github.event_name == 'pull_request_target'
@@ -311,11 +311,11 @@ jobs:
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: github.event_name != 'pull_request_target'
 
       - name: Checkout pull/${{ github.event.number }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
         if: github.event_name == 'pull_request_target'
@@ -412,11 +412,11 @@ jobs:
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: github.event_name != 'pull_request_target'
 
       - name: Checkout pull/${{ github.event.number }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
         if: github.event_name == 'pull_request_target'
@@ -513,11 +513,11 @@ jobs:
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         if: github.event_name != 'pull_request_target'
 
       - name: Checkout pull/${{ github.event.number }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
         if: github.event_name == 'pull_request_target'
@@ -577,7 +577,7 @@ jobs:
         airflow: [ '2.7', '2.8']
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v3
         with:
           python-version: '${{ matrix.python }}'
@@ -612,7 +612,7 @@ jobs:
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python 3.10
         uses: actions/setup-python@v3
         with:
@@ -644,7 +644,7 @@ jobs:
       - Run-Integration-tests-Airflow-2-8
       - Run-load-file-Integration-Airflow-2-8
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Cache
         uses: actions/cache@v3
         with:
@@ -678,7 +678,7 @@ jobs:
       - Generate-Constraints
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: actions/setup-python@v2
       with:
         python-version: '3.10'
