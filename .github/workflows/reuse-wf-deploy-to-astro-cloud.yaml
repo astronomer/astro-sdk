@@ -60,7 +60,7 @@ jobs:
 
       - name: send succeeded notification to Slack
         if: success() && github.event_name == 'workflow_dispatch'
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v2.0.0
         with:
           # yamllint disable rule:line-length
           payload: |
@@ -131,7 +131,7 @@ jobs:
 
       - name: send failure notification to Slack
         if: failure()
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v2.0.0
         with:
           # yamllint disable rule:line-length
           payload: |
