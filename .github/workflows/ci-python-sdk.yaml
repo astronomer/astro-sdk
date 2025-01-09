@@ -89,7 +89,7 @@ jobs:
         with:
           python-version: '3.10'
           architecture: 'x64'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
            path: |
              ~/.cache/pip
@@ -110,7 +110,7 @@ jobs:
         with:
           python-version: '3.10'
           architecture: 'x64'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
@@ -178,7 +178,7 @@ jobs:
         with:
           python-version: '3.10'
           architecture: 'x64'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
@@ -245,7 +245,7 @@ jobs:
         with:
           python-version: ${{ matrix.version }}
           architecture: 'x64'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
@@ -323,7 +323,7 @@ jobs:
         with:
           python-version: '3.10'
           architecture: 'x64'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
@@ -424,7 +424,7 @@ jobs:
         with:
           python-version: '3.10'
           architecture: 'x64'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
@@ -525,7 +525,7 @@ jobs:
         with:
           python-version: '3.10'
           architecture: 'x64'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
@@ -586,7 +586,7 @@ jobs:
         id: pip-cache
         run: |
           echo "pip_cache_dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ${{ steps.pip-cache.outputs.pip_cache_dir }}
           key: constraints-${{ matrix.python }}-${{ matrix.airflow }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
@@ -646,7 +646,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .test_durations
           key: test_durations-0-${{ github.run_id }}
@@ -683,7 +683,7 @@ jobs:
       with:
         python-version: '3.10'
         architecture: 'x64'
-    - uses: actions/cache@v2
+    - uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ hashFiles('python-sdk/pyproject.toml') }}
