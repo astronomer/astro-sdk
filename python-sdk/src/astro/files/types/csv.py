@@ -38,13 +38,17 @@ class CSVFileType(FileType):
         return PandasDataframe.from_pandas_df(df)
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
-    def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:  # skipcq PYL-R0201
+    def create_from_dataframe(
+        self, df: pd.DataFrame, stream: io.TextIOWrapper, **kwargs
+    ) -> None:  # skipcq PYL-R0201
         """Write csv file to one of the supported locations
 
         :param df: pandas dataframe
         :param stream: file stream object
+        :param kwargs: additional arguments to pass to the pandas `to_csv` function
         """
-        df.to_csv(stream, index=False)
+
+        df.to_csv(stream, **dict(index=False, **kwargs))
 
     @property
     def name(self):

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
@@ -21,20 +19,23 @@ class ExportToFileOperator(AstroSQLBaseOperator):
     :param input_data: Table to convert to file
     :param output_file: File object containing the path to the file and connection id.
     :param if_exists: Overwrite file if exists. Default False.
+    :param export_options: Additional options to pass to the file export functions.
     """
 
-    template_fields = ("input_data", "output_file")
+    template_fields = ("input_data", "output_file", "export_options")
 
     def __init__(
         self,
         input_data: BaseTable | pd.DataFrame,
         output_file: File,
         if_exists: ExportExistsStrategy = "exception",
+        export_options: dict | None = None,
         **kwargs,
     ) -> None:
         self.output_file = output_file
         self.input_data = input_data
         self.if_exists = if_exists
+        self.export_options = export_options or {}
         self.kwargs = kwargs
         datasets = {"output_datasets": self.output_file}
         if isinstance(input_data, Table):
@@ -57,7 +58,9 @@ class ExportToFileOperator(AstroSQLBaseOperator):
             raise ValueError(f"Expected input_table to be Table or dataframe. Got {type(self.input_data)}")
         # Write file if overwrite == True or if file doesn't exist.
         if self.if_exists == "replace" or not self.output_file.exists():
-            self.output_file.create_from_dataframe(df, store_as_dataframe=False)
+            self.output_file.create_from_dataframe(
+                df, store_as_dataframe=False, export_options=self.export_options
+            )
             return self.output_file
         else:
             raise FileExistsError(f"{self.output_file.path} file already exists.")
@@ -144,7 +147,8 @@ def export_to_file(
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
     task_id: str | None = None,
-    **kwargs: Any,
+    export_options: dict | None = None,
+    **kwargs,
 ) -> XComArg:
     """Convert ExportToFileOperator into a function. Returns XComArg.
 
@@ -170,6 +174,7 @@ def export_to_file(
     :param input_data: Input table / dataframe
     :param if_exists: Overwrite file if exists. Default "exception"
     :param task_id: task id, optional
+    :param export_options: Additional options to pass to the file export functions.
     """
 
     task_id = task_id or get_unique_task_id("export_to_file")
@@ -179,5 +184,6 @@ def export_to_file(
         output_file=output_file,
         input_data=input_data,
         if_exists=if_exists,
+        export_options=export_options,
         **kwargs,
     ).output

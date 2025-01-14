@@ -37,6 +37,25 @@ def test_save_dataframe_to_local(sample_dag):
     assert df.equals(pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]}))
 
 
+def test_save_dataframe_to_local_with_options(sample_dag):
+    @aql.dataframe
+    def make_df():
+        return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
+
+    with sample_dag:
+        df = make_df()
+        aql.export_to_file(
+            input_data=df,
+            output_file=File(path="/tmp/saved_df.csv"),
+            if_exists="replace",
+            export_options={"header": None},
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = pd.read_csv("/tmp/saved_df.csv")
+    assert df.equals(pd.DataFrame(data={"0": [1, 2], "1": [3, 4]}))
+
+
 @pytest.mark.parametrize("database_table_fixture", [{"database": Database.SQLITE}], indirect=True)
 def test_save_temp_table_to_local(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture

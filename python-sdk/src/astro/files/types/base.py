@@ -27,11 +27,12 @@ class FileType(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper, **kwargs) -> None:
         """Write file to one of the supported locations
 
         :param df: pandas dataframe
         :param stream: file stream object
+        :param kwargs: additional arguments to pass to the underlying write functionality
         """
         raise NotImplementedError
 
