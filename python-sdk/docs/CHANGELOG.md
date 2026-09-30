@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0
+
+### Misc
+- Mark the project as discontinued. Astronomer no longer maintains the Astro Python SDK and this is the final release.
+
+
 ## 1.8.1
 
 ### Misc

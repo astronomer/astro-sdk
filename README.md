@@ -1,3 +1,8 @@
+## ⚠️ Discontinuation of project
+> This project is no longer actively maintained by Astronomer, but we'd love to see it live on in the community. It has been deprecated since May 2025. Astronomer is not accepting new contributions, bug fixes or releases, but the code is still here for you to explore, fork and adapt under the terms of its license.
+> Please note that it may not work with the latest dependencies or platforms, and it could contain security vulnerabilities. Astronomer can't offer guarantees or warranties for its use.
+> If you're interested in adopting or stewarding this project, we'd be happy to chat, reach us at oss@astronomer.io. Thanks for being part of the open-source journey and helping keep great ideas alive!
+
 <h1 align="center">
   astro
 </h1>
@@ -15,7 +20,7 @@
 [![CI](https://github.com/astronomer/astro-sdk/actions/workflows/ci-python-sdk.yaml/badge.svg)](https://github.com/astronomer/astro-sdk)
 [![codecov](https://codecov.io/gh/astronomer/astro-sdk/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-sdk)
 
-**Astro Python SDK** is a Python SDK for rapid development of extract, transform, and load workflows in [Apache Airflow](https://airflow.apache.org/). It allows you to express your workflows as a set of data dependencies without having to worry about ordering and tasks. The Astro Python SDK is maintained by [Astronomer](https://astronomer.io).
+**Astro Python SDK** is a Python SDK for rapid development of extract, transform, and load workflows in [Apache Airflow](https://airflow.apache.org/). It allows you to express your workflows as a set of data dependencies without having to worry about ordering and tasks. The Astro Python SDK was maintained by [Astronomer](https://astronomer.io).
 
 ## Prerequisites
 

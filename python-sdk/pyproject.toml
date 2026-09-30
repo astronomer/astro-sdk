@@ -29,7 +29,7 @@ dependencies = [
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 7 - Inactive",
     "License :: OSI Approved :: Apache Software License",
     "Topic :: Database",
     "Framework :: Apache Airflow",
